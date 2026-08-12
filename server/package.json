@@ -11,7 +11,9 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "test": "vitest run"
   },
-  "prisma": { "seed": "tsx prisma/seed.ts" },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "cors": "^2.8.5",
@@ -27,5 +29,12 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^2.1.8"
+  },
+  "allowScripts": {
+    "@prisma/client@5.22.0": true,
+    "@prisma/engines@5.22.0": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.21.5": true,
+    "prisma@5.22.0": true
   }
 }
