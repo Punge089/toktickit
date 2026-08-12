@@ -7,13 +7,18 @@ type UiState = "idle" | "loading" | "success" | "error";
 export default function App() {
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
-  void categories;
+  const [errorMessage, setErrorMessage] = useState("");
 
   async function handleCheck() {
-    // TODO(Issue 4): set loading, call checkSystem(), then either
-    //   - success: store categories and show Online + the list, or
-    //   - error: show Offline + a useful message.
     setState("loading");
+    try {
+      const result = await checkSystem();
+      setCategories(result.categories);
+      setState("success");
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Unable to connect to TokTickIT API");
+      setState("error");
+    }
   }
 
   return (
@@ -23,10 +28,35 @@ export default function App() {
       </h1>
 
       <button className="btn btn-success" onClick={handleCheck} disabled={state === "loading"}>
-        {state === "loading" ? "Loading…" : "Check System"}
+        {state === "loading" ? "⏳ Loading…" : "Check System"}
       </button>
 
-      {/* TODO(Issue 4): render loading / success (Online + categories) / error (Offline) states. */}
+      {state === "success" && (
+        <div className="mt-4">
+          <p className="fw-semibold">
+            System Status: <span className="text-success">Online</span>
+          </p>
+          {categories.length > 0 && (
+            <>
+              <p className="fw-semibold mb-1">Supported Request Categories:</p>
+              <ul>
+                {categories.map((category) => (
+                  <li key={category.id}>{category.name}</li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      )}
+
+      {state === "error" && (
+        <div className="mt-4">
+          <p className="fw-semibold mb-1">
+            System Status: <span className="text-danger">Offline</span>
+          </p>
+          <p className="text-danger">{errorMessage}</p>
+        </div>
+      )}
     </div>
   );
 }
