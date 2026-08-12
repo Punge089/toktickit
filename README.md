@@ -57,6 +57,13 @@ toktickit/
    ```
 
 4. **Run the database migration and seed** (from `server/`)
+
+   Make sure PostgreSQL is actually running first, or `prisma migrate dev` will fail to connect:
+   ```bash
+   # Windows: check the service is Running
+   Get-Service | Where-Object Name -like "*postgres*"
+   ```
+   Then:
    ```bash
    npx prisma migrate dev
    npm run prisma:seed
