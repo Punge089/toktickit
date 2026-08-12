@@ -26,7 +26,16 @@ export async function checkSystem(): Promise<SystemStatus> {
     throw new Error("Unable to connect to TokTickIT API");
   }
 
-  // Issue 4 adds the categories fetch here; until then the backend is
-  // confirmed online with an empty category list.
-  return { online: true, categories: [] };
+  let categoriesRes: Response;
+  try {
+    categoriesRes = await fetch(`${API_URL}/api/categories`);
+  } catch {
+    throw new Error("Unable to connect to TokTickIT API");
+  }
+  if (!categoriesRes.ok) {
+    throw new Error("Unable to connect to TokTickIT API");
+  }
+
+  const categories: Category[] = await categoriesRes.json();
+  return { online: true, categories };
 }
