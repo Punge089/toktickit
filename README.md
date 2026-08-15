@@ -1,4 +1,4 @@
-# TokTickIT — Lab 1: Full-Stack Hello World Starter
+# TokTickIT - Lab 1: Full-Stack Hello World Starter
 
 TokTickIT is an IT service desk application (Account & Access, Hardware, Software, Network requests).
 Lab 1 builds a thin vertical slice proving the stack works end to end: a React page calls an
@@ -45,7 +45,7 @@ toktickit/
    cd ../client && npm install
    ```
 
-3. **Configure environment variables** — copy each `.env.example` to `.env` and adjust if needed.
+3. **Configure environment variables** - copy each `.env.example` to `.env` and adjust if needed.
    ```bash
    cp server/.env.example server/.env
    cp client/.env.example client/.env
@@ -71,10 +71,10 @@ toktickit/
 
 5. **Run the apps** (two terminals)
    ```bash
-   # terminal 1 — API on http://localhost:3000
+   # terminal 1 - API on http://localhost:3000
    cd server && npm run dev
 
-   # terminal 2 — frontend on http://localhost:5173
+   # terminal 2 - frontend on http://localhost:5173
    cd client && npm run dev
    ```
 
@@ -84,10 +84,10 @@ toktickit/
 ## Testing
 
 ```bash
-# API tests (Supertest) — from server/
+# API tests (Supertest) - from server/
 cd server && npm test
 
-# Frontend tests (Vitest) — from client/
+# Frontend tests (Vitest) - from client/
 cd client && npm test
 ```
 
@@ -95,14 +95,14 @@ cd client && npm test
 
 | Method | Path              | Description                                  |
 |--------|-------------------|-----------------------------------------------|
-| GET    | `/api/health`     | Health check — `{ status: "ok", service: "TokTickIT API" }` |
+| GET    | `/api/health`     | Health check - `{ status: "ok", service: "TokTickIT API" }` |
 | GET    | `/api/categories` | Returns the seeded IT request categories, ordered by id |
 
 ## Documentation
 
-- [`docs/lab-01/ai_use.md`](docs/lab-01/ai_use.md) — AI tool used and reflection on prompts.
-- [`docs/lab-01/reviewer.md`](docs/lab-01/reviewer.md) — peer review record.
-- [`docs/lab-01/tests.md`](docs/lab-01/tests.md) — test plan and evidence.
+- [`docs/lab-01/ai_use.md`](docs/lab-01/ai_use.md) - AI tool used and reflection on prompts.
+- [`docs/lab-01/reviewer.md`](docs/lab-01/reviewer.md) - peer review record.
+- [`docs/lab-01/tests.md`](docs/lab-01/tests.md) - test plan and evidence.
 
 ## Git workflow
 

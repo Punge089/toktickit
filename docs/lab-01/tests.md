@@ -1,4 +1,4 @@
-# Lab 1 — Test Plan and Evidence
+# Lab 1 - Test Plan and Evidence
 
 All test files live under `server/tests/lab-01/` and `client/tests/lab-01/`.
 
@@ -39,7 +39,7 @@ Test Files  1 passed (1)
      Tests  3 passed (3)
 ```
 
-*(Screenshot of the actual terminal output should be inserted here for submission — see
+*(Screenshot of the actual terminal output should be inserted here for submission - see
 `report_lab01_67070503420.md`.)*
 
 ## Manual end-to-end verification
@@ -49,4 +49,4 @@ Test Files  1 passed (1)
   - `GET /api/categories` → `[{"id":1,"name":"Account and Access"},{"id":2,"name":"Hardware"},{"id":3,"name":"Software"},{"id":4,"name":"Network"}]`
 - Stopped the server and confirmed the API becomes unreachable (connection refused), which the
   frontend surfaces as the Offline error state.
-- Re-ran `npm run prisma:seed` twice — still exactly 4 category rows (idempotent).
+- Re-ran `npm run prisma:seed` twice - still exactly 4 category rows (idempotent).
