@@ -41,7 +41,42 @@ case too or just for a totally dead server?"
 Keeps it simple for this lab, thank you!"
 
 ## Pull Requests I reviewed for my partner
-_(To be filled in: I need to review one of @book6349's PRs on their own individual-sprint repo
-and record my comment + their response here, per the Part 1 bidirectional review requirement.)_
-My comment: <...>
-Partner's response: <...>
+
+Reviewed all four of @book6349's Issue PRs on their own individual-sprint repo
+([book6349/toktickit](https://github.com/book6349/toktickit)):
+
+| PR | Title | My verdict |
+|----|-------|------------|
+| [#10](https://github.com/book6349/toktickit/pull/10) | Issue 1 — Project Foundation & README Documentation | Commented + Approved |
+| [#11](https://github.com/book6349/toktickit/pull/11) | Issue 2 — API Health Check Endpoint | Commented + Approved |
+| [#12](https://github.com/book6349/toktickit/pull/12) | Issue 3 — Category Model and Idempotent Seed | Commented + Approved |
+| [#13](https://github.com/book6349/toktickit/pull/13) | Issue 4 — Category List Endpoint and Full Test Suite | Commented + Approved |
+
+### PR #10 — Project Foundation
+**My comment:** "Reviewed the project foundation changes. The README.md instructions are
+comprehensive and easy to follow for running both client and server dev environments. Confirmed
+that .env files are gitignored and .env.example templates are provided. Everything looks solid!
+Approved."
+**Partner's response:** "Thank you for the detailed peer review and approval! Proceeding to merge
+feature/1-project-foundation into lab1-staging."
+
+### PR #11 — API Health Check
+**My comment:** "Reviewed Issue 2 health check implementation. Confirmed GET /api/health endpoint
+returns the required HTTP 200 payload. Supertest test suite passes cleanly, and the frontend
+handles online/offline status displays as expected. Code looks clean. Approved!"
+**Partner's response:** "Thank you for reviewing Issue 2! Merging feature/2-health-check into
+lab1-staging now."
+
+### PR #12 — Category Model + Seed
+**My comment:** "Reviewed Issue 3 database schema and seed script. The Category model definition
+adheres to requirements and the upsert logic guarantees idempotency without producing duplicate
+records. Looks great! Approved."
+**Partner's response:** "Thank you for the review! Merging feature/3-category-seed into
+lab1-staging now."
+
+### PR #13 — Category List
+**My comment:** "From my review it seems the REST API correctly returns categories sorted by ID,
+and all 5 automated Supertest and Vitest tests pass cleanly. Documentation under /docs/lab-01/ is
+also accurate and complete. Approved, good job!"
+**Partner's response:** "Thank you for all the reviews! Merging feature/4-category-list into
+lab1-staging now, then creating the final Lab 1 Release PR into main."
