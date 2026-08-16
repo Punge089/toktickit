@@ -1,7 +1,7 @@
 # Lab 1 - Peer Review Record
 
 **Author:** Bannasorn Thongkorn - 67070503420 - GitHub: @Punge089
-**Peer reviewer:** book6349 - GitHub: @book6349
+**Peer reviewer:** Papangkorn Jitvoottikrai - 67070503421 - GitHub: @book6349
 
 ## Pull Requests I authored (reviewed by my partner)
 | PR | Branch | Reviewer verdict |
