@@ -56,11 +56,11 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | UI-13 | UI component | §8 (attachments list) | Ticket Detail with 1 active + 1 removed attachment mocked | Active row has a working Download button; removed row shows its `removalReason` instead of action buttons | `client/tests/lab-02/AttachmentSection.test.tsx` | Planned |
 | UI-14 | UI component | AC-09 | Click Remove on an active attachment, submit without typing a reason | Client-side validation blocks submission; no DELETE fired | `client/tests/lab-02/AttachmentSection.test.tsx` | Planned |
 | UI-15 | UI component | AC-09 | Remove an attachment with a valid reason, mocked success | Attachment row updates to Removed badge + shows the reason | `client/tests/lab-02/AttachmentSection.test.tsx` | Planned |
-| STYLE-01 | UI style | §1, §3 | Required field renders | Has the asterisk element AND `aria-required="true"` (not just one) | `client/tests/lab-02/zen-green.style.test.tsx` | Planned |
-| STYLE-02 | UI style | §3 | Read-only field (Ticket Number on Create Ticket) | Has the read-only field class/token, distinct from an editable field's class | `client/tests/lab-02/zen-green.style.test.tsx` | Planned |
-| STYLE-03 | UI style | §3 | Disabled button | Has `disabled` attribute and the disabled visual class; click handler does not fire | `client/tests/lab-02/zen-green.style.test.tsx` | Planned |
-| STYLE-04 | UI style | §3 | Icon-only control (attachment remove trash icon) | Has an `aria-label` and a `title` | `client/tests/lab-02/zen-green.style.test.tsx` | Planned |
-| STYLE-05 | UI style | §3 | Invalid field | Error message element's `id` matches the field's `aria-describedby` | `client/tests/lab-02/zen-green.style.test.tsx` | Planned |
+| STYLE-01 | UI style | §1, §3 | Required field renders | Has the asterisk element AND `aria-required="true"` (not just one) | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
+| STYLE-02 | UI style | §3 | Read-only field (Ticket Number on Create Ticket) | Has the read-only field class/token, distinct from an editable field's class | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
+| STYLE-03 | UI style | §3 | Disabled button | Has `disabled` attribute and the disabled visual class; click handler does not fire | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
+| STYLE-04 | UI style | §3 | Icon-only control (attachment remove trash icon) | Has an `aria-label` and a `title` | `client/tests/lab-02/zen-green.style.test.tsx` | Planned (pattern proven on the Issue 23 nav hamburger; the attachment-remove icon itself ships in Issue 31) |
+| STYLE-05 | UI style | §3 | Invalid field | Error message element's `id` matches the field's `aria-describedby` | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
 | RESP-01 | Responsive | AC-17, §9 | Create Ticket at 375/820/1280px | No `document.body` horizontal scroll at any width; screenshots saved | `e2e/lab-02/responsive.spec.ts` | Planned |
 | RESP-02 | Responsive | AC-17, §9 | My Tickets at 375/820/1280px | Table renders at desktop/tablet, cards render at mobile; screenshots saved | `e2e/lab-02/responsive.spec.ts` | Planned |
 | RESP-03 | Responsive | AC-17, §9 | Ticket Detail at 375/820/1280px | Header/attachment sections both fully visible, no clipped filenames; screenshots saved | `e2e/lab-02/responsive.spec.ts` | Planned |

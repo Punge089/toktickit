@@ -1,0 +1,345 @@
+/* Zen Green Theme tokens — see docs/lab-02/ui-spec.md §1-3.
+   Components consume these custom properties, never a literal hex value, so
+   client/tests/lab-02/zen-green.style.test.tsx can assert on class/token use. */
+
+:root {
+  /* Color */
+  --zen-primary: #006b3c;
+  --zen-secondary: #0b7a46;
+  --zen-pale: #eaf6ef;
+  --zen-page-bg: #f5f7f6;
+  --zen-surface: #ffffff;
+  --zen-border: #d9e4dd;
+  --zen-text: #16261e;
+  --zen-text-muted: #5b6b62;
+  --zen-field-editable-bg: #ffffff;
+  --zen-field-readonly-bg: #eff2ed;
+  --zen-error: #8a1f1f;
+  --zen-error-bg: #fbeded;
+  --zen-warning: #8a5a00;
+  --zen-warning-bg: #fbf2df;
+  --zen-success: #0b7a46;
+  --zen-success-bg: #eaf6ef;
+
+  /* Typography */
+  --zen-fs-h1: 1.5rem;
+  --zen-fs-h2: 1.125rem;
+  --zen-fs-body: 0.9375rem;
+  --zen-fs-label: 0.8125rem;
+  --zen-fs-caption: 0.75rem;
+
+  /* Spacing scale */
+  --zen-space-1: 4px;
+  --zen-space-2: 8px;
+  --zen-space-3: 12px;
+  --zen-space-4: 16px;
+  --zen-space-5: 24px;
+  --zen-space-6: 32px;
+  --zen-space-7: 48px;
+}
+
+body {
+  background: var(--zen-page-bg);
+  color: var(--zen-text);
+  font-size: var(--zen-fs-body);
+}
+
+/* ---------------------------------------------------------------- Buttons */
+
+.zen-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--zen-space-2);
+  min-height: 40px;
+  padding: 0 var(--zen-space-4);
+  border-radius: 6px;
+  font-size: var(--zen-fs-body);
+  font-weight: 600;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+}
+
+.zen-btn:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
+.zen-btn-primary {
+  background: var(--zen-primary);
+  color: #ffffff;
+}
+
+.zen-btn-secondary {
+  background: transparent;
+  color: var(--zen-secondary);
+  border-color: var(--zen-secondary);
+}
+
+.zen-btn-tertiary {
+  background: transparent;
+  color: var(--zen-secondary);
+  border-color: transparent;
+  text-decoration: underline;
+}
+
+.zen-btn-destructive {
+  background: transparent;
+  color: var(--zen-error);
+  border-color: var(--zen-error);
+}
+
+.zen-btn:disabled,
+.zen-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.zen-btn-busy {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+/* ----------------------------------------------------------------- Fields */
+
+.zen-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-1);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-field-label {
+  font-size: var(--zen-fs-label);
+  font-weight: 600;
+  color: var(--zen-text-muted);
+}
+
+.zen-field-required-marker {
+  color: var(--zen-error);
+  margin-left: 2px;
+}
+
+.zen-field-control {
+  min-height: 40px;
+  padding: 0 var(--zen-space-3);
+  border: 1px solid var(--zen-border);
+  border-radius: 6px;
+  background: var(--zen-field-editable-bg);
+  color: var(--zen-text);
+  font-size: var(--zen-fs-body);
+}
+
+textarea.zen-field-control {
+  min-height: 132px;
+  padding-top: var(--zen-space-2);
+  resize: vertical;
+}
+
+.zen-field-control:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
+.zen-field-readonly .zen-field-control {
+  background: var(--zen-field-readonly-bg);
+  color: var(--zen-text-muted);
+  cursor: default;
+}
+
+.zen-field-caption {
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-field-invalid .zen-field-control {
+  border-color: var(--zen-error);
+  border-width: 2px;
+  background: var(--zen-error-bg);
+}
+
+.zen-field-error {
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-error);
+}
+
+/* ------------------------------------------------------------------ Badge */
+
+.zen-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--zen-space-2);
+  border-radius: 999px;
+  font-size: var(--zen-fs-caption);
+  font-weight: 600;
+}
+
+.zen-badge-neutral {
+  background: var(--zen-field-readonly-bg);
+  color: var(--zen-text-muted);
+}
+
+.zen-badge-warning {
+  background: var(--zen-warning-bg);
+  color: var(--zen-warning);
+}
+
+.zen-badge-error {
+  background: var(--zen-error-bg);
+  color: var(--zen-error);
+}
+
+.zen-badge-secondary {
+  background: var(--zen-pale);
+  color: var(--zen-secondary);
+}
+
+.zen-badge-success {
+  background: var(--zen-success-bg);
+  color: var(--zen-success);
+}
+
+/* ------------------------------------------------------------------ Alert */
+
+.zen-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--zen-space-2);
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: var(--zen-fs-body);
+}
+
+.zen-alert-error {
+  background: var(--zen-error-bg);
+  color: var(--zen-error);
+  border-color: var(--zen-error);
+}
+
+.zen-alert-warning {
+  background: var(--zen-warning-bg);
+  color: var(--zen-warning);
+  border-color: var(--zen-warning);
+}
+
+.zen-alert-success {
+  background: var(--zen-success-bg);
+  color: var(--zen-success);
+  border-color: var(--zen-success);
+}
+
+/* --------------------------------------------------------------- Spinner */
+
+.zen-spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: zen-spin 0.7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zen-spinner {
+    animation-duration: 1.6s;
+  }
+}
+
+@keyframes zen-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ----------------------------------------------------------------- Empty */
+
+.zen-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--zen-space-3);
+  padding: var(--zen-space-7) var(--zen-space-4);
+  text-align: center;
+  color: var(--zen-text-muted);
+}
+
+/* ------------------------------------------------------------------ Shell */
+
+.zen-shell-header {
+  background: var(--zen-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--zen-space-4);
+  padding: var(--zen-space-3) var(--zen-space-4);
+}
+
+.zen-shell-wordmark {
+  font-weight: 700;
+  font-size: var(--zen-fs-h2);
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.zen-shell-nav {
+  display: flex;
+  gap: var(--zen-space-4);
+}
+
+.zen-shell-nav-link {
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 500;
+  padding-bottom: 2px;
+  border-bottom: 2px solid transparent;
+}
+
+.zen-shell-nav-link-active {
+  border-bottom-color: var(--zen-pale);
+  font-weight: 600;
+}
+
+.zen-shell-requester {
+  display: flex;
+  align-items: center;
+  gap: var(--zen-space-3);
+  color: #ffffff;
+  font-size: var(--zen-fs-caption);
+}
+
+.zen-shell-hamburger {
+  display: none;
+}
+
+.zen-shell-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--zen-space-5) var(--zen-space-4);
+}
+
+@media (max-width: 767px) {
+  .zen-shell-nav {
+    display: none;
+  }
+
+  .zen-shell-nav.zen-shell-nav-open {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    right: 0;
+    background: var(--zen-primary);
+    padding: var(--zen-space-3) var(--zen-space-4);
+    gap: var(--zen-space-3);
+    z-index: 10;
+  }
+
+  .zen-shell-hamburger {
+    display: inline-flex;
+  }
+}
