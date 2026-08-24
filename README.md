@@ -83,11 +83,31 @@ toktickit/
 
 ## Testing
 
+Server tests run against a **dedicated test database**, never the dev database in `server/.env`, so
+seed/CRUD tests never touch your local dev data. Create it once and point `server/.env.test` at it
+(`server/.env.test` is gitignored, same as `.env`):
+
 ```bash
-# API tests (Supertest) - from server/
+psql -U postgres -c "CREATE DATABASE toktickit_test;"
+```
+```
+# server/.env.test
+DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_test?schema=public"
+PORT=3001
+```
+```bash
+cd server
+DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_test?schema=public" npx prisma migrate deploy
+DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit_test?schema=public" npx tsx prisma/seed.ts
+```
+
+Then run the suites:
+
+```bash
+# unit + API tests (Vitest + Supertest) - from server/, uses server/.env.test automatically
 cd server && npm test
 
-# Frontend tests (Vitest) - from client/
+# frontend unit + UI component tests (Vitest) - from client/
 cd client && npm test
 ```
 
