@@ -3,12 +3,18 @@ node_modules/
 # env & secrets
 .env
 *.env
+.env.*
 !.env.example
 # build output
 dist/
 build/
 # prisma
 server/prisma/*.db
+# uploads & test artifacts (lab-02)
+server/uploads/
+test-results/
+playwright-report/
+.playwright/
 # logs & OS
 *.log
 .DS_Store
