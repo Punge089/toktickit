@@ -18,6 +18,11 @@ X-Dev-Requester-Id: <integer RequesterUser id>
 | Header value does not match any RequesterUser | `400` | `{ "error": "UNKNOWN_REQUESTER", "message": "No Development Requester with that id" }` |
 | Header resolves to an inactive RequesterUser | `403` | `{ "error": "REQUESTER_INACTIVE", "message": "This Development Requester is no longer active" }` |
 
+> **Not the same failure as §6's 404.** The three rows above are about *identity*: is the caller a real,
+> active Requester at all. §6's ownership `404` is a separate, later check: the caller *is* a valid, active
+> Requester, but the specific Ticket/Attachment they asked for isn't theirs (or doesn't exist). A request
+> can fail here (400/403) without ever reaching the ownership check, or pass here and still get a 404 later.
+
 **Standard error shape** (used for all 4xx/5xx unless noted otherwise):
 ```json
 { "error": "SHORT_CODE", "message": "human-readable, safe to display", "fieldErrors": { "summary": "..." } }
