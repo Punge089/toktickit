@@ -1,52 +1,41 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useRequester } from "../context/RequesterContext.js";
 import { fetchTicketDetail, TicketDetail, TicketNotFoundError } from "../api/ticketDetail.js";
+import { formatDateTime } from "../lib/format.js";
 import { Spinner } from "../components/ui/Spinner.js";
 import { Alert } from "../components/ui/Alert.js";
-import { PriorityBadge, StatusBadge, AttachmentStateBadge } from "../components/ui/Badge.js";
+import { PriorityBadge, StatusBadge } from "../components/ui/Badge.js";
+import { AttachmentSection } from "../components/tickets/AttachmentSection.js";
 
 type PageState = "loading" | "loaded" | "not-found" | "error";
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-// Issue 30 — Requester Ticket Detail (ui-spec.md §8): read-only header
-// block, clearly separated from the Attachments section. Attachment
-// add/download/soft-remove actions ship in Issue 31 — this issue only
-// displays existing attachment metadata (BR-23: metadata always visible,
-// active vs removed distinguished by badge, not by hiding removed rows).
+// Issue 30/31 — Requester Ticket Detail (ui-spec.md §8): read-only header
+// block, clearly separated by a divider from the Attachments section,
+// which supports add/download/soft-remove (Issue 31) on top of the
+// always-visible metadata Issue 30 established (BR-23).
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { requester } = useRequester();
   const [state, setState] = useState<PageState>("loading");
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!requester || !id) return;
-    let cancelled = false;
     setState("loading");
     fetchTicketDetail(requester.id, id)
       .then((detail) => {
-        if (cancelled) return;
         setTicket(detail);
         setState("loaded");
       })
       .catch((err) => {
-        if (cancelled) return;
         setState(err instanceof TicketNotFoundError ? "not-found" : "error");
       });
-    return () => {
-      cancelled = true;
-    };
   }, [requester?.id, id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   if (state === "loading") {
     return <Spinner label="Loading ticket…" />;
@@ -122,26 +111,7 @@ export function TicketDetailPage() {
 
       <h2 style={{ fontSize: "var(--zen-fs-h2)" }}>Attachments</h2>
 
-      {ticket.attachments.length === 0 ? (
-        <p style={{ color: "var(--zen-text-muted)" }}>No attachments on this ticket yet.</p>
-      ) : (
-        <div>
-          {ticket.attachments.map((a) => (
-            <div key={a.id} className="zen-attachment-row">
-              <span className="zen-attachment-name" title={a.originalFilename}>
-                {a.originalFilename}
-              </span>
-              <AttachmentStateBadge removed={a.removedAt !== null} />
-              <span className="zen-attachment-meta">
-                {formatSize(a.sizeBytes)} · uploaded {formatDateTime(a.uploadedAt)}
-              </span>
-              {a.removedAt && a.removalReason && (
-                <span className="zen-attachment-meta">Removed: {a.removalReason}</span>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <AttachmentSection ticketId={ticket.id} attachments={ticket.attachments} onChange={load} />
     </div>
   );
 }
