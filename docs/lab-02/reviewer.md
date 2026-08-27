@@ -130,7 +130,89 @@ Every other test still hits the real backend normally."
 
 ## Pull Requests I reviewed for my partner
 
-_TODO: bidirectional review evidence — same as Lab 1, this half lives on @book6349's own repository, not
-this one, and has to be filled in by hand after actually reviewing their PRs there. Follow the same
-pattern as `docs/lab-01/reviewer.md`: link each PR you reviewed on their repo, and record what you
-actually commented and how they responded._
+Reviewed all ten of @book6349's Lab 2 Issue PRs, plus their release PR, on their own individual-sprint
+repo ([book6349/toktickit](https://github.com/book6349/toktickit)):
+
+| PR | Title | My verdict |
+|----|-------|------------|
+| [#25](https://github.com/book6349/toktickit/pull/25) | Issue 5 - Sprint engineering contract and test plan | Commented + Approved |
+| [#26](https://github.com/book6349/toktickit/pull/26) | Issue 6 - Database models, migrations, reference APIs, and idempotent seed | Commented + Approved |
+| [#27](https://github.com/book6349/toktickit/pull/27) | Issue 7 - Requester selector, session context, application shell, and navigation | Commented + Approved |
+| [#28](https://github.com/book6349/toktickit/pull/28) | Issue 8 - Create Ticket API, UI, validation, and initial attachments | Commented + Approved |
+| [#29](https://github.com/book6349/toktickit/pull/29) | Issue 9 - My Tickets API and responsive list UI | Commented + Approved |
+| [#30](https://github.com/book6349/toktickit/pull/30) | Issue 10 - Owned read-only Ticket Detail | Commented + Approved |
+| [#31](https://github.com/book6349/toktickit/pull/31) | Issue 11 - Attachment upload, download, and soft removal | Commented + Approved |
+| [#32](https://github.com/book6349/toktickit/pull/32) | Issue 12 - E2E flow, responsive screenshots, and visual audit | Commented + Approved |
+| [#33](https://github.com/book6349/toktickit/pull/33) | Issue 13 - Evidence documents and final report preparation | Commented + Approved |
+| [#34](https://github.com/book6349/toktickit/pull/34) | Lab 2 Release: TokTickIT Requester Ticketing MVP (lab2-staging to main) | Commented + Approved |
+
+### PR #25 - Sprint engineering contract and test plan
+**My comment:** "The four documents line up well. One thing I checked: how do you keep the simulated
+Requester header from being mistaken for real authentication, and how do you know every acceptance
+criterion is covered?"
+**Partner's response:** "The specification labels X-Requester-Id as a testing-only context mechanism
+and defers real authentication to Lab 3. The traceability table maps AC-01 through AC-22 to planned
+tests, and the final-results table stays planned until a command actually runs."
+
+### PR #26 - Database models, migrations, reference APIs, and idempotent seed
+**My comment:** "The schema and seed cover several pieces at once. How did you make the migration and
+seed safe to rerun, and how do the reference endpoints keep inactive categories, systems, and
+requesters out of their responses?"
+**Partner's response:** "The migration adds the relationships, constraints, and ownership indexes,
+while the seed uses unique names and emails with upserts so repeated runs do not create duplicates.
+Each reference endpoint filters isActive and returns the documented wrapper shape, with a safe error
+when the database is unavailable."
+
+### PR #27 - Requester selector, session context, application shell, and navigation
+**My comment:** "The requester selector and shell are clear. How do you stop an inactive requester from
+being reused if an old session value is still present?"
+**Partner's response:** "The client rechecks the saved session value against the active requester list,
+clears it when it is no longer active, and the server verifies the same active context on every
+requester-scoped request. The header is only the Lab 2 simulation, not authentication."
+
+### PR #28 - Create Ticket API, UI, validation, and initial attachments
+**My comment:** "The create flow looks good. What happens if one initial file fails validation or
+storage after the other files have been accepted?"
+**Partner's response:** "The server validates every field and file before creating anything. If storage
+or metadata creation fails, it removes any temporary files, stored objects, attachment rows, and the
+ticket, so the initial batch is all-or-nothing. The ticket number and NEW status are server-generated."
+
+### PR #29 - My Tickets API and responsive list UI
+**My comment:** "Search, filters, and pagination are all here. What guarantees that a requester cannot
+see another requester's ticket by changing a query parameter?"
+**Partner's response:** "Every list query includes requesterId in the database where clause; search and
+filters are applied on that owner-scoped query, not only in the browser. Invalid page, sort, filter, and
+status values return INVALID_QUERY."
+
+### PR #30 - Owned read-only Ticket Detail
+**My comment:** "How does the detail endpoint handle a valid ticket ID that belongs to another
+requester?"
+**Partner's response:** "The lookup requires both the ticket ID and the selected requesterId. If either
+the ticket is missing or the owner does not match, the API returns the same TICKET_NOT_FOUND response,
+so it does not reveal another requester's record. The UI renders the returned fields read-only."
+
+### PR #31 - Attachment upload, download, and soft removal
+**My comment:** "Why soft-remove an attachment instead of deleting its row and file immediately?"
+**Partner's response:** "Soft removal retains the original filename, type, size, upload time, removal
+reason, and removal timestamp for audit visibility. Removed records cannot be downloaded or previewed,
+and every upload, download, and removal query is scoped to the ticket owner."
+
+### PR #32 - E2E flow, responsive screenshots, and visual audit
+**My comment:** "The responsive and E2E coverage is planned. How will you avoid calling a screenshot or
+flow passing before it actually runs?"
+**Partner's response:** "The evidence section records the exact command, branch, date, and terminal
+output. Desktop, tablet, and mobile screenshots are captured only after the corresponding checks run,
+and deferred or failing checks remain explicitly labeled."
+
+### PR #33 - Evidence documents and final report preparation
+**My comment:** "What makes the final report auditable instead of just a list of green checks?"
+**Partner's response:** "Each acceptance criterion links to implementation and test evidence, while
+executed, failing, deferred, and unexecuted work are separated. The report also includes API examples,
+screenshot filenames, review/approval references, merge events, and the final branch."
+
+### PR #34 - Lab 2 Release: TokTickIT Requester Ticketing MVP (lab2-staging → main)
+**My comment:** "The nine Lab 2 PRs are integrated and staging verification is recorded. I noticed E2E
+and responsive screenshot evidence is still marked Pending. Will you attach that real evidence before
+merging into main?"
+**Partner's response:** "Yes. I'll attach the actual Playwright output and desktop/tablet/mobile
+screenshots before treating the release as complete. I won't claim those checks passed early."
