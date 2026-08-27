@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
-import { getPrisma } from "./prisma.js";
+import { referenceRouter } from "./routes/reference.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -18,20 +18,8 @@ app.get("/api/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok", service: "TokTickIT API" });
 });
 
-// ---------------------------------------------------------------------------
-// Issue 4 — Category list
-// GET /api/categories -> categories from PostgreSQL via Prisma, ordered by id.
-// ---------------------------------------------------------------------------
-app.get("/api/categories", async (_req: Request, res: Response) => {
-  try {
-    const categories = await getPrisma().category.findMany({
-      orderBy: { id: "asc" },
-      select: { id: true, name: true },
-    });
-    res.status(200).json(categories);
-  } catch {
-    res.status(500).json({ error: "Unable to load categories" });
-  }
-});
+// Issue 4 (Lab 1) — /api/categories, now Issue 24 (Lab 2) — plus
+// /api/related-systems and /api/dev-requesters. See routes/reference.ts.
+app.use(referenceRouter);
 
 export default app;
