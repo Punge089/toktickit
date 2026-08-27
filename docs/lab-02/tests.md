@@ -47,11 +47,11 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | UI-01 | UI component | AC-02 | Visiting `/tickets` with no Requester selected | Redirected to `/select-requester` | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
 | UI-02 | UI component | AC-16 | Requester Selection screen, mocked empty active-Requester list | Empty-state message shown; dropdown and Continue are not rendered at all (not merely disabled) | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
 | UI-03 | UI component | AC-15 | Requester Selection screen, mocked API failure | Failure callout + Retry button shown | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
-| UI-04 | UI component | AC-04 | Create Ticket submitted with empty `summary` | Field-level message renders under Summary; no POST fired | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
-| UI-05 | UI component | AC-05, BR-18 | Create Ticket submit, mocked network failure | Failure banner shown; all typed field values still present | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
-| UI-06 | UI component | §6 (Submitting state) | Click Submit with a slow mocked response | Button shows busy state and is disabled for the duration | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
-| UI-07 | UI component | AC-01 | Create Ticket submit, mocked success | Confirmation panel shows the returned Ticket Number | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
-| UI-08 | UI component | AC-07 | Select an 8MB file in the attachment picker | Rejected client-side before any request; message names the size limit | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
+| UI-04 | UI component | AC-04 | Create Ticket submitted with empty `summary` | Field-level message renders under Summary; no POST fired | `client/tests/lab-02/CreateTicket.test.tsx` | **Pass** |
+| UI-05 | UI component | AC-05, BR-18 | Create Ticket submit, mocked network failure | Failure banner shown; all typed field values still present | `client/tests/lab-02/CreateTicket.test.tsx` | **Pass** |
+| UI-06 | UI component | §6 (Submitting state) | Click Submit with a slow mocked response | Button shows busy state and is disabled for the duration | `client/tests/lab-02/CreateTicket.test.tsx` | **Pass** |
+| UI-07 | UI component | AC-01 | Create Ticket submit, mocked success | Confirmation panel shows the returned Ticket Number | `client/tests/lab-02/CreateTicket.test.tsx` | **Pass** |
+| UI-08 | UI component | AC-07 | Select an 8MB file in the attachment picker | Rejected client-side before any request; message names the size limit | `client/tests/lab-02/CreateTicket.test.tsx` | **Pass** |
 | UI-09 | UI component | AC-11 vs AC-12 | My Tickets: mocked 0-tickets-ever vs. mocked 0-matches-with-filter | Distinct empty-state and no-results copy render for each case | `client/tests/lab-02/MyTickets.test.tsx` | Planned |
 | UI-10 | UI component | AC-10 | My Tickets rendered, then Requester context switched | List refetches and old Requester's rows are gone | `client/tests/lab-02/MyTickets.test.tsx` | Planned |
 | UI-11 | UI component | §7 (pagination) | Change page-size control | Triggers a refetch with the new `pageSize`; page resets to 1 | `client/tests/lab-02/MyTickets.test.tsx` | Planned |
