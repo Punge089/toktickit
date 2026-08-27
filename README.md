@@ -109,7 +109,17 @@ cd server && npm test
 
 # frontend unit + UI component tests (Vitest) - from client/
 cd client && npm test
+
+# E2E + responsive/visual tests (Playwright) - from the repo root
+npm install                 # once, installs @playwright/test
+npx playwright install chromium   # once, downloads the browser
+npx playwright test
 ```
+
+The Playwright suite starts the real server and client dev servers itself (see `playwright.config.ts`)
+and runs against the actual PostgreSQL-backed API — nothing is mocked. It writes screenshots to
+`artifacts/lab-02/screenshots/` (committed to the repo as visual evidence, see `docs/lab-02/ui-spec.md`
+§11-12) and creates real Ticket rows in your dev database as it exercises the flow.
 
 ## Required API endpoints
 
