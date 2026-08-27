@@ -62,14 +62,14 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | STYLE-01 | UI style | §1, §3 | Required field renders | Has the asterisk element AND `aria-required="true"` (not just one) | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
 | STYLE-02 | UI style | §3 | Read-only field (Ticket Number on Create Ticket) | Has the read-only field class/token, distinct from an editable field's class | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
 | STYLE-03 | UI style | §3 | Disabled button | Has `disabled` attribute and the disabled visual class; click handler does not fire | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
-| STYLE-04 | UI style | §3 | Icon-only control (attachment remove trash icon) | Has an `aria-label` and a `title` | `client/tests/lab-02/zen-green.style.test.tsx` | Planned (pattern proven on the Issue 23 nav hamburger; the attachment-remove icon itself ships in Issue 31) |
+| STYLE-04 | UI style | §3 | Icon-only control (attachment remove trash icon) | Has an `aria-label` and a `title` | `client/tests/lab-02/zen-green.style.test.tsx` | N/A — Issue 31's Remove/Download ended up as labeled text buttons, not icon-only controls, so this rule doesn't apply to them; the underlying aria-label+title pattern stays proven on the nav hamburger from Issue 23 |
 | STYLE-05 | UI style | §3 | Invalid field | Error message element's `id` matches the field's `aria-describedby` | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
-| RESP-01 | Responsive | AC-17, §9 | Create Ticket at 375/820/1280px | No `document.body` horizontal scroll at any width; screenshots saved | `e2e/lab-02/responsive.spec.ts` | Planned |
-| RESP-02 | Responsive | AC-17, §9 | My Tickets at 375/820/1280px | Table renders at desktop/tablet, cards render at mobile; screenshots saved | `e2e/lab-02/responsive.spec.ts` | Planned |
-| RESP-03 | Responsive | AC-17, §9 | Ticket Detail at 375/820/1280px | Header/attachment sections both fully visible, no clipped filenames; screenshots saved | `e2e/lab-02/responsive.spec.ts` | Planned |
-| E2E-01 | E2E | AC-01, AC-10 | Select Requester A → create a ticket with one attachment → find it in My Tickets | Ticket Number from creation matches the row opened from My Tickets | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
-| E2E-02 | E2E | AC-09 | From the created ticket's Detail screen, remove its attachment with a reason | Attachment shows Removed badge; Download button gone | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
-| E2E-03 | E2E | AC-03, AC-10 | Switch to Requester B | Requester A's ticket is absent from B's My Tickets; direct navigation to A's ticket URL shows "Ticket not found." | `e2e/lab-02/requester-ticket-flow.spec.ts` | Planned |
+| RESP-01 | Responsive | AC-17, §9 | Create Ticket at 375/850/1280px, 4 states each (initial/validation/success/failure) | No horizontal scroll at any width; 12 screenshots saved | `e2e/lab-02/responsive.spec.ts` | **Pass** |
+| RESP-02 | Responsive | AC-17, §9 | My Tickets at 375/850/1280px, 3 states each (loaded/empty/no-results) | Table reflows to cards via CSS grid alone; no horizontal scroll; 9 screenshots saved | `e2e/lab-02/responsive.spec.ts` | **Pass** |
+| RESP-03 | Responsive | AC-17, §9 | Ticket Detail at 375/850/1280px, 2 states each (loaded/attachment-removed) | Header/attachment sections both fully visible, no clipped filenames; 6 screenshots saved | `e2e/lab-02/responsive.spec.ts` | **Pass** |
+| E2E-01 | E2E | AC-01, AC-10 | Select Requester A → create a ticket with one attachment → find it in My Tickets | Ticket Number from creation matches the row opened from My Tickets | `e2e/lab-02/requester-ticket-flow.spec.ts` | **Pass** |
+| E2E-02 | E2E | AC-09 | From the created ticket's Detail screen, remove its attachment with a reason | Attachment shows Removed badge; Download button gone | `e2e/lab-02/requester-ticket-flow.spec.ts` | **Pass** |
+| E2E-03 | E2E | AC-03, AC-10 | Switch to Requester B | Requester A's ticket is absent from B's My Tickets; direct navigation to A's ticket URL shows "Ticket not found." | `e2e/lab-02/requester-ticket-flow.spec.ts` | **Pass** |
 
 ## 3. Acceptance-Criterion Traceability
 
@@ -96,9 +96,9 @@ Criterion in `specification.md` §9 maps to at least one row below.
 
 ## 4. Responsive and Visual Checklist
 
-Completed once `e2e/lab-02/responsive.spec.ts` has produced the screenshots listed in `ui-spec.md` §12.
-Checklist itself lives in `ui-spec.md` §11 and is filled in (checked off, with screenshot references) here
-once implementation is done — not before, since it is evidence, not a plan.
+`e2e/lab-02/responsive.spec.ts` has produced all 27 screenshots listed in `ui-spec.md` §12 — 12 for
+Create Ticket, 9 for My Tickets, 6 for Ticket Detail (see RESP-01/02/03 above). The checklist itself
+lives in `ui-spec.md` §11 and is now checked off against those real screenshots, dated 2026-08-27.
 
 ## 5. Test Commands
 
