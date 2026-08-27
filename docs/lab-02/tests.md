@@ -116,13 +116,21 @@ npx playwright test
 
 ## 6. Final Results
 
-Filled in after implementation, from a run against the final `main` branch. Placeholder until then:
+Run from `lab2-staging` after Issue #32 merged, 2026-08-27, using the commands in §5 (all against real
+databases — the test DB for server/client, the real dev DB + servers for Playwright):
 
 ```
-server:  Test Files  N passed (N)   Tests  N passed (N)
-client:  Test Files  N passed (N)   Tests  N passed (N)
-playwright: N passed (N)
+server:     Test Files  10 passed (10)   Tests  45 passed (45)
+client:     Test Files   7 passed (7)    Tests  31 passed (31)
+playwright:            28 passed (28)    (1 flow spec + 27 responsive/visual, run twice for stability)
 ```
+
+Every Acceptance Criterion in `specification.md` §9 has at least one Pass row above (see the traceability
+matrix in §3). No test is skipped, `.only`'d, or commented out.
+
+**Superseded by the identical re-run from `main`** after the Lab 2 release Pull Request
+(`lab2-staging` → `main`) is merged — see the commit referenced in `docs/lab-02/reviewer.md` / the
+submission PDF's Part 3 for that final confirmation run.
 
 ## 7. Known Limitations or Deferred Tests
 
