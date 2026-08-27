@@ -16,18 +16,18 @@ Criterion in `specification.md` §9 maps to at least one row below.
 
 | Test ID | Type | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|---|
-| UNIT-01 | Unit | BR-01 | Ticket number format `TKT-YYYY-NNNNNN` | Matches regex, correct year | `server/tests/lab-02/ticket-number.unit.test.ts` | Planned |
-| UNIT-02 | Unit | BR-01 | 20 concurrent ticket-number generations in the same year | All 20 numbers unique | `server/tests/lab-02/ticket-number.unit.test.ts` | Planned |
-| UNIT-03 | Unit | BR-20 | File-type allowlist checker | Accepts jpg/jpeg/png/webp/pdf; rejects gif/exe/txt | `server/tests/lab-02/attachment-rules.unit.test.ts` | Planned |
-| UNIT-04 | Unit | BR-21 | File-size boundary checker | Exactly 5MB passes; 5MB+1byte rejected | `server/tests/lab-02/attachment-rules.unit.test.ts` | Planned |
-| UNIT-05 | Unit | BR-25 | Stored-filename generator | Output is a UUID + validated extension, never contains the original filename | `server/tests/lab-02/attachment-rules.unit.test.ts` | Planned |
+| UNIT-01 | Unit | BR-01 | Ticket number format `TKT-YYYY-NNNNNN` | Matches regex, correct year | `server/tests/lab-02/ticket-number.unit.test.ts` | **Pass** |
+| UNIT-02 | Unit | BR-01 | 20 concurrent ticket-number generations in the same year | All 20 numbers unique | `server/tests/lab-02/ticket-number.unit.test.ts` | **Pass** |
+| UNIT-03 | Unit | BR-20 | File-type allowlist checker | Accepts jpg/jpeg/png/webp/pdf; rejects gif/exe/txt | `server/tests/lab-02/attachment-rules.unit.test.ts` | **Pass** |
+| UNIT-04 | Unit | BR-21 | File-size boundary checker | Exactly 5MB passes; 5MB+1byte rejected | `server/tests/lab-02/attachment-rules.unit.test.ts` | **Pass** |
+| UNIT-05 | Unit | BR-25 | Stored-filename generator | Output is a UUID + validated extension, never contains the original filename | `server/tests/lab-02/attachment-rules.unit.test.ts` | **Pass** |
 | UNIT-06 | Unit | Issue #22 AC | Seed idempotency: run `seedAll()` twice against the test DB | Second run changes no row counts; 4 categories, ≥6 related systems, ≥4 active + ≥1 inactive Requester all present | `server/tests/lab-02/seed.unit.test.ts` | **Pass** |
-| API-01 | API | AC-01 | `POST /api/tickets` valid payload | `201`; response has `ticketNumber`; row exists in DB with `currentStatus=NEW` | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| API-02 | API | AC-04, BR-14–17 | `POST /api/tickets` missing `summary` | `400`; `fieldErrors.summary` present; no row created | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| API-03 | API | BR-14 | `summary` at 4 and 121 chars (boundary) | Both `400`; 5 and 120 chars both `201` | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| API-04 | API | BR-15 | `categoryId` referencing an inactive Category | `400` | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| API-05 | API | §0, BR-26 | Request with inactive Requester header | `403` | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| API-06 | API | BR-19 | Create with one valid + one oversized attachment | `201`; ticket saved; `attachmentErrors` lists the oversized file | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
+| API-01 | API | AC-01 | `POST /api/tickets` valid payload | `201`; response has `ticketNumber`; row exists in DB with `currentStatus=NEW` | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
+| API-02 | API | AC-04, BR-14–17 | `POST /api/tickets` missing `summary` | `400`; `fieldErrors.summary` present; no row created | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
+| API-03 | API | BR-14 | `summary` at 4 and 121 chars (boundary) | Both `400`; 5 and 120 chars both `201` | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
+| API-04 | API | BR-15 | `categoryId` referencing an inactive Category | `400` | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
+| API-05 | API | §0, BR-26 | Request with inactive Requester header | `403` | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
+| API-06 | API | BR-19 | Create with one valid + one oversized attachment | `201`; ticket saved; `attachmentErrors` lists the oversized file | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
 | API-07 | API | AC-10, BR-09 | `GET /api/tickets` as Requester A vs Requester B | Each sees only their own tickets | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
 | API-08 | API | BR-11 | `search=` matching a `ticketNumber` and separately a `summary` substring | Both return the matching ticket; unrelated tickets excluded | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
 | API-09 | API | BR-12 | Two tickets with identical `createdAt`, sorted by `createdAt:desc` twice | Row order identical both times (secondary `id:desc` holds) | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
