@@ -41,7 +41,9 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | API-17 | API | BR-24 | `DELETE /api/attachments/:id` with `removalReason` = `"ok"` (4 chars) | `400` (below 5-char minimum) | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | API-18 | API | AC-08, BR-23 | `GET /api/attachments/:id/download` on a removed attachment | `410 ATTACHMENT_REMOVED` | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | API-19 | API | §10 (ownership, general) | Requester B calls add/download/remove-attachment on Requester A's ticket's attachment | `404` for all three, no data leaked or mutated | `server/tests/lab-02/attachments.api.test.ts` | Planned |
-| API-20 | API | FR-01, BR-06 | `GET /api/dev-requesters` with one active + one inactive seeded Requester | Only the active one is returned | `server/tests/lab-02/dev-requesters.api.test.ts` | Planned |
+| API-20 | API | FR-01, BR-06 | `GET /api/dev-requesters` with one active + one inactive seeded Requester | Only the active one is returned | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
+| API-21 | API | Issue #24 AC | `GET /api/categories` with one category deactivated | Deactivated category excluded; 500 on simulated DB failure | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
+| API-22 | API | Issue #24 AC | `GET /api/related-systems` success + simulated DB failure | ≥6 active systems, ordered by id; 500 on simulated DB failure | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
 | UI-01 | UI component | AC-02 | Visiting `/tickets` with no Requester selected | Redirected to `/select-requester` | `client/tests/lab-02/RequesterSelect.test.tsx` | Planned |
 | UI-02 | UI component | AC-16 | Requester Selection screen, mocked empty active-Requester list | Empty-state message shown; Continue stays disabled | `client/tests/lab-02/RequesterSelect.test.tsx` | Planned |
 | UI-03 | UI component | AC-15 | Requester Selection screen, mocked API failure | Failure callout + Retry button shown | `client/tests/lab-02/RequesterSelect.test.tsx` | Planned |
