@@ -140,10 +140,6 @@ section (2026-08-27), and again on this doc-accuracy branch before it merged.
 Every Acceptance Criterion in `specification.md` §9 has at least one Pass row above (see the traceability
 matrix in §3). No test is skipped, `.only`'d, or commented out.
 
-**Superseded by the identical re-run from `main`** after the Lab 2 release Pull Request
-(`lab2-staging` → `main`) is merged — see the commit referenced in `docs/lab-02/reviewer.md` / the
-submission PDF's Part 3 for that final confirmation run.
-
 ## 7. Known Limitations or Deferred Tests
 
 - Concurrency test (UNIT-02) exercises 20 parallel calls in-process; it does not simulate true
