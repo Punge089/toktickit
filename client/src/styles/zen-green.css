@@ -424,3 +424,74 @@ textarea.zen-field-control {
     display: block;
   }
 }
+
+/* --------------------------------------------------------- Ticket Detail */
+/* Header block and Attachments are visually separated (ui-spec.md §8) so
+   later labs' Comments/Notes/Actions Taken have an unambiguous place to go
+   without being confused for read-only ticket data. */
+
+.zen-detail-header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--zen-space-3);
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+}
+
+@media (min-width: 768px) {
+  .zen-detail-header {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.zen-detail-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.zen-detail-label {
+  font-size: var(--zen-fs-label);
+  font-weight: 600;
+  color: var(--zen-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.zen-detail-value {
+  font-size: var(--zen-fs-body);
+}
+
+.zen-detail-divider {
+  border: none;
+  border-top: 1px solid var(--zen-border);
+  margin: var(--zen-space-5) 0;
+}
+
+.zen-attachment-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--zen-space-3);
+  padding: var(--zen-space-3) 0;
+  border-bottom: 1px solid var(--zen-border);
+}
+
+.zen-attachment-row:last-child {
+  border-bottom: none;
+}
+
+.zen-attachment-name {
+  font-weight: 600;
+  flex: 1 1 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zen-attachment-meta {
+  color: var(--zen-text-muted);
+  font-size: var(--zen-fs-caption);
+}

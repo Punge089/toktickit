@@ -90,4 +90,42 @@ export const handlers = [
       },
     });
   }),
+
+  // Issue 30 — GET /api/tickets/:id. id 1 exists and is owned by requester
+  // "1"; anything else 404s, matching the real endpoint's not-found-vs-
+  // not-owned behavior (BR-10/BR-28).
+  http.get(`${API_URL}/api/tickets/:id`, ({ params, request }) => {
+    const requesterId = request.headers.get("X-Dev-Requester-Id");
+    if (params.id !== "1" || requesterId !== "1") {
+      return HttpResponse.json({ error: "TICKET_NOT_FOUND", message: "Ticket not found." }, { status: 404 });
+    }
+    return HttpResponse.json({
+      id: 1,
+      ticketNumber: "TKT-2026-000001",
+      requesterId: 1,
+      requesterName: "Aran Suksawat",
+      summary: "Laptop battery drains quickly",
+      description: "The battery on my corporate laptop drains quickly.",
+      categoryId: 1,
+      categoryName: "Hardware",
+      relatedSystemId: 1,
+      relatedSystemName: "Corporate Laptop",
+      requestedPriority: "MEDIUM",
+      itPriority: null,
+      currentStatus: "NEW",
+      createdAt: "2026-08-24T10:00:00.000Z",
+      updatedAt: "2026-08-24T10:00:00.000Z",
+      attachments: [
+        {
+          id: 1,
+          originalFilename: "battery-log.pdf",
+          mimeType: "application/pdf",
+          sizeBytes: 20480,
+          uploadedAt: "2026-08-24T10:05:00.000Z",
+          removedAt: null,
+          removalReason: null,
+        },
+      ],
+    });
+  }),
 ];
