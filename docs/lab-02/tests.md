@@ -33,8 +33,8 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | API-09 | API | BR-12 | Two tickets with identical `createdAt`, sorted by `createdAt:desc` twice | Row order identical both times (secondary `id:desc` holds) | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
 | API-10 | API | AC-13, BR-13 | `pageSize=7` and `page=999` | Both `400`, naming the invalid parameter | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
 | API-11 | API | AC-11, AC-12 | List with 0 tickets ever vs. 0 tickets matching an active filter | `meta.appliedFilters` distinguishes the two cases correctly | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
-| API-12 | API | AC-03, BR-10 | `GET /api/tickets/:id` for another Requester's ticket | `404`, identical body to a nonexistent id | `server/tests/lab-02/ticket-detail.api.test.ts` | Planned |
-| API-13 | API | FR-05 | `GET /api/tickets/:id` for own ticket | `200`; includes nested `attachments` array | `server/tests/lab-02/ticket-detail.api.test.ts` | Planned |
+| API-12 | API | AC-03, BR-10 | `GET /api/tickets/:id` for another Requester's ticket | `404`, identical body to a nonexistent id | `server/tests/lab-02/ticket-detail.api.test.ts` | **Pass** |
+| API-13 | API | FR-05 | `GET /api/tickets/:id` for own ticket | `200`; includes nested `attachments` array | `server/tests/lab-02/ticket-detail.api.test.ts` | **Pass** |
 | API-14 | API | AC-06, BR-21 | `POST .../attachments` on a ticket that already has 5 active attachments | `409 ATTACHMENT_LIMIT_REACHED`; count stays 5 | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | API-15 | API | AC-07, BR-20 | Upload a `.exe` renamed to `.png` (mismatched magic bytes/mimetype) | `415`; not saved | `server/tests/lab-02/attachments.api.test.ts` | Planned |
 | API-16 | API | AC-09, BR-22–24 | `DELETE /api/attachments/:id` with a valid reason on an owned, active attachment | `200`; `removedAt` set; active count decreases by 1 | `server/tests/lab-02/attachments.api.test.ts` | Planned |
@@ -55,7 +55,7 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | UI-09 | UI component | AC-11 vs AC-12 | My Tickets: mocked 0-tickets-ever vs. mocked 0-matches-with-filter | Distinct empty-state and no-results copy render for each case | `client/tests/lab-02/MyTickets.test.tsx` | **Pass** |
 | UI-10 | UI component | AC-10 | My Tickets rendered, then Requester context switched | List refetches and old Requester's rows are gone | `client/tests/lab-02/MyTickets.test.tsx` | **Pass** |
 | UI-11 | UI component | §7 (pagination) | Change page-size control | Triggers a refetch with the new `pageSize`; page resets to 1 | `client/tests/lab-02/MyTickets.test.tsx` | **Pass** |
-| UI-12 | UI component | AC-03, BR-10/28 | Ticket Detail, mocked `404` from the API | "Ticket not found." message with a link back to My Tickets | `client/tests/lab-02/RequesterTicketDetail.test.tsx` | Planned |
+| UI-12 | UI component | AC-03, BR-10/28 | Ticket Detail, mocked `404` from the API | "Ticket not found." message with a link back to My Tickets | `client/tests/lab-02/RequesterTicketDetail.test.tsx` | **Pass** |
 | UI-13 | UI component | §8 (attachments list) | Ticket Detail with 1 active + 1 removed attachment mocked | Active row has a working Download button; removed row shows its `removalReason` instead of action buttons | `client/tests/lab-02/AttachmentSection.test.tsx` | Planned |
 | UI-14 | UI component | AC-09 | Click Remove on an active attachment, submit without typing a reason | Client-side validation blocks submission; no DELETE fired | `client/tests/lab-02/AttachmentSection.test.tsx` | Planned |
 | UI-15 | UI component | AC-09 | Remove an attachment with a valid reason, mocked success | Attachment row updates to Removed badge + shows the reason | `client/tests/lab-02/AttachmentSection.test.tsx` | Planned |
