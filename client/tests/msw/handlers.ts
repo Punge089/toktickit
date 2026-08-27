@@ -46,4 +46,48 @@ export const handlers = [
       { status: 201 },
     ),
   ),
+
+  // Issue 29 — GET /api/tickets. Returns different fixtures per requester
+  // so the Requester-switch test doesn't need an override.
+  http.get(`${API_URL}/api/tickets`, ({ request }) => {
+    const url = new URL(request.url);
+    const requesterId = request.headers.get("X-Dev-Requester-Id");
+    const page = Number(url.searchParams.get("page") ?? "1");
+    const pageSize = Number(url.searchParams.get("pageSize") ?? "10");
+
+    const byRequester: Record<string, { id: number; ticketNumber: string; summary: string }[]> = {
+      "1": [
+        { id: 1, ticketNumber: "TKT-2026-000001", summary: "Requester A ticket one" },
+        { id: 2, ticketNumber: "TKT-2026-000002", summary: "Requester A ticket two" },
+      ],
+      "2": [{ id: 3, ticketNumber: "TKT-2026-000003", summary: "Requester B ticket one" }],
+    };
+    const rows = byRequester[requesterId ?? ""] ?? [];
+
+    return HttpResponse.json({
+      data: rows.map((r) => ({
+        ...r,
+        categoryId: 1,
+        categoryName: "Hardware",
+        requestedPriority: "MEDIUM",
+        currentStatus: "NEW",
+        createdAt: "2026-08-24T10:00:00.000Z",
+        updatedAt: "2026-08-24T10:00:00.000Z",
+      })),
+      meta: {
+        page,
+        pageSize,
+        totalItems: rows.length,
+        totalPages: 1,
+        sort: "createdAt:desc",
+        appliedFilters: {
+          search: url.searchParams.get("search"),
+          categoryId: null,
+          relatedSystemId: null,
+          requestedPriority: null,
+          status: null,
+        },
+      },
+    });
+  }),
 ];

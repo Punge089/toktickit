@@ -343,3 +343,84 @@ textarea.zen-field-control {
     display: inline-flex;
   }
 }
+
+/* ------------------------------------------------------------- My Tickets */
+/* One set of DOM rows reflows from a desktop "table" to mobile "cards"
+   purely via CSS grid, per ui-spec.md §7 — no duplicate markup, so the
+   same rows are what Playwright screenshots at every breakpoint (Issue 32). */
+
+.zen-tickets-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-tickets-list {
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  background: var(--zen-surface);
+  overflow: hidden;
+}
+
+.zen-ticket-header,
+.zen-ticket-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--zen-space-2);
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border-bottom: 1px solid var(--zen-border);
+  align-items: center;
+}
+
+.zen-ticket-row:last-child {
+  border-bottom: none;
+}
+
+.zen-ticket-header {
+  display: none; /* header row is desktop/tablet-table-only */
+  font-size: var(--zen-fs-caption);
+  font-weight: 600;
+  color: var(--zen-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.zen-ticket-row {
+  cursor: pointer;
+}
+
+.zen-ticket-row:hover {
+  background: var(--zen-pale);
+}
+
+.zen-ticket-cell-summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zen-ticket-cell-category {
+  display: none; /* shown again on tablet+desktop below */
+}
+
+@media (min-width: 768px) {
+  .zen-ticket-header,
+  .zen-ticket-row {
+    grid-template-columns: 1.1fr 2fr 1.3fr 0.9fr 1.2fr;
+  }
+  .zen-ticket-header {
+    display: grid;
+  }
+}
+
+@media (min-width: 992px) {
+  .zen-ticket-header,
+  .zen-ticket-row {
+    grid-template-columns: 1.1fr 2fr 1fr 1fr 0.9fr 1.2fr;
+  }
+  .zen-ticket-cell-category {
+    display: block;
+  }
+}
