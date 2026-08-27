@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { referenceRouter } from "./routes/reference.js";
 import { ticketsRouter } from "./routes/tickets.js";
+import { myTicketsRouter } from "./routes/myTickets.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -25,5 +26,8 @@ app.use(referenceRouter);
 
 // Issue 26 — POST /api/tickets. See routes/tickets.ts.
 app.use(ticketsRouter);
+
+// Issue 28 — GET /api/tickets (paginated, owned list). See routes/myTickets.ts.
+app.use(myTicketsRouter);
 
 export default app;

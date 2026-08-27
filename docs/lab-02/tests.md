@@ -28,11 +28,11 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | API-04 | API | BR-15 | `categoryId` referencing an inactive Category | `400` | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
 | API-05 | API | §0, BR-26 | Request with inactive Requester header | `403` | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
 | API-06 | API | BR-19 | Create with one valid + one oversized attachment | `201`; ticket saved; `attachmentErrors` lists the oversized file | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
-| API-07 | API | AC-10, BR-09 | `GET /api/tickets` as Requester A vs Requester B | Each sees only their own tickets | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
-| API-08 | API | BR-11 | `search=` matching a `ticketNumber` and separately a `summary` substring | Both return the matching ticket; unrelated tickets excluded | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
-| API-09 | API | BR-12 | Two tickets with identical `createdAt`, sorted by `createdAt:desc` twice | Row order identical both times (secondary `id:desc` holds) | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
-| API-10 | API | AC-13, BR-13 | `pageSize=7` and `page=999` | Both `400`, naming the invalid parameter | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
-| API-11 | API | AC-11, AC-12 | List with 0 tickets ever vs. 0 tickets matching an active filter | `meta.appliedFilters` distinguishes the two cases correctly | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
+| API-07 | API | AC-10, BR-09 | `GET /api/tickets` as Requester A vs Requester B | Each sees only their own tickets | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
+| API-08 | API | BR-11 | `search=` matching a `ticketNumber` and separately a `summary` substring | Both return the matching ticket; unrelated tickets excluded | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
+| API-09 | API | BR-12 | Two tickets with identical `createdAt`, sorted by `createdAt:desc` twice | Row order identical both times (secondary `id:desc` holds) | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
+| API-10 | API | AC-13, BR-13 | `pageSize=7` and `page=999` | Both `400`, naming the invalid parameter | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
+| API-11 | API | AC-11, AC-12 | List with 0 tickets ever vs. 0 tickets matching an active filter | `meta.appliedFilters` distinguishes the two cases correctly | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
 | API-12 | API | AC-03, BR-10 | `GET /api/tickets/:id` for another Requester's ticket | `404`, identical body to a nonexistent id | `server/tests/lab-02/ticket-detail.api.test.ts` | Planned |
 | API-13 | API | FR-05 | `GET /api/tickets/:id` for own ticket | `200`; includes nested `attachments` array | `server/tests/lab-02/ticket-detail.api.test.ts` | Planned |
 | API-14 | API | AC-06, BR-21 | `POST .../attachments` on a ticket that already has 5 active attachments | `409 ATTACHMENT_LIMIT_REACHED`; count stays 5 | `server/tests/lab-02/attachments.api.test.ts` | Planned |
