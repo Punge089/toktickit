@@ -44,9 +44,9 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | API-20 | API | FR-01, BR-06 | `GET /api/dev-requesters` with one active + one inactive seeded Requester | Only the active one is returned | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
 | API-21 | API | Issue #24 AC | `GET /api/categories` with one category deactivated | Deactivated category excluded; 500 on simulated DB failure | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
 | API-22 | API | Issue #24 AC | `GET /api/related-systems` success + simulated DB failure | ≥6 active systems, ordered by id; 500 on simulated DB failure | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
-| UI-01 | UI component | AC-02 | Visiting `/tickets` with no Requester selected | Redirected to `/select-requester` | `client/tests/lab-02/RequesterSelect.test.tsx` | Planned |
-| UI-02 | UI component | AC-16 | Requester Selection screen, mocked empty active-Requester list | Empty-state message shown; Continue stays disabled | `client/tests/lab-02/RequesterSelect.test.tsx` | Planned |
-| UI-03 | UI component | AC-15 | Requester Selection screen, mocked API failure | Failure callout + Retry button shown | `client/tests/lab-02/RequesterSelect.test.tsx` | Planned |
+| UI-01 | UI component | AC-02 | Visiting `/tickets` with no Requester selected | Redirected to `/select-requester` | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
+| UI-02 | UI component | AC-16 | Requester Selection screen, mocked empty active-Requester list | Empty-state message shown; dropdown and Continue are not rendered at all (not merely disabled) | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
+| UI-03 | UI component | AC-15 | Requester Selection screen, mocked API failure | Failure callout + Retry button shown | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
 | UI-04 | UI component | AC-04 | Create Ticket submitted with empty `summary` | Field-level message renders under Summary; no POST fired | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
 | UI-05 | UI component | AC-05, BR-18 | Create Ticket submit, mocked network failure | Failure banner shown; all typed field values still present | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
 | UI-06 | UI component | §6 (Submitting state) | Click Submit with a slow mocked response | Button shows busy state and is disabled for the duration | `client/tests/lab-02/CreateTicket.test.tsx` | Planned |
