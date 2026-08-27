@@ -71,6 +71,14 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | E2E-02 | E2E | AC-09 | From the created ticket's Detail screen, remove its attachment with a reason | Attachment shows Removed badge; Download button gone | `e2e/lab-02/requester-ticket-flow.spec.ts` | **Pass** |
 | E2E-03 | E2E | AC-03, AC-10 | Switch to Requester B | Requester A's ticket is absent from B's My Tickets; direct navigation to A's ticket URL shows "Ticket not found." | `e2e/lab-02/requester-ticket-flow.spec.ts` | **Pass** |
 
+**Note on E2E-01/02/03 vs. the Playwright count below:** these three rows are one continuous scenario
+implemented as a single Playwright `test()` in `requester-ticket-flow.spec.ts`, using `test.step()` to
+label the three parts (each depends on state — the Ticket Number, its Detail URL — that the previous
+part created, so they cannot run as independent tests). They are listed as three planned-test rows
+because each maps to different Acceptance Criteria, not because there are three separate automated
+tests. The Playwright total in §6 is **28 passed** — 1 flow test (covering E2E-01/02/03) + 27 responsive
+tests (RESP-01/02/03, 9 test cases × 3 viewports) — not 30.
+
 ## 3. Acceptance-Criterion Traceability
 
 | AC | Covered by |
@@ -116,14 +124,18 @@ npx playwright test
 
 ## 6. Final Results
 
-Run from `lab2-staging` after Issue #32 merged, 2026-08-27, using the commands in §5 (all against real
-databases — the test DB for server/client, the real dev DB + servers for Playwright):
+Confirmed from `main` after the Lab 2 release (PR #49), 2026-08-27, using the commands in §5 (all
+against real databases — the test DB for server/client, the real dev DB + servers for Playwright):
 
 ```
 server:     Test Files  10 passed (10)   Tests  45 passed (45)
 client:     Test Files   7 passed (7)    Tests  31 passed (31)
-playwright:            28 passed (28)    (1 flow spec + 27 responsive/visual, run twice for stability)
+playwright:            28 passed (28)    (1 flow test + 27 responsive/visual tests — see the note under
+                                           §2's E2E rows; 1 + 27 = 28, not 30)
 ```
+
+All three suites were re-run and reconfirmed identical on `main` a second time while fixing this
+section (2026-08-27), and again on this doc-accuracy branch before it merged.
 
 Every Acceptance Criterion in `specification.md` §9 has at least one Pass row above (see the traceability
 matrix in §3). No test is skipped, `.only`'d, or commented out.
