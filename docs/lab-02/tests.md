@@ -38,7 +38,7 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | API-14 | API | AC-06, BR-21 | `POST .../attachments` on a ticket that already has 5 active attachments | `409 ATTACHMENT_LIMIT_REACHED`; count stays 5 | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
 | API-15 | API | AC-07, BR-20 | Upload a `.exe` renamed to `.png` (mismatched magic bytes/mimetype) | `415`; not saved | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
 | API-16 | API | AC-09, BR-22–24 | `DELETE /api/attachments/:id` with a valid reason on an owned, active attachment | `200`; `removedAt` set; active count decreases by 1 | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
-| API-17 | API | BR-24 | `DELETE /api/attachments/:id` with `removalReason` = `"ok"` (4 chars) | `400` (below 5-char minimum) | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
+| API-17 | API | BR-24 | `DELETE /api/attachments/:id` with `removalReason` = `"ok"` (2 chars) | `400` (below 5-char minimum) | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
 | API-18 | API | AC-08, BR-23 | `GET /api/attachments/:id/download` on a removed attachment | `410 ATTACHMENT_REMOVED` | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
 | API-19 | API | §10 (ownership, general) | Requester B calls add/download/remove-attachment on Requester A's ticket's attachment | `404` for all three, no data leaked or mutated | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
 | API-20 | API | FR-01, BR-06 | `GET /api/dev-requesters` with one active + one inactive seeded Requester | Only the active one is returned | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
@@ -95,8 +95,8 @@ tests (RESP-01/02/03, 9 test cases × 3 viewports) — not 30.
 | AC-10 | API-07, UI-10, E2E-01, E2E-03 |
 | AC-11 | API-11, UI-09 |
 | AC-12 | API-11, UI-09 |
-| AC-13 | API-10 |
-| AC-14 | API-09 |
+| AC-13 | API-10, UI-11 |
+| AC-14 | API-09 (tie-break half only — see §7) |
 | AC-15 | UI-03 |
 | AC-16 | UI-02 |
 | AC-17 | RESP-01, RESP-02, RESP-03 |
@@ -124,8 +124,14 @@ npx playwright test
 
 ## 6. Final Results
 
-Confirmed from `main` after the Lab 2 release (PR #49), 2026-08-27, using the commands in §5 (all
-against real databases — the test DB for server/client, the real dev DB + servers for Playwright):
+Confirmed from `main` after the Lab 2 release (PR #49), 2026-08-27, using the commands in §5. What each
+suite actually runs against (correcting an earlier over-broad claim that all three used a real database):
+
+- **server** — the real PostgreSQL test database (`server/.env.test`); no mocking.
+- **client** — jsdom, with the network mocked via `msw` per §1. These are component and style tests and
+  they deliberately touch no database.
+- **playwright** — the real dev database with both dev servers running; no mocking except the single
+  intercepted request used to produce the API-failure state.
 
 ```
 server:     Test Files  10 passed (10)   Tests  45 passed (45)
@@ -148,3 +154,11 @@ matrix in §3). No test is skipped, `.only`'d, or commented out.
   RTL/Playwright; a full screen-reader pass is out of scope for Lab 2.
 - Load/performance testing of the paginated ticket list is out of scope; only correctness of pagination
   metadata and boundaries is tested.
+- **AC-14 is only partly covered by an automated assertion.** API-09 proves the stable tie-break (the same
+  query returns the same row order twice), but no test changes the sort control and then asserts the list
+  is ordered by the newly selected field. That half is verified manually in the Part 7 evidence instead of
+  being claimed as automated coverage here.
+- **AC-13's happy path is covered indirectly.** API-10 asserts the `400` responses for an invalid
+  `pageSize` and an out-of-range `page`, and UI-11 asserts that changing the page-size control refetches
+  and resets to page 1; there is no single test that walks forward through pages and checks the returned
+  rows change. Page navigation is shown manually in the Part 7 evidence.

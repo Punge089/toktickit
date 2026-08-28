@@ -285,9 +285,18 @@ endpoint's parameter list.
   `npm`/Playwright commands).
 
 **Course delivery**
-- All Lab 2 work happened on feature branches named `feature/<issue-number>-<slug>`, merged into
-  `lab2-staging` via peer-reviewed, approved Pull Requests, then released to `main` via one Pull Request
-  from `lab2-staging`.
+- *The rule:* all Lab 2 work happens on feature branches named `feature/<issue-number>-<slug>`, merged
+  into `lab2-staging` via peer-reviewed, approved Pull Requests, then released to `main` via a Pull
+  Request from `lab2-staging`.
+- *What actually happened:* every Issue PR (#34 to #46) and the documentation/release PRs #47, #48 and
+  #49 followed that rule exactly — reviewed, approved, then merged. Three later documentation fixes did
+  not, and are recorded rather than smoothed over:
+  - **PR #50 to #53** were merged before @book6349 reviewed them. They were reviewed afterwards, but
+    GitHub only allows a Comment review on an already-merged PR, so they carry no approval.
+  - **PR #54** was reviewed and approved before merge, but went from its branch straight into `main`
+    instead of through `lab2-staging`, so it skipped the staging hop this rule requires.
+  - The release therefore reached `main` through several Pull Requests (#49, #51, #53, #54), not one.
+  - Full detail, including the review conversations, is in `docs/lab-02/reviewer.md`.
 - Every Issue was linked to its PR through the Development panel (not just a `Closes #N` keyword, which
   does not link across non-default-branch PRs) and moved through the full Backlog → Specified → Started
   → PR Review → (Fixing →) Done flow on the Project board.
