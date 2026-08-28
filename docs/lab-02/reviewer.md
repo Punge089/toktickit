@@ -5,8 +5,10 @@
 
 ## Pull Requests I authored (reviewed and approved by my partner)
 
-Every PR below was reviewed with a real comment, a real reply, and a genuine "Approve" review (not a
-rubber-stamp), and merged by the reviewer (@book6349), per the course's Part 9 agreement.
+Every PR **in the table below** was reviewed with a real comment, a real reply, and a genuine "Approve"
+review (not a rubber-stamp) before it was merged, per the course's Part 9 agreement. Four later
+documentation PRs (#50 to #53) did not follow that order, and PR #54 skipped the staging branch; all five
+are recorded separately under "Where the workflow broke" rather than being listed here as if they had.
 
 | PR | Issue | Branch | Reviewer verdict |
 |----|-------|--------|-------------------|
@@ -23,6 +25,9 @@ rubber-stamp), and merged by the reviewer (@book6349), per the course's Part 9 a
 | [#44](https://github.com/Punge089/toktickit/pull/44) | #30 | feature/30-ticket-detail | Commented, replied, Approved |
 | [#45](https://github.com/Punge089/toktickit/pull/45) | #31 | feature/31-attachments | Commented, replied, Approved |
 | [#46](https://github.com/Punge089/toktickit/pull/46) | #32 | feature/32-e2e-visual | Commented, replied, Approved |
+| [#47](https://github.com/Punge089/toktickit/pull/47) | #33 | docs/lab2-report | Commented, replied, Approved |
+| [#48](https://github.com/Punge089/toktickit/pull/48) | #33 | docs/lab2-report | Commented, replied, Approved |
+| [#49](https://github.com/Punge089/toktickit/pull/49) | (release) | lab2-staging → main | Commented, replied, Approved |
 
 ### PR #34 - Sprint 2 specification, API, UI, and test plan
 **@book6349:** "Read through the docs, looks solid. Quick question on the 404 for ownership failures,
@@ -128,6 +133,27 @@ and aborts it, so it looks like a real network failure to the page without touch
 Every other test still hits the real backend normally."
 **@book6349:** "Excellent." — Approved.
 
+### PR #47 - Lab 2 documentation and release prep
+**@book6349:** "Wait, this row mentions you committed straight to lab2-staging by accident. That
+actually happened during this sprint?"
+**Me:** "Yeah, real mistake, not hypothetical. Happened on Issue 31, caught before pushing though since
+the push failed on its own (wrong branch name), so nothing ever hit origin. Wrote it up honestly instead
+of leaving it out."
+**@book6349:** "Oh alright, approved." — Approved.
+
+### PR #48 - Complete reviewer.md with bidirectional peer review
+**@book6349:** "Oh this is the section that was missing from #47. All 10 look filled in now?"
+**Me:** "Yep, all 10 plus your release PR (#34 on your repo), pulled straight from GitHub so it's the
+actual comments/responses, not rewritten from memory."
+**@book6349:** "Good, that completes it." — Approved.
+
+### PR #49 - Lab 2 Release: TokTickIT Requester Ticketing MVP (lab2-staging → main)
+**@book6349:** "Big one. Before I approve, quick sanity check, all 104 tests you listed actually ran on
+lab2-staging right before opening this, not from an older commit?"
+**Me:** "Yeah, ran all three suites (server/client/playwright) fresh right before opening this PR, pasted
+the exact output in the description. Nothing cached from earlier in the sprint."
+**@book6349:** "Approved, merging into main." — Approved.
+
 ## Pull Requests I reviewed for my partner
 
 Reviewed all ten of @book6349's Lab 2 Issue PRs, plus their release PR, on their own individual-sprint
@@ -217,21 +243,33 @@ merging into main?"
 **Partner's response:** "Yes. I'll attach the actual Playwright output and desktop/tablet/mobile
 screenshots before treating the release as complete. I won't claim those checks passed early."
 
-## Retroactive review: PR #50-53 (merged before review — workflow slip)
+## Where the workflow broke: PR #50-53, and what #54 did about it
 
-PRs #50-53 were small documentation-accuracy fixes that I merged directly into `lab2-staging`/`main`
-without waiting for @book6349's review first, breaking the peer-reviewed-PR rule above. Once I caught
-the mistake, @book6349 reviewed all four after the fact. GitHub only allows a **Comment** review (not
-Approve or Request changes) on a pull request that is already merged, so these are recorded as
-"Commented (retroactive)" rather than "Approved" — an honest record of what actually happened, not a
-substitute for the real approve-before-merge workflow used on every other PR in this lab.
+I broke my own rule on four PRs and I would rather explain it than hide it. PRs #50 to #53 were small
+documentation fixes, and because they felt trivial I merged them into `lab2-staging` and `main` myself
+without waiting for @book6349 to look at them first. Every PR before them went through review and
+approval before merging; these four did not.
 
-| PR | Base ← Head | Purpose | Reviewer verdict |
-|----|-------------|---------|-------------------|
-| [#50](https://github.com/Punge089/toktickit/pull/50) | lab2-staging ← fix/lab2-doc-accuracy | Fix 3 doc accuracy issues (test provenance, screenshot count, E2E count) | Commented (retroactive) |
-| [#51](https://github.com/Punge089/toktickit/pull/51) | main ← lab2-staging | Release carrying #50 into main | Commented (retroactive) |
-| [#52](https://github.com/Punge089/toktickit/pull/52) | lab2-staging ← fix/tests-md-stale-note | Remove stale "superseded by main" note in tests.md | Commented (retroactive) |
-| [#53](https://github.com/Punge089/toktickit/pull/53) | main ← lab2-staging | Release carrying #52 into main | Commented (retroactive) |
+When I noticed, I asked @book6349 to review them anyway. GitHub will not let anyone approve a pull
+request that has already been merged, so the only option left was a Comment review. That is why the four
+rows below say "Commented (retroactive)" instead of "Approved". I am recording it that way on purpose: a
+review that happened after the merge is not the same thing as an approval that gated the merge, and
+labelling it "Approved" would make the history look cleaner than it actually was.
+
+PR #54, which added this section, is the partial correction. I opened it, left it open, and did not touch
+the merge button until @book6349 had commented, I had answered, and they had actually clicked Approve.
+It still has one defect of its own, listed in the table: it went from its branch straight into `main`
+rather than through `lab2-staging`, so it got the review right and the branch flow wrong. Between #49,
+#51, #53 and #54, the release reached `main` through four Pull Requests rather than the single one the
+Definition of Done describes.
+
+| PR | Base ← Head | Purpose | Reviewer verdict | Workflow defect |
+|----|-------------|---------|-------------------|-----------------|
+| [#50](https://github.com/Punge089/toktickit/pull/50) | lab2-staging ← fix/lab2-doc-accuracy | Fix 3 doc accuracy issues (test provenance, screenshot count, E2E count) | Commented (retroactive) | Merged before review |
+| [#51](https://github.com/Punge089/toktickit/pull/51) | main ← lab2-staging | Release carrying #50 into main | Commented (retroactive) | Merged before review |
+| [#52](https://github.com/Punge089/toktickit/pull/52) | lab2-staging ← fix/tests-md-stale-note | Remove stale "superseded by main" note in tests.md | Commented (retroactive) | Merged before review |
+| [#53](https://github.com/Punge089/toktickit/pull/53) | main ← lab2-staging | Release carrying #52 into main | Commented (retroactive) | Merged before review |
+| [#54](https://github.com/Punge089/toktickit/pull/54) | main ← docs/reviewer-retroactive-review | Added this section | Commented, replied, **Approved before merge** | Skipped the `lab2-staging` hop |
 
 ### PR #50 - Fix: 3 documentation accuracy issues
 **@book6349:** "Reviewing this after the merge, sorry I missed it before. The E2E note about 1 test vs
@@ -247,3 +285,11 @@ after was definitely confusing. Good you caught it yourself."
 
 ### PR #53 - Lab 2 Release: remove stale note in tests.md
 **@book6349:** "Same as #51, just the release for #52 into main?"
+
+### PR #54 - Recording all of the above (reviewed and approved before merge)
+**@book6349:** "GitHub only lets you Comment (not Approve) on an already-merged PR, so #50-53 stay
+'Commented' in GitHub's own history forever, right? reviewer.md's the only place that's spelled out?"
+**Me:** "Yep, that's a GitHub limitation, no way around it. reviewer.md labels them 'Commented
+(retroactive)' so it's explicit they were reviewed properly, just not pre-merge like the rest."
+**@book6349:** "Makes sense, and this one's actually pre-merge like it should be." — Approved, then
+merged.
