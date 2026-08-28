@@ -60,6 +60,22 @@ body {
   cursor: pointer;
 }
 
+/* D-04 / ui-spec §1: links take a Zen Green token instead of the browser
+   default blue, which was the one place a non-token colour reached the page. */
+a {
+  color: var(--zen-secondary);
+  text-decoration: underline;
+}
+
+a:hover {
+  color: var(--zen-primary);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
 .zen-btn:focus-visible {
   outline: 2px solid var(--zen-secondary);
   outline-offset: 2px;

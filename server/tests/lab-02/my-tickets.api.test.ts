@@ -111,6 +111,75 @@ describe("GET /api/tickets", () => {
     expect(badPage.body.fieldErrors).toHaveProperty("page");
   });
 
+  // API-23 — AC-13's happy path: walking forward a page must return a
+  // different, non-overlapping slice and matching pagination metadata. API-10
+  // only covered the rejected values.
+  it("returns a different, non-overlapping slice on page 2 with correct metadata (AC-13)", async () => {
+    const pager = await getPrisma().requesterUser.create({
+      data: {
+        fullName: "Pagination Fixture",
+        email: `pagination-${Date.now()}@example.com`,
+        isActive: true,
+      },
+    });
+    for (let i = 0; i < 15; i++) {
+      await makeTicket(pager.id, { summary: `Pagination fixture ticket ${i}` });
+    }
+
+    const page1 = await request(app)
+      .get("/api/tickets?page=1&pageSize=10")
+      .set("X-Dev-Requester-Id", String(pager.id));
+    const page2 = await request(app)
+      .get("/api/tickets?page=2&pageSize=10")
+      .set("X-Dev-Requester-Id", String(pager.id));
+
+    expect(page1.status).toBe(200);
+    expect(page2.status).toBe(200);
+    expect(page1.body.data).toHaveLength(10);
+    expect(page2.body.data).toHaveLength(5);
+
+    expect(page1.body.meta.page).toBe(1);
+    expect(page2.body.meta.page).toBe(2);
+    expect(page2.body.meta.totalItems).toBe(15);
+    expect(page2.body.meta.totalPages).toBe(2);
+
+    const ids1 = page1.body.data.map((t: { id: number }) => t.id);
+    const ids2 = page2.body.data.map((t: { id: number }) => t.id);
+    expect(ids1.filter((id: number) => ids2.includes(id))).toHaveLength(0);
+  });
+
+  // API-24 — AC-14's other half: changing the sort actually reorders by the
+  // selected field. API-09 only proved the tie-break was stable.
+  it("orders by the field named in the sort parameter (AC-14)", async () => {
+    const sorter = await getPrisma().requesterUser.create({
+      data: {
+        fullName: "Sort Fixture",
+        email: `sort-${Date.now()}@example.com`,
+        isActive: true,
+      },
+    });
+    const oldest = new Date("2026-01-01T00:00:00.000Z");
+    const newest = new Date("2026-06-01T00:00:00.000Z");
+    await makeTicket(sorter.id, { summary: "Oldest sort fixture", createdAt: oldest });
+    await makeTicket(sorter.id, { summary: "Newest sort fixture", createdAt: newest });
+
+    const desc = await request(app)
+      .get("/api/tickets?sort=createdAt:desc")
+      .set("X-Dev-Requester-Id", String(sorter.id));
+    const asc = await request(app)
+      .get("/api/tickets?sort=createdAt:asc")
+      .set("X-Dev-Requester-Id", String(sorter.id));
+
+    expect(desc.status).toBe(200);
+    expect(asc.status).toBe(200);
+    expect(desc.body.data[0].summary).toBe("Newest sort fixture");
+    expect(asc.body.data[0].summary).toBe("Oldest sort fixture");
+    // and the two orders are genuinely reversed, not coincidentally equal
+    expect(asc.body.data.map((t: { id: number }) => t.id)).toEqual(
+      [...desc.body.data.map((t: { id: number }) => t.id)].reverse(),
+    );
+  });
+
   // API-11
   it("distinguishes the empty-account state from the no-results-for-filter state (AC-11/AC-12)", async () => {
     const zeroTicketRequester = await getPrisma().requesterUser.create({

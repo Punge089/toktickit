@@ -145,7 +145,8 @@ export function AttachmentSection({ ticketId, attachments, onChange }: Attachmen
                 </span>
                 <AttachmentStateBadge removed={removed} />
                 <span className="zen-attachment-meta">
-                  {formatSize(a.sizeBytes)} · uploaded {formatDateTime(a.uploadedAt)}
+                  {formatSize(a.sizeBytes)} · uploaded {formatDateTime(a.uploadedAt)} by{" "}
+                  {a.uploadedByName}
                 </span>
 
                 {!removed && (
@@ -158,8 +159,12 @@ export function AttachmentSection({ ticketId, attachments, onChange }: Attachmen
                     </Button>
                   </>
                 )}
-                {removed && a.removalReason && (
-                  <span className="zen-attachment-meta">Removed: {a.removalReason}</span>
+                {removed && (
+                  <span className="zen-attachment-meta">
+                    Removed {a.removedAt && formatDateTime(a.removedAt)}
+                    {a.removedByName && ` by ${a.removedByName}`}
+                    {a.removalReason && `: ${a.removalReason}`}
+                  </span>
                 )}
 
                 {removingId === a.id && (

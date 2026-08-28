@@ -23,7 +23,13 @@ ticketDetailRouter.get("/api/tickets/:id", requesterAuth, async (req: Request, r
         requester: { select: { fullName: true } },
         category: { select: { name: true } },
         relatedSystem: { select: { name: true } },
-        attachments: { orderBy: { uploadedAt: "asc" } },
+        attachments: {
+          orderBy: { uploadedAt: "asc" },
+          include: {
+            uploadedBy: { select: { fullName: true } },
+            removedBy: { select: { fullName: true } },
+          },
+        },
       },
     });
 
@@ -54,7 +60,9 @@ ticketDetailRouter.get("/api/tickets/:id", requesterAuth, async (req: Request, r
         mimeType: a.mimeType,
         sizeBytes: a.sizeBytes,
         uploadedAt: a.uploadedAt,
+        uploadedByName: a.uploadedBy.fullName,
         removedAt: a.removedAt,
+        removedByName: a.removedBy?.fullName ?? null,
         removalReason: a.removalReason,
       })),
     });
