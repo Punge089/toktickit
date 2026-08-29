@@ -6,7 +6,9 @@ export interface TicketDetailAttachment {
   mimeType: string;
   sizeBytes: number;
   uploadedAt: string;
+  uploadedByName: string;
   removedAt: string | null;
+  removedByName: string | null;
   removalReason: string | null;
 }
 

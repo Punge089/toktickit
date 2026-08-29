@@ -154,6 +154,46 @@ lab2-staging right before opening this, not from an older commit?"
 the exact output in the description. Nothing cached from earlier in the sprint."
 **@book6349:** "Approved, merging into main." — Approved.
 
+## Documentation fixes after the release (PR #55 onward)
+
+These came out of an external review of the draft submission report, which found places where these
+documents contradicted each other or claimed more than was true. Each went feature branch to
+`lab2-staging` to `main`, reviewed and approved before merge.
+
+| PR | Base <- Head | Purpose | Reviewer verdict |
+|----|--------------|---------|-------------------|
+| [#55](https://github.com/Punge089/toktickit/pull/55) | lab2-staging <- fix/lab2-doc-consistency | Fix internal contradictions, record workflow exceptions honestly | Commented, replied, Approved |
+| [#56](https://github.com/Punge089/toktickit/pull/56) | main <- lab2-staging | Release carrying #55 | Commented, replied, Approved |
+| [#57](https://github.com/Punge089/toktickit/pull/57) | lab2-staging <- fix/br23-detail-fields | Implement BR-23 metadata, Ticket Date, token link colour; 104 to 108 tests | Commented, replied, Approved |
+
+### PR #55 - Documentation consistency
+**@book6349:** "You unticked the colour checklist item and added a known-deviations table instead of just
+fixing the code. Doesn't that lose marks? Feels like we're advertising our own weak spots in the spec."
+**Me:** "Thought about that too. But the links really are blue and it's visible in every screenshot we're
+submitting, so leaving it ticked is a false claim in the report, which is worse than a CSS bug."
+**@book6349:** "Very good staging." - Approved.
+
+*(That answer stopped being the right call once we checked BR-23, which is what PR #57 fixed.)*
+
+### PR #56 - Release carrying #55 into main
+**@book6349:** "Just the release for #55, nothing new in it?"
+**Me:** "Right, same two commits, no extra changes. Going staging to main like #49/#51/#53 did."
+**@book6349:** "Oh I see, merging." - Approved.
+
+### PR #57 - Implement BR-23, Ticket Date and the token link colour
+**@book6349:** "The suite has been green at 104 this whole time. How did BR-23 go missing without
+anything failing?"
+**Me:** "Because nothing actually tested BR-23. AC-08 only asks that a removed row has no Download
+button, which we did correctly. It only turned up by reading the screenshots against the spec we wrote
+ourselves. UI-16 and UI-17 now assert the metadata directly so it can't slip again."
+**@book6349:** "Makes sense, and good that you added tests rather than just fixing the display." -
+Approved.
+
+**A note on the last two PRs.** This file cannot list the pull request that carries its own latest
+version, nor that PR's release. Those are the final two entries in the repository's
+[pull request list](https://github.com/Punge089/toktickit/pulls?q=is%3Apr+is%3Amerged), where their
+review and approval status can be checked directly.
+
 ## Pull Requests I reviewed for my partner
 
 Reviewed all ten of @book6349's Lab 2 Issue PRs, plus their release PR, on their own individual-sprint

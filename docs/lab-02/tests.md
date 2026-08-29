@@ -44,6 +44,8 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | API-20 | API | FR-01, BR-06 | `GET /api/dev-requesters` with one active + one inactive seeded Requester | Only the active one is returned | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
 | API-21 | API | Issue #24 AC | `GET /api/categories` with one category deactivated | Deactivated category excluded; 500 on simulated DB failure | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
 | API-22 | API | Issue #24 AC | `GET /api/related-systems` success + simulated DB failure | ≥6 active systems, ordered by id; 500 on simulated DB failure | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
+| API-23 | API | AC-13, BR-13 | `GET /api/tickets` page 1 then page 2 with `pageSize=10` over 15 tickets | Page 2 returns the remaining 5, no id appears on both pages, `meta.totalItems`=15 and `meta.totalPages`=2 | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
+| API-24 | API | AC-14, BR-12 | `sort=createdAt:desc` vs `sort=createdAt:asc` on the same two tickets | Newest first vs oldest first; the two id orders are exact reverses | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
 | UI-01 | UI component | AC-02 | Visiting `/tickets` with no Requester selected | Redirected to `/select-requester` | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
 | UI-02 | UI component | AC-16 | Requester Selection screen, mocked empty active-Requester list | Empty-state message shown; dropdown and Continue are not rendered at all (not merely disabled) | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
 | UI-03 | UI component | AC-15 | Requester Selection screen, mocked API failure | Failure callout + Retry button shown | `client/tests/lab-02/RequesterSelect.test.tsx` | **Pass** |
@@ -59,6 +61,8 @@ Criterion in `specification.md` §9 maps to at least one row below.
 | UI-13 | UI component | §8 (attachments list) | Ticket Detail with 1 active + 1 removed attachment mocked | Active row has a working Download button; removed row shows its `removalReason` instead of action buttons | `client/tests/lab-02/AttachmentSection.test.tsx` | **Pass** |
 | UI-14 | UI component | AC-09 | Click Remove on an active attachment, submit without typing a reason | Client-side validation blocks submission; no DELETE fired | `client/tests/lab-02/AttachmentSection.test.tsx` | **Pass** |
 | UI-15 | UI component | AC-09 | Remove an attachment with a valid reason, mocked success | Attachment row updates to Removed badge + shows the reason | `client/tests/lab-02/AttachmentSection.test.tsx` | **Pass** |
+| UI-16 | UI component | BR-23 | Removed attachment row rendered | Row keeps filename, size, uploader, removal reason and the removal timestamp (distinct from the upload timestamp) | `client/tests/lab-02/AttachmentSection.test.tsx` | **Pass** |
+| UI-17 | UI component | BR-23 | Active attachment row rendered | Row reads "uploaded {date} by {uploader name}" | `client/tests/lab-02/AttachmentSection.test.tsx` | **Pass** |
 | STYLE-01 | UI style | §1, §3 | Required field renders | Has the asterisk element AND `aria-required="true"` (not just one) | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
 | STYLE-02 | UI style | §3 | Read-only field (Ticket Number on Create Ticket) | Has the read-only field class/token, distinct from an editable field's class | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
 | STYLE-03 | UI style | §3 | Disabled button | Has `disabled` attribute and the disabled visual class; click handler does not fire | `client/tests/lab-02/zen-green.style.test.tsx` | **Pass** |
@@ -95,8 +99,8 @@ tests (RESP-01/02/03, 9 test cases × 3 viewports) — not 30.
 | AC-10 | API-07, UI-10, E2E-01, E2E-03 |
 | AC-11 | API-11, UI-09 |
 | AC-12 | API-11, UI-09 |
-| AC-13 | API-10, UI-11 |
-| AC-14 | API-09 (tie-break half only — see §7) |
+| AC-13 | API-10, API-23, UI-11 |
+| AC-14 | API-09, API-24 |
 | AC-15 | UI-03 |
 | AC-16 | UI-02 |
 | AC-17 | RESP-01, RESP-02, RESP-03 |
@@ -124,24 +128,27 @@ npx playwright test
 
 ## 6. Final Results
 
-Confirmed from `main` after the Lab 2 release (PR #49), 2026-08-27, using the commands in §5. What each
-suite actually runs against (correcting an earlier over-broad claim that all three used a real database):
+Run on 2026-08-29 after the BR-23 and ui-spec fixes described in `ui-spec.md` §11, using the commands in
+§5. The same three commands were re-run from `main` once those fixes were released there, with identical
+results. What each suite actually runs against:
 
-- **server** — the real PostgreSQL test database (`server/.env.test`); no mocking.
-- **client** — jsdom, with the network mocked via `msw` per §1. These are component and style tests and
+- **server** - the real PostgreSQL test database (`server/.env.test`); no mocking.
+- **client** - jsdom, with the network mocked via `msw` per §1. These are component and style tests and
   they deliberately touch no database.
-- **playwright** — the real dev database with both dev servers running; no mocking except the single
-  intercepted request used to produce the API-failure state.
+- **playwright** - the real dev database with both dev servers started by `playwright.config.ts`. Nothing
+  is mocked except one deliberately aborted request, used to produce the Create Ticket API-failure state.
 
+```
+server:     Test Files  10 passed (10)   Tests  47 passed (47)
+client:     Test Files   7 passed (7)    Tests  33 passed (33)
+playwright:            28 passed (28)    (1 flow test + 27 responsive/visual tests)
+                                          total: 47 + 33 + 28 = 108
 ```
 server:     Test Files  10 passed (10)   Tests  45 passed (45)
 client:     Test Files   7 passed (7)    Tests  31 passed (31)
 playwright:            28 passed (28)    (1 flow test + 27 responsive/visual tests — see the note under
                                            §2's E2E rows; 1 + 27 = 28, not 30)
 ```
-
-All three suites were re-run and reconfirmed identical on `main` a second time while fixing this
-section (2026-08-27), and again on this doc-accuracy branch before it merged.
 
 Every Acceptance Criterion in `specification.md` §9 has at least one Pass row above (see the traceability
 matrix in §3). No test is skipped, `.only`'d, or commented out.
@@ -154,11 +161,3 @@ matrix in §3). No test is skipped, `.only`'d, or commented out.
   RTL/Playwright; a full screen-reader pass is out of scope for Lab 2.
 - Load/performance testing of the paginated ticket list is out of scope; only correctness of pagination
   metadata and boundaries is tested.
-- **AC-14 is only partly covered by an automated assertion.** API-09 proves the stable tie-break (the same
-  query returns the same row order twice), but no test changes the sort control and then asserts the list
-  is ordered by the newly selected field. That half is verified manually in the Part 7 evidence instead of
-  being claimed as automated coverage here.
-- **AC-13's happy path is covered indirectly.** API-10 asserts the `400` responses for an invalid
-  `pageSize` and an out-of-range `page`, and UI-11 asserts that changing the page-size control refetches
-  and resets to page 1; there is no single test that walks forward through pages and checks the returned
-  rows change. Page navigation is shown manually in the Part 7 evidence.

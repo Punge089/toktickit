@@ -36,16 +36,25 @@ function parseSingleFile(req: Request, res: Response, next: NextFunction) {
 async function findOwnedAttachment(attachmentId: number, requesterId: number) {
   return getPrisma().attachment.findFirst({
     where: { id: attachmentId, ticket: { requesterId } },
+    include: {
+      uploadedBy: { select: { fullName: true } },
+      removedBy: { select: { fullName: true } },
+    },
   });
 }
 
+// BR-23 requires a removed Attachment to keep showing filename, size,
+// uploader, removal reason and removal time, so the uploader/remover names
+// travel with the metadata rather than only their ids.
 function attachmentMetadata(a: {
   id: number;
   originalFilename: string;
   mimeType: string;
   sizeBytes: number;
   uploadedAt: Date;
+  uploadedBy: { fullName: string };
   removedAt: Date | null;
+  removedBy: { fullName: string } | null;
   removalReason: string | null;
 }) {
   return {
@@ -54,7 +63,9 @@ function attachmentMetadata(a: {
     mimeType: a.mimeType,
     sizeBytes: a.sizeBytes,
     uploadedAt: a.uploadedAt,
+    uploadedByName: a.uploadedBy.fullName,
     removedAt: a.removedAt,
+    removedByName: a.removedBy?.fullName ?? null,
     removalReason: a.removalReason,
   };
 }
