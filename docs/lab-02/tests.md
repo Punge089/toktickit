@@ -144,11 +144,6 @@ client:     Test Files   7 passed (7)    Tests  33 passed (33)
 playwright:            28 passed (28)    (1 flow test + 27 responsive/visual tests)
                                           total: 47 + 33 + 28 = 108
 ```
-server:     Test Files  10 passed (10)   Tests  45 passed (45)
-client:     Test Files   7 passed (7)    Tests  31 passed (31)
-playwright:            28 passed (28)    (1 flow test + 27 responsive/visual tests — see the note under
-                                           §2's E2E rows; 1 + 27 = 28, not 30)
-```
 
 Every Acceptance Criterion in `specification.md` §9 has at least one Pass row above (see the traceability
 matrix in §3). No test is skipped, `.only`'d, or commented out.
