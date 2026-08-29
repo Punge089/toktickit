@@ -128,8 +128,9 @@ npx playwright test
 
 ## 6. Final Results
 
-Run on the `fix/br23-detail-fields` branch on 2026-08-29, after the BR-23 and ui-spec fixes described in
-`ui-spec.md` §11, using the commands in §5. What each suite actually runs against:
+Run on 2026-08-29 after the BR-23 and ui-spec fixes described in `ui-spec.md` §11, using the commands in
+§5. The same three commands were re-run from `main` once those fixes were released there, with identical
+results. What each suite actually runs against:
 
 - **server** - the real PostgreSQL test database (`server/.env.test`); no mocking.
 - **client** - jsdom, with the network mocked via `msw` per §1. These are component and style tests and
