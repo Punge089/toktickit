@@ -187,6 +187,94 @@ Prisma schema itself. New models added in Lab 2:
 | `Attachment` | Files attached to a Ticket, with soft-removal fields. FK to `Ticket` and to the uploading/removing `RequesterUser`. |
 | `TicketCounter` | One row per year; source of the sequential part of the Ticket Number (BR-01). |
 
+### Fields, types and nullability
+
+Taken from `server/prisma/schema.prisma`. "Req." marks a column that is NOT NULL in the database.
+
+**`RequesterUser`** - the seeded Development Requester identities.
+
+| Field | Type | Req. | Key / default | Notes |
+|---|---|---|---|---|
+| `id` | Int | yes | PK, autoincrement | |
+| `fullName` | String | yes | | Shown in the shell header and as attachment uploader (BR-23) |
+| `email` | String | yes | unique | Uniqueness is what makes the seed idempotent |
+| `department` | String | no | | The only optional descriptive column |
+| `isActive` | Boolean | yes | default `true` | Gates selector visibility (BR-06, BR-26) |
+| `createdAt` | DateTime | yes | default `now()` | |
+
+**`Category`** and **`RelatedSystem`** - reference data, identical shape.
+
+| Field | Type | Req. | Key / default | Notes |
+|---|---|---|---|---|
+| `id` | Int | yes | PK, autoincrement | |
+| `name` | String | yes | unique | |
+| `isActive` | Boolean | yes | default `true` | Only active rows reach the API (§1 of api-spec) |
+| `createdAt` | DateTime | yes | default `now()` | |
+
+**`Ticket`** - the support ticket.
+
+| Field | Type | Req. | Key / default | Notes |
+|---|---|---|---|---|
+| `id` | Int | yes | PK, autoincrement | |
+| `ticketNumber` | String | yes | unique | `TKT-YYYY-NNNNNN`, generated in-transaction (BR-01) |
+| `requesterId` | Int | yes | FK to `RequesterUser` | The ownership column every scoped query filters on (BR-09) |
+| `categoryId` | Int | yes | FK to `Category` | |
+| `relatedSystemId` | Int | yes | FK to `RelatedSystem` | |
+| `summary` | String | yes | | 5-120 chars, enforced in the API (BR-14) |
+| `description` | String | yes | | 20-4000 chars (BR-14) |
+| `requestedPriority` | `Priority` | yes | enum | Chosen by the Requester |
+| `itPriority` | `Priority` | no | enum, null in Lab 2 | Reserved for the IT Staff workflow (BR-04) |
+| `currentStatus` | `TicketStatus` | yes | default `NEW` | Only `NEW` exists in Lab 2 (BR-02) |
+| `createdAt` | DateTime | yes | default `now()` | The Ticket Date shown on Detail (BR-03) |
+| `updatedAt` | DateTime | yes | `@updatedAt` | Shown as Last Updated |
+
+**`Attachment`** - files on a Ticket, soft-removed.
+
+| Field | Type | Req. | Key / default | Notes |
+|---|---|---|---|---|
+| `id` | Int | yes | PK, autoincrement | |
+| `ticketId` | Int | yes | FK to `Ticket` | |
+| `originalFilename` | String | yes | | Display only; never used to build a path (BR-25) |
+| `storedFilename` | String | yes | unique | UUID + validated extension (BR-25) |
+| `mimeType` | String | yes | | Checked against the extension (BR-20) |
+| `sizeBytes` | Int | yes | | 5 MB ceiling (BR-21) |
+| `uploadedAt` | DateTime | yes | default `now()` | |
+| `uploadedById` | Int | yes | FK to `RequesterUser` | Named relation `AttachmentUploadedBy`; surfaced as the uploader (BR-23) |
+| `removedAt` | DateTime | no | | Null means active; set means removed, and doubles as the audit timestamp (BR-22) |
+| `removedById` | Int | no | FK to `RequesterUser` | Named relation `AttachmentRemovedBy` |
+| `removalReason` | String | no | | Required (5-200 chars) when removing (BR-24) |
+
+**`TicketCounter`** - one row per year, the source of the Ticket Number sequence.
+
+| Field | Type | Req. | Key / default | Notes |
+|---|---|---|---|---|
+| `year` | Int | yes | PK | Natural key, so the sequence resets per year |
+| `lastValue` | Int | yes | default `0` | Incremented inside the ticket-creation transaction (BR-01) |
+
+### Enums
+
+| Enum | Values | Why |
+|---|---|---|
+| `Priority` | `LOW`, `MEDIUM`, `HIGH`, `URGENT` | Used by both `requestedPriority` and `itPriority`; a DB enum rather than free text so an invalid priority cannot be stored |
+| `TicketStatus` | `NEW` | Deliberately single-valued in Lab 2 (BR-02). Declaring it as an enum now means later labs add values without a column type change |
+
+### Migration decisions
+
+Two migrations exist: `20260812134942_init` from Lab 1, and `20260824140910_lab2_ticketing` for this sprint.
+
+- **Additive only.** The Lab 2 migration adds tables, columns, FKs and indexes; it drops nothing and
+  rewrites no existing row, so it can be applied to a Lab 1 database without data loss.
+- **`Category` gained `isActive`** with a `true` default rather than being made nullable, so rows that
+  existed before the migration stay visible and no backfill step is needed.
+- **Two named relations from `Attachment` to `RequesterUser`** (`AttachmentUploadedBy` and
+  `AttachmentRemovedBy`). Prisma needs the names because one model references another twice; the
+  alternative, a single `actorId` plus a role column, would have made "who uploaded this" a runtime
+  filter instead of a foreign key.
+- **`removedAt: DateTime?` rather than `isRemoved: Boolean`** - see the design decision below.
+- **`TicketCounter` keyed by year rather than a database sequence**, because a plain sequence cannot be
+  reset per calendar year without DDL, and the counter has to be updated inside the same transaction as
+  the insert for BR-01 to hold.
+
 Key relationships (Prisma): `RequesterUser 1—N Ticket`, `Ticket 1—N Attachment`, `Category 1—N Ticket`,
 `RelatedSystem 1—N Ticket`, `RequesterUser 1—N Attachment` (as uploader, and separately as remover).
 

@@ -141,7 +141,8 @@ npx playwright test
 ```
 
 The Playwright suite starts the real server and client dev servers itself (see `playwright.config.ts`)
-and runs against the actual PostgreSQL-backed API — nothing is mocked. It writes screenshots to
+and runs against the actual PostgreSQL-backed API. Nothing is mocked except one deliberately
+aborted request, used to produce the Create Ticket API-failure state. It writes screenshots to
 `artifacts/lab-02/screenshots/` (committed to the repo as visual evidence, see `docs/lab-02/ui-spec.md`
 §11-12) and creates real Ticket rows in your dev database as it exercises the flow.
 

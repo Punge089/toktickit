@@ -7,6 +7,7 @@ import { server } from "../msw/server.js";
 import { RequesterProvider } from "../../src/context/RequesterContext.js";
 import { AttachmentSection } from "../../src/components/tickets/AttachmentSection.js";
 import type { TicketDetailAttachment } from "../../src/api/ticketDetail.js";
+import { formatDateTime } from "../../src/lib/format.js";
 
 const API_URL = "http://localhost:3000";
 
@@ -16,7 +17,9 @@ const activeAttachment: TicketDetailAttachment = {
   mimeType: "application/pdf",
   sizeBytes: 20480,
   uploadedAt: "2026-08-24T10:00:00.000Z",
+  uploadedByName: "Aran Suksawat",
   removedAt: null,
+  removedByName: null,
   removalReason: null,
 };
 
@@ -26,7 +29,9 @@ const removedAttachment: TicketDetailAttachment = {
   mimeType: "application/pdf",
   sizeBytes: 10240,
   uploadedAt: "2026-08-20T10:00:00.000Z",
+  uploadedByName: "Aran Suksawat",
   removedAt: "2026-08-21T10:00:00.000Z",
+  removedByName: "Aran Suksawat",
   removalReason: "Superseded by evidence.pdf",
 };
 
@@ -84,7 +89,35 @@ describe("AttachmentSection", () => {
     expect(screen.getByRole("button", { name: /^remove$/i })).toBeInTheDocument();
 
     expect(screen.getByText("old.pdf")).toBeInTheDocument();
-    expect(screen.getByText(/removed: superseded by evidence\.pdf/i)).toBeInTheDocument();
+    expect(screen.getByText(/superseded by evidence\.pdf/i)).toBeInTheDocument();
+  });
+
+  // UI-16 — BR-23 requires a removed attachment to keep showing filename,
+  // size, uploader, removal reason AND removal time. The reason alone used to
+  // be rendered, which met the wording of AC-08 but not BR-23.
+  it("keeps filename, size, uploader, removal reason and removal time on a removed row", () => {
+    renderSection([removedAttachment]);
+
+    const row = screen.getByText("old.pdf").closest(".zen-attachment-row");
+    expect(row).not.toBeNull();
+    const text = row!.textContent ?? "";
+
+    expect(text).toContain("old.pdf");
+    expect(text).toMatch(/10(\.0)? KB/i);
+    expect(text).toContain("Aran Suksawat");
+    expect(text).toContain("Superseded by evidence.pdf");
+    // the removal timestamp, not just the upload one
+    expect(text).toContain(formatDateTime(removedAttachment.removedAt!));
+    expect(formatDateTime(removedAttachment.removedAt!)).not.toBe(
+      formatDateTime(removedAttachment.uploadedAt),
+    );
+  });
+
+  // UI-17 — BR-23: an active row names its uploader too.
+  it("names the uploader on an active row", () => {
+    renderSection([activeAttachment]);
+    const row = screen.getByText("evidence.pdf").closest(".zen-attachment-row");
+    expect(row!.textContent ?? "").toMatch(/uploaded .* by Aran Suksawat/i);
   });
 
   // UI-14
@@ -128,7 +161,7 @@ describe("AttachmentSection", () => {
     await user.click(screen.getByRole("button", { name: /confirm removal/i }));
 
     expect(await screen.findByText("Removed")).toBeInTheDocument();
-    expect(screen.getByText(/removed: wrong file, replaced\./i)).toBeInTheDocument();
+    expect(screen.getByText(/wrong file, replaced\./i)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^download$/i })).not.toBeInTheDocument();
   });
 });

@@ -68,6 +68,10 @@ export function TicketDetailPage() {
 
       <div className="zen-detail-header">
         <div className="zen-detail-field">
+          <span className="zen-detail-label">Ticket Date</span>
+          <span className="zen-detail-value">{formatDateTime(ticket.createdAt)}</span>
+        </div>
+        <div className="zen-detail-field">
           <span className="zen-detail-label">Requester</span>
           <span className="zen-detail-value">{ticket.requesterName}</span>
         </div>
