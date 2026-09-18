@@ -14,8 +14,8 @@ describe("POST /api/tickets", () => {
   beforeAll(async () => {
     await seedAll();
     const prisma = getPrisma();
-    const activeRequester = await prisma.requesterUser.findFirstOrThrow({ where: { isActive: true } });
-    const inactiveRequester = await prisma.requesterUser.findFirstOrThrow({ where: { isActive: false } });
+    const activeRequester = await prisma.user.findFirstOrThrow({ where: { role: "REQUESTER", isActive: true } });
+    const inactiveRequester = await prisma.user.findFirstOrThrow({ where: { role: "REQUESTER", isActive: false } });
     const category = await prisma.category.findFirstOrThrow({ where: { isActive: true } });
     const relatedSystem = await prisma.relatedSystem.findFirstOrThrow({ where: { isActive: true } });
     activeRequesterId = activeRequester.id;

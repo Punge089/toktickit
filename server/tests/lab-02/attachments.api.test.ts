@@ -23,6 +23,7 @@ describe("Attachment lifecycle", () => {
         summary: "Attachment lifecycle test ticket",
         description: "A".repeat(30),
         requestedPriority: "MEDIUM",
+        itPriority: "MEDIUM",
       },
     });
     return ticket.id;
@@ -31,7 +32,7 @@ describe("Attachment lifecycle", () => {
   beforeAll(async () => {
     await seedAll();
     const prisma = getPrisma();
-    const requesters = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 });
+    const requesters = await prisma.user.findMany({ where: { role: "REQUESTER", isActive: true }, take: 2 });
     requesterA = requesters[0].id;
     requesterB = requesters[1].id;
     ticketId = await makeTicket();

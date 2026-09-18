@@ -24,6 +24,7 @@ describe("GET /api/tickets", () => {
         summary: overrides.summary ?? "Test ticket for My Tickets API",
         description: "A".repeat(30),
         requestedPriority: "MEDIUM",
+        itPriority: "MEDIUM",
         ...(overrides.createdAt ? { createdAt: overrides.createdAt } : {}),
       },
     });
@@ -32,7 +33,7 @@ describe("GET /api/tickets", () => {
   beforeAll(async () => {
     await seedAll();
     const prisma = getPrisma();
-    const requesters = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 });
+    const requesters = await prisma.user.findMany({ where: { role: "REQUESTER", isActive: true }, take: 2 });
     requesterA = requesters[0].id;
     requesterB = requesters[1].id;
     const category = await prisma.category.findFirstOrThrow({ where: { isActive: true } });
@@ -115,7 +116,7 @@ describe("GET /api/tickets", () => {
   // different, non-overlapping slice and matching pagination metadata. API-10
   // only covered the rejected values.
   it("returns a different, non-overlapping slice on page 2 with correct metadata (AC-13)", async () => {
-    const pager = await getPrisma().requesterUser.create({
+    const pager = await getPrisma().user.create({
       data: {
         fullName: "Pagination Fixture",
         email: `pagination-${Date.now()}@example.com`,
@@ -151,7 +152,7 @@ describe("GET /api/tickets", () => {
   // API-24 — AC-14's other half: changing the sort actually reorders by the
   // selected field. API-09 only proved the tie-break was stable.
   it("orders by the field named in the sort parameter (AC-14)", async () => {
-    const sorter = await getPrisma().requesterUser.create({
+    const sorter = await getPrisma().user.create({
       data: {
         fullName: "Sort Fixture",
         email: `sort-${Date.now()}@example.com`,
@@ -182,7 +183,7 @@ describe("GET /api/tickets", () => {
 
   // API-11
   it("distinguishes the empty-account state from the no-results-for-filter state (AC-11/AC-12)", async () => {
-    const zeroTicketRequester = await getPrisma().requesterUser.create({
+    const zeroTicketRequester = await getPrisma().user.create({
       data: {
         fullName: `Zero Ticket Requester ${Date.now()}`,
         email: `zero-ticket-${Date.now()}@example.dev`,
@@ -204,7 +205,7 @@ describe("GET /api/tickets", () => {
   });
 
   it("rejects an inactive Requester with 403", async () => {
-    const inactive = await getPrisma().requesterUser.findFirstOrThrow({ where: { isActive: false } });
+    const inactive = await getPrisma().user.findFirstOrThrow({ where: { role: "REQUESTER", isActive: false } });
     const res = await request(app).get("/api/tickets").set("X-Dev-Requester-Id", String(inactive.id));
     expect(res.status).toBe(403);
   });

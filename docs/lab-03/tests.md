@@ -20,8 +20,8 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| UNIT-01 | BR-08 | Password policy validator: length, upper/lower/digit/special | Accepts a compliant password; rejects one missing each rule individually | `server/tests/lab-03/password.unit.test.ts` | Planned |
-| UNIT-02 | BR-07, BR-09 | `hashPassword`/`verifyPassword` round trip; wrong password; same password fails "must differ" check | Correct password verifies true, wrong verifies false, hash is never the plaintext | `server/tests/lab-03/password.unit.test.ts` | Planned |
+| UNIT-01 | BR-08 | Password policy validator: length, upper/lower/digit/special | Accepts a compliant password; rejects one missing each rule individually | `server/tests/lab-03/password.unit.test.ts` | **Pass** |
+| UNIT-02 | BR-07, BR-09 | `hashPassword`/`verifyPassword` round trip; wrong password; same password fails "must differ" check | Correct password verifies true, wrong verifies false, hash is never the plaintext | `server/tests/lab-03/password.unit.test.ts` | **Pass** |
 | UNIT-03 | BR-19–BR-23 | Transition-matrix function for every (from, to) pair in specification.md §5a | Listed pairs return allowed; every other pair, including same-status, returns rejected | `server/tests/lab-03/transitions.unit.test.ts` | Planned |
 | UNIT-04 | §6.3, AC-24 | Queue query parser: valid and invalid `sort`/`status`/`itPriority`/`owner`/`page`/`pageSize` | Valid values parse to the expected filter object; each invalid value returns the specific field name that failed | `server/tests/lab-03/staff-queue.api.test.ts` (parser exercised directly) | Planned |
 
@@ -29,16 +29,16 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| API-01 | AC-01 | `POST /api/auth/login` valid credentials | `200`; session cookie set; body has role and `mustChangePassword` | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-02 | AC-05 | Login with wrong password, and separately with an unknown email | Both `401 INVALID_CREDENTIALS`, identical message | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-03 | AC-06 | Login with correct password on an inactive account | `403 ACCOUNT_INACTIVE` | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-04 | AC-07, BR-06 | 5 failed attempts then a 6th (even with the correct password) within the window | First 5 return `401`; 6th returns `429` with `Retry-After`; resets after a successful login | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-05 | AC-02, BR-02 | A `mustChangePassword` user calls `GET /api/tickets` before changing password | `403 PASSWORD_CHANGE_REQUIRED`; `/me`, `/logout`, `/change-password` remain reachable | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-06 | BR-08, BR-09 | `POST /api/auth/change-password` with a policy-violating password, a mismatched confirmation, and the same-as-current password | Each `400` with the specific `fieldErrors` key | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-07 | BR-02 | Successful change-password on a first-login user | `mustChangePassword` becomes `false`; every other endpoint is now reachable | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-08 | BR-09 | Successful change-password while a second session (different login) exists for the same user | The second session's next request is `401`; the session used to change the password still works | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-09 | AC-08, BR-10 | `POST /api/auth/logout` then reuse of the old cookie | Logout `204`; the reused cookie gets `401` on `/me` | `server/tests/lab-03/auth.api.test.ts` | Planned |
-| API-10 | FR-04 | `GET /api/auth/me` with no cookie | `401` | `server/tests/lab-03/auth.api.test.ts` | Planned |
+| API-01 | AC-01 | `POST /api/auth/login` valid credentials | `200`; session cookie set; body has role and `mustChangePassword` | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-02 | AC-05 | Login with wrong password, and separately with an unknown email | Both `401 INVALID_CREDENTIALS`, identical message | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-03 | AC-06 | Login with correct password on an inactive account | `403 ACCOUNT_INACTIVE` | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-04 | AC-07, BR-06 | 5 failed attempts then a 6th (even with the correct password) within the window | First 5 return `401`; 6th returns `429` with `Retry-After`; resets after a successful login | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-05 | AC-02, BR-02 | A `mustChangePassword` user calls a protected endpoint on the new session middleware chain before changing password | `403 PASSWORD_CHANGE_REQUIRED`; `/me`, `/logout`, `/change-password` remain reachable | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-06 | BR-08, BR-09 | `POST /api/auth/change-password` with a policy-violating password, a mismatched confirmation, and the same-as-current password | Each `400` with the specific `fieldErrors` key | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-07 | BR-02 | Successful change-password on a first-login user | `mustChangePassword` becomes `false`; every other endpoint is now reachable | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-08 | BR-09 | Successful change-password while a second session (different login) exists for the same user | The second session's next request is `401`; the session used to change the password still works | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-09 | AC-08, BR-10 | `POST /api/auth/logout` then reuse of the old cookie | Logout `204`; the reused cookie gets `401` on `/me` | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-10 | FR-04 | `GET /api/auth/me` with no cookie | `401` | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
 
 ### Security / Authorization
 
@@ -57,10 +57,10 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| MIG-01 | §7 Migration Decisions | Apply the Lab 3 migration SQL to a temporary schema seeded with Lab-2-shaped rows (a legacy Requester, a Ticket with `itPriority = null`, an Attachment with uploader/remover) | Same rows reachable via `User`/`Ticket`; FK references unchanged; `itPriority` backfilled to `requestedPriority` | `server/tests/lab-03/migration.test.ts` | Planned |
-| MIG-02 | §7 Migration Decisions | A migrated Requester's `passwordHash` before the documented seed password is applied | Login fails safely (`401`), never a crash, for a user with `passwordHash = null` | `server/tests/lab-03/migration.test.ts` | Planned |
-| MIG-03 | labsheet §5.3 | Run `seedAll()` twice against the test DB | Second run changes no row counts; ≥4 active + ≥1 inactive Requester, ≥3 active + ≥1 inactive IT Staff, ≥1 active Administrator all present | `server/tests/lab-03/seed.lab3.test.ts` | Planned |
-| MIG-04 | labsheet §5.3 | Seeded Tickets after `seedAll()` | All 8 statuses represented at least once; at least one assigned and one unassigned Ticket; Resolved/Closed Tickets have a `resolutionSummary` | `server/tests/lab-03/seed.lab3.test.ts` | Planned |
+| MIG-01 | §7 Migration Decisions | Apply the Lab 3 migration SQL to a temporary schema seeded with Lab-2-shaped rows (a legacy Requester, a Ticket with `itPriority = null`, an Attachment with uploader/remover) | Same rows reachable via `User`/`Ticket`; FK references unchanged; `itPriority` backfilled to `requestedPriority` | `server/tests/lab-03/migration.test.ts` | **Pass** |
+| MIG-02 | §7 Migration Decisions | A migrated Requester's `passwordHash` after the migration but before the seed password is applied | `passwordHash` is `null` and `mustChangePassword` is `true` — such a user cannot log in until a password is set | `server/tests/lab-03/migration.test.ts` | **Pass** |
+| MIG-03 | labsheet §5.3 | Run `seedAll()` twice against the test DB | Second run changes no row counts; ≥4 active + ≥1 inactive Requester, ≥3 active + ≥1 inactive IT Staff, ≥1 active Administrator all present | `server/tests/lab-03/seed.lab3.test.ts` | **Pass** |
+| MIG-04 | labsheet §5.3 | Seeded Tickets after `seedAll()` | All 8 statuses represented at least once; at least one assigned and one unassigned Ticket; Resolved/Closed Tickets have a `resolutionSummary` | `server/tests/lab-03/seed.lab3.test.ts` | **Pass** |
 | REG-01 | BR-37, BR-38 | `server/tests/lab-02/create-ticket.api.test.ts`, adapted to log in instead of sending `X-Dev-Requester-Id` | Same assertions as Lab 2, all passing under session auth | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
 | REG-02 | BR-37, BR-38 | `server/tests/lab-02/my-tickets.api.test.ts`, adapted | Same assertions, session-authenticated | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
 | REG-03 | BR-37, BR-38 | `server/tests/lab-02/ticket-detail.api.test.ts`, adapted | Same assertions, session-authenticated | `server/tests/lab-02/ticket-detail.api.test.ts` | Planned |
