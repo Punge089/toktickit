@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { apiFetch } from "./http.js";
 
 export interface AttachmentAddResult {
   id: number;
@@ -14,18 +14,14 @@ async function readErrorMessage(res: Response, fallback: string): Promise<string
   return (body && typeof body.message === "string" && body.message) || fallback;
 }
 
-// Issue 31 — POST /api/tickets/:id/attachments (api-spec.md §7).
-export async function addAttachment(
-  requesterId: number,
-  ticketId: number,
-  file: File,
-): Promise<AttachmentAddResult> {
+// Issue 31/64 — POST /api/tickets/:id/attachments (api-spec.md §7).
+// Ownership now comes from the session (BR-03); no requesterId is sent.
+export async function addAttachment(ticketId: number, file: File): Promise<AttachmentAddResult> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}/attachments`, {
+  const res = await apiFetch(`/api/tickets/${ticketId}/attachments`, {
     method: "POST",
-    headers: { "X-Dev-Requester-Id": String(requesterId) },
     body: formData,
   });
   if (!res.ok) {
@@ -34,18 +30,14 @@ export async function addAttachment(
   return res.json();
 }
 
-// Issue 31 — DELETE /api/attachments/:id (api-spec.md §10).
+// Issue 31/64 — DELETE /api/attachments/:id (api-spec.md §10).
 export async function removeAttachment(
-  requesterId: number,
   attachmentId: number,
   removalReason: string,
 ): Promise<{ id: number; removedAt: string; removalReason: string }> {
-  const res = await fetch(`${API_URL}/api/attachments/${attachmentId}`, {
+  const res = await apiFetch(`/api/attachments/${attachmentId}`, {
     method: "DELETE",
-    headers: {
-      "X-Dev-Requester-Id": String(requesterId),
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ removalReason }),
   });
   if (!res.ok) {
@@ -54,18 +46,13 @@ export async function removeAttachment(
   return res.json();
 }
 
-// Issue 31 — GET /api/attachments/:id/download (api-spec.md §9). The
-// endpoint is header-authenticated, so a plain <a href> can't carry
-// X-Dev-Requester-Id — fetch the bytes, then hand them to the browser as a
-// download via a throwaway object URL.
-export async function downloadAttachment(
-  requesterId: number,
-  attachmentId: number,
-  filename: string,
-): Promise<void> {
-  const res = await fetch(`${API_URL}/api/attachments/${attachmentId}/download`, {
-    headers: { "X-Dev-Requester-Id": String(requesterId) },
-  });
+// Issue 31/64 — GET /api/attachments/:id/download (api-spec.md §9). The
+// endpoint is session-cookie-authenticated (credentials: "include"), so a
+// plain <a href> still can't carry the cookie across origins reliably —
+// fetch the bytes, then hand them to the browser as a download via a
+// throwaway object URL, same as Lab 2.
+export async function downloadAttachment(attachmentId: number, filename: string): Promise<void> {
+  const res = await apiFetch(`/api/attachments/${attachmentId}/download`);
   if (!res.ok) {
     throw new Error(await readErrorMessage(res, "Unable to download this attachment."));
   }

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { getPrisma } from "../prisma.js";
-import { requesterAuth } from "../middleware/requesterAuth.js";
+import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 
 // Issue 30 — GET /api/tickets/:id (api-spec.md §6). BR-10/BR-28: a ticket
 // that doesn't exist and a ticket that exists but belongs to someone else
@@ -9,7 +9,12 @@ export const ticketDetailRouter = Router();
 
 const NOT_FOUND = { error: "TICKET_NOT_FOUND", message: "Ticket not found." };
 
-ticketDetailRouter.get("/api/tickets/:id", requesterAuth, async (req: Request, res: Response) => {
+ticketDetailRouter.get(
+  "/api/tickets/:id",
+  requireAuth,
+  requirePasswordCurrent,
+  requireRole("REQUESTER"),
+  async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     res.status(404).json(NOT_FOUND);
@@ -18,7 +23,7 @@ ticketDetailRouter.get("/api/tickets/:id", requesterAuth, async (req: Request, r
 
   try {
     const ticket = await getPrisma().ticket.findFirst({
-      where: { id, requesterId: req.requester!.id },
+      where: { id, requesterId: req.user!.id },
       include: {
         requester: { select: { fullName: true } },
         category: { select: { name: true } },
@@ -69,4 +74,5 @@ ticketDetailRouter.get("/api/tickets/:id", requesterAuth, async (req: Request, r
   } catch {
     res.status(500).json({ error: "INTERNAL_ERROR", message: "Something went wrong. Please try again." });
   }
-});
+  },
+);

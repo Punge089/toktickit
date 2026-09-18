@@ -3,11 +3,16 @@ import { test, expect, Page } from "@playwright/test";
 // Issue 32 — responsive + visual evidence (ui-spec.md §9, §12). Desktop/
 // tablet/mobile screenshots of Create Ticket, My Tickets, and Ticket
 // Detail, plus a horizontal-scroll assertion at every viewport (AC-17).
+//
+// Issue 64 (REG-06) — logs in via the real Login screen instead of the
+// removed Development Requester selector.
 const VIEWPORTS = [
   { name: "desktop", width: 1280, height: 900 },
   { name: "tablet", width: 850, height: 1100 },
   { name: "mobile", width: 375, height: 812 },
 ] as const;
+
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "TokTick-Dev#2026";
 
 async function assertNoHorizontalScroll(page: Page) {
   const { scrollWidth, clientWidth } = await page.evaluate(() => ({
@@ -17,19 +22,18 @@ async function assertNoHorizontalScroll(page: Page) {
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth + 1); // +1 tolerance for subpixel rounding
 }
 
-async function selectRequester(page: Page, label: string) {
-  await page.goto("/");
-  await page.getByLabel("Development Requester").selectOption({ label });
-  await page.getByRole("button", { name: "Continue" }).click();
+async function login(page: Page, email: string) {
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password").fill(SEED_PASSWORD);
+  await page.getByRole("button", { name: "Sign In" }).click();
   await expect(page.getByRole("heading", { name: "My Tickets" })).toBeVisible();
 }
 
-const selectRequesterA = (page: Page) =>
-  selectRequester(page, "Aran Suksawat (aran.suksawat@example.dev)");
+const loginRequesterA = (page: Page) => login(page, "aran.suksawat@example.dev");
 // Requester B never creates a ticket anywhere in the Lab 2 test suite, so
 // her My Tickets is a genuine empty-account state, not a search result.
-const selectRequesterB = (page: Page) =>
-  selectRequester(page, "Buppha Ratanakorn (buppha.ratanakorn@example.dev)");
+const loginRequesterB = (page: Page) => login(page, "buppha.ratanakorn@example.dev");
 
 async function createTicket(page: Page, summary: string, withAttachment = false) {
   await page.getByRole("main").getByRole("link", { name: "Create Ticket" }).click();
@@ -56,7 +60,7 @@ for (const vp of VIEWPORTS) {
     test.use({ viewport: { width: vp.width, height: vp.height } });
 
     test("Create Ticket — initial state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await page.getByRole("main").getByRole("link", { name: "Create Ticket" }).click();
       await expect(page.getByRole("heading", { name: "Create Ticket" })).toBeVisible();
       await assertNoHorizontalScroll(page);
@@ -67,7 +71,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("Create Ticket — validation failure state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await page.getByRole("main").getByRole("link", { name: "Create Ticket" }).click();
       await page.getByRole("button", { name: "Submit Ticket" }).click();
       await expect(page.getByText(/summary must be 5-120 characters/i)).toBeVisible();
@@ -79,7 +83,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("Create Ticket — success state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await createTicket(page, `Responsive success check (${vp.name}) ${Date.now()}`);
       await assertNoHorizontalScroll(page);
       await page.screenshot({
@@ -89,7 +93,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("Create Ticket — API failure state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await page.getByRole("main").getByRole("link", { name: "Create Ticket" }).click();
       // Blocks only this test's submit request — the rest of the suite
       // still runs against the real backend.
@@ -115,7 +119,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("My Tickets — loaded state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await createTicket(page, `Responsive loaded-list check (${vp.name}) ${Date.now()}`);
       // Navigate directly rather than through the nav link — on mobile the
       // nav is collapsed behind the hamburger, which isn't what this test
@@ -130,7 +134,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("My Tickets — empty state", async ({ page }) => {
-      await selectRequesterB(page);
+      await loginRequesterB(page);
       await expect(page.getByText(/no tickets yet/i)).toBeVisible();
       await assertNoHorizontalScroll(page);
       await page.screenshot({
@@ -140,7 +144,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("My Tickets — no-results state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await page.getByLabel("Search").fill("zzz-definitely-not-a-real-match-zzz");
       await expect(page.getByText(/no tickets match your search/i)).toBeVisible();
       await assertNoHorizontalScroll(page);
@@ -151,7 +155,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("Ticket Detail — loaded state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await createTicket(page, `Responsive detail check (${vp.name}) ${Date.now()}`);
       await page.getByRole("link", { name: "View Ticket" }).click();
       await expect(page.locator(".zen-detail-header")).toBeVisible();
@@ -163,7 +167,7 @@ for (const vp of VIEWPORTS) {
     });
 
     test("Ticket Detail — attachment removed state", async ({ page }) => {
-      await selectRequesterA(page);
+      await loginRequesterA(page);
       await createTicket(page, `Responsive removed-attachment check (${vp.name}) ${Date.now()}`, true);
       await page.getByRole("link", { name: "View Ticket" }).click();
       await page.getByRole("button", { name: "Remove" }).click();

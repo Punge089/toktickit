@@ -44,13 +44,13 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| SEC-01 | AC-03, BR-03 | Requester sends another user's id as `requesterId` in the body, in the query string, and on the legacy `X-Dev-Requester-Id` header while creating/listing tickets | All three ignored; only the authenticated user's own data is returned/created | `server/tests/lab-03/authorization.api.test.ts` | Planned |
+| SEC-01 | AC-03, BR-03 | Requester sends another user's id as `requesterId` in the body, in the query string, and on the legacy `X-Dev-Requester-Id` header while creating/listing tickets | All three ignored; only the authenticated user's own data is returned/created | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
 | SEC-02 | AC-11 | Requester calls `GET /api/staff/tickets` and `GET /api/staff/tickets/:id` directly | Both `403 FORBIDDEN`, no ticket data in the body | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | SEC-03 | AC-04, AC-20 | Requester calls `GET`/`POST /api/staff/tickets/:id/notes` on their own ticket | Both `403`, no note content anywhere in the response | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | SEC-04 | AC-29 | IT Staff and Requester each call every `/api/admin/*` endpoint | All `403`; unauthenticated caller gets `401` on the same endpoints | `server/tests/lab-03/authorization.api.test.ts` | Planned |
-| SEC-05 | BR-36 | Every endpoint group is called once unauthenticated | All return `401`, never `403` or `404`, so existence is never implied without a session | `server/tests/lab-03/authorization.api.test.ts` | Planned |
-| SEC-06 | BR-13 | State-changing request with a mismatched `Origin` header vs. one with none | Mismatched `Origin` → `403 ORIGIN_NOT_ALLOWED`; missing `Origin` (Supertest default) → normal handling | `server/tests/lab-03/authorization.api.test.ts` | Planned |
-| SEC-07 | BR-39 | `GET /api/dev-requesters` | `404` — route no longer exists | `server/tests/lab-03/authorization.api.test.ts` | Planned |
+| SEC-05 | BR-36 | Every Requester-scoped endpoint plus `/api/auth/me` is called once unauthenticated | All return `401` | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
+| SEC-06 | BR-13 | State-changing request with a mismatched `Origin` header vs. one with none vs. the correct one | Mismatched `Origin` → `403 ORIGIN_NOT_ALLOWED`; missing or matching `Origin` → normal handling | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
+| SEC-07 | BR-39 | `GET /api/dev-requesters` | `404` — route no longer exists | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
 | SEC-08 | BR-36 | IT Staff attempts to write a Comment/Note/status change on a Ticket that belongs to a Requester, called with a Requester B's ticket id that does exist | Confirms `404` is used only for true nonexistence at Requester routes, and staff routes never 404 solely due to ownership | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 
 ### Migration and Regression
@@ -61,12 +61,12 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | MIG-02 | §7 Migration Decisions | A migrated Requester's `passwordHash` after the migration but before the seed password is applied | `passwordHash` is `null` and `mustChangePassword` is `true` — such a user cannot log in until a password is set | `server/tests/lab-03/migration.test.ts` | **Pass** |
 | MIG-03 | labsheet §5.3 | Run `seedAll()` twice against the test DB | Second run changes no row counts; ≥4 active + ≥1 inactive Requester, ≥3 active + ≥1 inactive IT Staff, ≥1 active Administrator all present | `server/tests/lab-03/seed.lab3.test.ts` | **Pass** |
 | MIG-04 | labsheet §5.3 | Seeded Tickets after `seedAll()` | All 8 statuses represented at least once; at least one assigned and one unassigned Ticket; Resolved/Closed Tickets have a `resolutionSummary` | `server/tests/lab-03/seed.lab3.test.ts` | **Pass** |
-| REG-01 | BR-37, BR-38 | `server/tests/lab-02/create-ticket.api.test.ts`, adapted to log in instead of sending `X-Dev-Requester-Id` | Same assertions as Lab 2, all passing under session auth | `server/tests/lab-02/create-ticket.api.test.ts` | Planned |
-| REG-02 | BR-37, BR-38 | `server/tests/lab-02/my-tickets.api.test.ts`, adapted | Same assertions, session-authenticated | `server/tests/lab-02/my-tickets.api.test.ts` | Planned |
-| REG-03 | BR-37, BR-38 | `server/tests/lab-02/ticket-detail.api.test.ts`, adapted | Same assertions, session-authenticated | `server/tests/lab-02/ticket-detail.api.test.ts` | Planned |
-| REG-04 | BR-37, BR-38 | `server/tests/lab-02/attachments.api.test.ts`, adapted | Same assertions, session-authenticated | `server/tests/lab-02/attachments.api.test.ts` | Planned |
-| REG-05 | BR-38 | `client/tests/lab-02/RequesterSelect.test.tsx`, repurposed | Asserts `/select-requester` no longer exists and redirects to `/login` instead of testing the removed selector | `client/tests/lab-02/RequesterSelect.test.tsx` | Planned |
-| REG-06 | BR-38 | `e2e/lab-02/requester-ticket-flow.spec.ts` and `responsive.spec.ts`, adapted to log in via the real Login screen instead of the Dev Requester selector | Full Lab 2 flow (create → find → remove attachment → cross-Requester 404) still passes end to end | `e2e/lab-02/requester-ticket-flow.spec.ts`, `e2e/lab-02/responsive.spec.ts` | Planned |
+| REG-01 | BR-37, BR-38 | `server/tests/lab-02/create-ticket.api.test.ts`, adapted to log in instead of sending `X-Dev-Requester-Id`; adds a since-deactivated-session case and an IT Staff role-boundary case | Same assertions as Lab 2, all passing under session auth (8/8) | `server/tests/lab-02/create-ticket.api.test.ts` | **Pass** |
+| REG-02 | BR-37, BR-38 | `server/tests/lab-02/my-tickets.api.test.ts`, adapted | Same assertions, session-authenticated (11/11) | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
+| REG-03 | BR-37, BR-38 | `server/tests/lab-02/ticket-detail.api.test.ts`, adapted | Same assertions, session-authenticated (5/5) | `server/tests/lab-02/ticket-detail.api.test.ts` | **Pass** |
+| REG-04 | BR-37, BR-38 | `server/tests/lab-02/attachments.api.test.ts`, adapted | Same assertions, session-authenticated (7/7) | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
+| REG-05 | BR-38 | `client/tests/lab-02/RequesterSelect.test.tsx`, repurposed, plus `zen-green.style.test.tsx`, `CreateTicket.test.tsx`, `MyTickets.test.tsx`, `RequesterTicketDetail.test.tsx`, `AttachmentSection.test.tsx` adapted to the session-cookie identity | Asserts `/select-requester` no longer exists and redirects to `/login`; every other Lab 2 client test's original assertions still pass under `AuthContext` | `client/tests/lab-02/*.test.tsx` | **Pass** |
+| REG-06 | BR-38 | `e2e/lab-02/requester-ticket-flow.spec.ts` and `responsive.spec.ts`, adapted to log in via the real Login screen instead of the Dev Requester selector; "switching Requester" is logout + log back in | Full Lab 2 flow (create → find → remove attachment → cross-Requester 404) plus all 27 responsive/visual screenshots still pass end to end (28/28) | `e2e/lab-02/requester-ticket-flow.spec.ts`, `e2e/lab-02/responsive.spec.ts` | **Pass** |
 
 ### Queue
 
@@ -123,13 +123,13 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| UI-01 | AC-05 | Login form submitted, mocked `401 INVALID_CREDENTIALS` | Generic error message rendered; password field cleared | `client/tests/lab-03/Login.test.tsx` | Planned |
-| UI-02 | AC-06, AC-07 | Login form, mocked `403 ACCOUNT_INACTIVE` and mocked `429 TOO_MANY_ATTEMPTS` | Each renders its own distinct message | `client/tests/lab-03/Login.test.tsx` | Planned |
-| UI-03 | §3 (Submitting state) | Submit Login with a slow mocked response | Button shows busy state, fields become read-only | `client/tests/lab-03/Login.test.tsx` | Planned |
-| UI-04 | BR-08 | Change Password form, typing progressively closer to a compliant password | Each policy-checklist row ticks independently as its own rule becomes true | `client/tests/lab-03/ChangePassword.test.tsx` | Planned |
-| UI-05 | BR-09 | Change Password form, confirm field not matching new password | Save/Continue disabled; mismatch message shown | `client/tests/lab-03/ChangePassword.test.tsx` | Planned |
-| UI-06 | AC-10 | Shell rendered with a mocked Requester `/me`, then a mocked IT Staff `/me`, then a mocked Administrator `/me` | Nav links and role badge differ correctly for each | `client/tests/lab-03/AppShellRoles.test.tsx` | Planned |
-| UI-07 | AC-11 | Requester-role shell attempts to render the Queue route | Forbidden screen shown; no queue fetch made (asserted via the mock network call count) | `client/tests/lab-03/AppShellRoles.test.tsx` | Planned |
+| UI-01 | AC-05 | Login form submitted, mocked `401 INVALID_CREDENTIALS` | Generic error message rendered; password field cleared | `client/tests/lab-03/Login.test.tsx` | **Pass** |
+| UI-02 | AC-06, AC-07 | Login form, mocked `403 ACCOUNT_INACTIVE` and mocked `429 TOO_MANY_ATTEMPTS` | Each renders its own distinct message | `client/tests/lab-03/Login.test.tsx` | **Pass** |
+| UI-03 | §3 (Submitting state) | Submit Login with a slow mocked response | Button shows busy state, fields become read-only | `client/tests/lab-03/Login.test.tsx` | **Pass** |
+| UI-04 | BR-08 | Change Password form, typing progressively closer to a compliant password | Each policy-checklist row ticks independently as its own rule becomes true | `client/tests/lab-03/ChangePassword.test.tsx` | **Pass** |
+| UI-05 | BR-09 | Change Password form, confirm field not matching new password | Save/Continue disabled; mismatch message shown | `client/tests/lab-03/ChangePassword.test.tsx` | **Pass** |
+| UI-06 | AC-10 | Shell rendered with a mocked Requester `/me`, then a mocked IT Staff `/me`, then a mocked Administrator `/me` | Nav links and role badge differ correctly for each | `client/tests/lab-03/AppShellRoles.test.tsx` | **Pass** |
+| UI-07 | AC-11 | Requester-role shell attempts to render the Queue route | Forbidden screen shown; no queue fetch made (asserted via the mock network call count) | `client/tests/lab-03/AppShellRoles.test.tsx` | **Pass** |
 | UI-08 | AC-23 | Ticket Queue table, mocked multi-page result set, change a filter and the sort control | Refetch fires with the new query params; page resets to 1 | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Planned |
 | UI-09 | §7 (empty/no-results) | Queue mocked with 0 tickets ever, and separately 0 matches with a filter active | Distinct empty vs. no-results copy | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Planned |
 | UI-10 | AC-16 | Staff Ticket Detail's Status `<select>`, Ticket currently `RESOLVED` | Options list contains only `Closed` and `Reopened` | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |

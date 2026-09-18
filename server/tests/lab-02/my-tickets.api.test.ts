@@ -3,11 +3,16 @@ import request from "supertest";
 import { app } from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 import { seedAll } from "../../prisma/seed.js";
+import { createAndLoginUser } from "../helpers/auth.js";
 
 // api-spec.md §5, specification.md BR-09, BR-11..BR-13, AC-10..AC-14.
+//
+// Issue 64 (REG-02) — every request now authenticates via a real session
+// cookie instead of X-Dev-Requester-Id, per docs/lab-03/BR-38.
 describe("GET /api/tickets", () => {
+  let agentA: Awaited<ReturnType<typeof createAndLoginUser>>["agent"];
+  let agentB: Awaited<ReturnType<typeof createAndLoginUser>>["agent"];
   let requesterA: number;
-  let requesterB: number;
   let categoryId: number;
   let relatedSystemId: number;
 
@@ -32,10 +37,13 @@ describe("GET /api/tickets", () => {
 
   beforeAll(async () => {
     await seedAll();
+    const a = await createAndLoginUser({ role: "REQUESTER", fullName: "My Tickets Fixture A" });
+    const b = await createAndLoginUser({ role: "REQUESTER", fullName: "My Tickets Fixture B" });
+    agentA = a.agent;
+    agentB = b.agent;
+    requesterA = a.user.id;
+
     const prisma = getPrisma();
-    const requesters = await prisma.user.findMany({ where: { role: "REQUESTER", isActive: true }, take: 2 });
-    requesterA = requesters[0].id;
-    requesterB = requesters[1].id;
     const category = await prisma.category.findFirstOrThrow({ where: { isActive: true } });
     const relatedSystem = await prisma.relatedSystem.findFirstOrThrow({ where: { isActive: true } });
     categoryId = category.id;
@@ -47,14 +55,10 @@ describe("GET /api/tickets", () => {
     const uniqueSummary = `Requester A only ${Date.now()}`;
     await makeTicket(requesterA, { summary: uniqueSummary });
 
-    const resA = await request(app)
-      .get("/api/tickets?pageSize=50")
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const resA = await agentA.get("/api/tickets?pageSize=50");
     expect(resA.body.data.some((t: { summary: string }) => t.summary === uniqueSummary)).toBe(true);
 
-    const resB = await request(app)
-      .get("/api/tickets?pageSize=50")
-      .set("X-Dev-Requester-Id", String(requesterB));
+    const resB = await agentB.get("/api/tickets?pageSize=50");
     expect(resB.body.data.some((t: { summary: string }) => t.summary === uniqueSummary)).toBe(false);
   });
 
@@ -63,19 +67,13 @@ describe("GET /api/tickets", () => {
     const marker = `Marker${Date.now()}`;
     const ticket = await makeTicket(requesterA, { summary: `Something with ${marker} inside` });
 
-    const bySummary = await request(app)
-      .get(`/api/tickets?search=${marker}`)
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const bySummary = await agentA.get(`/api/tickets?search=${marker}`);
     expect(bySummary.body.data.some((t: { id: number }) => t.id === ticket.id)).toBe(true);
 
-    const byNumber = await request(app)
-      .get(`/api/tickets?search=${ticket.ticketNumber}`)
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const byNumber = await agentA.get(`/api/tickets?search=${ticket.ticketNumber}`);
     expect(byNumber.body.data.some((t: { id: number }) => t.id === ticket.id)).toBe(true);
 
-    const noMatch = await request(app)
-      .get("/api/tickets?search=zzz-definitely-no-match-zzz")
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const noMatch = await agentA.get("/api/tickets?search=zzz-definitely-no-match-zzz");
     expect(noMatch.body.data).toHaveLength(0);
   });
 
@@ -85,12 +83,8 @@ describe("GET /api/tickets", () => {
     await makeTicket(requesterA, { createdAt: tieTime });
     await makeTicket(requesterA, { createdAt: tieTime });
 
-    const res1 = await request(app)
-      .get("/api/tickets?sort=createdAt:desc&pageSize=50")
-      .set("X-Dev-Requester-Id", String(requesterA));
-    const res2 = await request(app)
-      .get("/api/tickets?sort=createdAt:desc&pageSize=50")
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const res1 = await agentA.get("/api/tickets?sort=createdAt:desc&pageSize=50");
+    const res2 = await agentA.get("/api/tickets?sort=createdAt:desc&pageSize=50");
 
     expect(res1.body.data.map((t: { id: number }) => t.id)).toEqual(
       res2.body.data.map((t: { id: number }) => t.id),
@@ -99,15 +93,11 @@ describe("GET /api/tickets", () => {
 
   // API-10
   it("rejects an invalid pageSize and an out-of-range page with 400, naming the field (BR-13)", async () => {
-    const badPageSize = await request(app)
-      .get("/api/tickets?pageSize=7")
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const badPageSize = await agentA.get("/api/tickets?pageSize=7");
     expect(badPageSize.status).toBe(400);
     expect(badPageSize.body.fieldErrors).toHaveProperty("pageSize");
 
-    const badPage = await request(app)
-      .get("/api/tickets?page=999")
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const badPage = await agentA.get("/api/tickets?page=999");
     expect(badPage.status).toBe(400);
     expect(badPage.body.fieldErrors).toHaveProperty("page");
   });
@@ -116,23 +106,13 @@ describe("GET /api/tickets", () => {
   // different, non-overlapping slice and matching pagination metadata. API-10
   // only covered the rejected values.
   it("returns a different, non-overlapping slice on page 2 with correct metadata (AC-13)", async () => {
-    const pager = await getPrisma().user.create({
-      data: {
-        fullName: "Pagination Fixture",
-        email: `pagination-${Date.now()}@example.com`,
-        isActive: true,
-      },
-    });
+    const { agent: pagerAgent, user: pager } = await createAndLoginUser({ role: "REQUESTER" });
     for (let i = 0; i < 15; i++) {
       await makeTicket(pager.id, { summary: `Pagination fixture ticket ${i}` });
     }
 
-    const page1 = await request(app)
-      .get("/api/tickets?page=1&pageSize=10")
-      .set("X-Dev-Requester-Id", String(pager.id));
-    const page2 = await request(app)
-      .get("/api/tickets?page=2&pageSize=10")
-      .set("X-Dev-Requester-Id", String(pager.id));
+    const page1 = await pagerAgent.get("/api/tickets?page=1&pageSize=10");
+    const page2 = await pagerAgent.get("/api/tickets?page=2&pageSize=10");
 
     expect(page1.status).toBe(200);
     expect(page2.status).toBe(200);
@@ -152,24 +132,14 @@ describe("GET /api/tickets", () => {
   // API-24 — AC-14's other half: changing the sort actually reorders by the
   // selected field. API-09 only proved the tie-break was stable.
   it("orders by the field named in the sort parameter (AC-14)", async () => {
-    const sorter = await getPrisma().user.create({
-      data: {
-        fullName: "Sort Fixture",
-        email: `sort-${Date.now()}@example.com`,
-        isActive: true,
-      },
-    });
+    const { agent: sorterAgent, user: sorter } = await createAndLoginUser({ role: "REQUESTER" });
     const oldest = new Date("2026-01-01T00:00:00.000Z");
     const newest = new Date("2026-06-01T00:00:00.000Z");
     await makeTicket(sorter.id, { summary: "Oldest sort fixture", createdAt: oldest });
     await makeTicket(sorter.id, { summary: "Newest sort fixture", createdAt: newest });
 
-    const desc = await request(app)
-      .get("/api/tickets?sort=createdAt:desc")
-      .set("X-Dev-Requester-Id", String(sorter.id));
-    const asc = await request(app)
-      .get("/api/tickets?sort=createdAt:asc")
-      .set("X-Dev-Requester-Id", String(sorter.id));
+    const desc = await sorterAgent.get("/api/tickets?sort=createdAt:desc");
+    const asc = await sorterAgent.get("/api/tickets?sort=createdAt:asc");
 
     expect(desc.status).toBe(200);
     expect(asc.status).toBe(200);
@@ -183,37 +153,42 @@ describe("GET /api/tickets", () => {
 
   // API-11
   it("distinguishes the empty-account state from the no-results-for-filter state (AC-11/AC-12)", async () => {
-    const zeroTicketRequester = await getPrisma().user.create({
-      data: {
-        fullName: `Zero Ticket Requester ${Date.now()}`,
-        email: `zero-ticket-${Date.now()}@example.dev`,
-        isActive: true,
-      },
-    });
+    const { agent: zeroAgent } = await createAndLoginUser({ role: "REQUESTER" });
 
-    const empty = await request(app)
-      .get("/api/tickets")
-      .set("X-Dev-Requester-Id", String(zeroTicketRequester.id));
+    const empty = await zeroAgent.get("/api/tickets");
     expect(empty.body.data).toHaveLength(0);
     expect(empty.body.meta.appliedFilters.search).toBeNull();
 
-    const noResults = await request(app)
-      .get("/api/tickets?search=definitely-not-a-real-match-xyz")
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const noResults = await agentA.get("/api/tickets?search=definitely-not-a-real-match-xyz");
     expect(noResults.body.data).toHaveLength(0);
     expect(noResults.body.meta.appliedFilters.search).toBe("definitely-not-a-real-match-xyz");
   });
 
-  it("rejects an inactive Requester with 403", async () => {
-    const inactive = await getPrisma().user.findFirstOrThrow({ where: { role: "REQUESTER", isActive: false } });
-    const res = await request(app).get("/api/tickets").set("X-Dev-Requester-Id", String(inactive.id));
-    expect(res.status).toBe(403);
+  // Adapted from Lab 2's "inactive Requester -> 403" (see create-ticket
+  // test's equivalent case for the full rationale).
+  it("rejects a request whose session belongs to a since-deactivated user (401)", async () => {
+    const { agent: staleAgent, user } = await createAndLoginUser({ role: "REQUESTER" });
+    await getPrisma().user.update({ where: { id: user.id }, data: { isActive: false } });
+    const res = await staleAgent.get("/api/tickets");
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a request with no session cookie, even with a legacy X-Dev-Requester-Id header, with 401", async () => {
+    const res = await request(app).get("/api/tickets").set("X-Dev-Requester-Id", String(requesterA));
+    expect(res.status).toBe(401);
   });
 
   it("defaults to createdAt:desc sort and pageSize 10 when no query params are given", async () => {
-    const res = await request(app).get("/api/tickets").set("X-Dev-Requester-Id", String(requesterA));
+    const res = await agentA.get("/api/tickets");
     expect(res.status).toBe(200);
     expect(res.body.meta.sort).toBe("createdAt:desc");
     expect(res.body.meta.pageSize).toBe(10);
+  });
+
+  it("rejects an IT Staff session with 403 FORBIDDEN", async () => {
+    const { agent: staffAgent } = await createAndLoginUser({ role: "IT_STAFF" });
+    const res = await staffAgent.get("/api/tickets");
+    expect(res.status).toBe(403);
+    expect(res.body.error).toBe("FORBIDDEN");
   });
 });

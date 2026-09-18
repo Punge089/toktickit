@@ -1,10 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { http, HttpResponse } from "msw";
 import { server } from "../msw/server.js";
-import { RequesterProvider } from "../../src/context/RequesterContext.js";
 import { AttachmentSection } from "../../src/components/tickets/AttachmentSection.js";
 import type { TicketDetailAttachment } from "../../src/api/ticketDetail.js";
 import { formatDateTime } from "../../src/lib/format.js";
@@ -57,16 +56,11 @@ function Harness({ initial }: { initial: TicketDetailAttachment[] }) {
   );
 }
 
+// Issue 64 (REG) — AttachmentSection no longer reads any Requester/Auth
+// context itself (ownership is enforced server-side via the session
+// cookie on every request), so no provider wrapper is needed here.
 function renderSection(initial: TicketDetailAttachment[]) {
-  sessionStorage.setItem(
-    "toktickit:lab2:selectedRequester",
-    JSON.stringify({ id: 1, fullName: "Aran Suksawat" }),
-  );
-  return render(
-    <RequesterProvider>
-      <Harness initial={initial} />
-    </RequesterProvider>,
-  );
+  return render(<Harness initial={initial} />);
 }
 
 describe("AttachmentSection", () => {
@@ -74,10 +68,6 @@ describe("AttachmentSection", () => {
     // jsdom doesn't implement the Blob URL APIs the real download flow uses.
     URL.createObjectURL = vi.fn(() => "blob:mock") as unknown as typeof URL.createObjectURL;
     URL.revokeObjectURL = vi.fn();
-  });
-
-  afterEach(() => {
-    sessionStorage.clear();
   });
 
   // UI-13

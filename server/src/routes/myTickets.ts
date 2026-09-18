@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import { getPrisma } from "../prisma.js";
-import { requesterAuth } from "../middleware/requesterAuth.js";
+import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 import { PRIORITIES } from "../lib/ticketValidation.js";
 
 // Issue 28 — GET /api/tickets (api-spec.md §5). Every result is scoped to
@@ -24,7 +24,12 @@ function parsePositiveInt(raw: unknown): number | null {
   return Number.isInteger(n) && n > 0 ? n : null;
 }
 
-myTicketsRouter.get("/api/tickets", requesterAuth, async (req: Request, res: Response) => {
+myTicketsRouter.get(
+  "/api/tickets",
+  requireAuth,
+  requirePasswordCurrent,
+  requireRole("REQUESTER"),
+  async (req: Request, res: Response) => {
   const q = req.query;
   const prisma = getPrisma();
 
@@ -57,7 +62,7 @@ myTicketsRouter.get("/api/tickets", requesterAuth, async (req: Request, res: Res
   }
 
   // filters — always scoped to the requesting Requester (BR-09)
-  const where: Prisma.TicketWhereInput = { requesterId: req.requester!.id };
+  const where: Prisma.TicketWhereInput = { requesterId: req.user!.id };
   const appliedFilters: Record<string, string | number | null> = {
     search: null,
     categoryId: null,
@@ -169,4 +174,5 @@ myTicketsRouter.get("/api/tickets", requesterAuth, async (req: Request, res: Res
   } catch {
     res.status(500).json({ error: "INTERNAL_ERROR", message: "Something went wrong. Please try again." });
   }
-});
+  },
+);

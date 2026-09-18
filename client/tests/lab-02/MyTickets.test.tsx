@@ -1,10 +1,10 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { http, HttpResponse } from "msw";
 import { server } from "../msw/server.js";
-import { RequesterProvider, useRequester } from "../../src/context/RequesterContext.js";
+import { AuthProvider } from "../../src/context/AuthContext.js";
 import { MyTicketsPage } from "../../src/pages/MyTicketsPage.js";
 
 const API_URL = "http://localhost:3000";
@@ -25,35 +25,21 @@ const emptyMeta = (appliedFilters: Partial<Record<string, string | null>> = {}) 
   },
 });
 
-// Lets a test trigger a mid-session Requester switch (BR-07) without going
-// through the full Change-Requester navigation flow.
-function SwitchRequesterButton({ to }: { to: { id: number; fullName: string } }) {
-  const { selectRequester } = useRequester();
-  return (
-    <button type="button" onClick={() => selectRequester(to)}>
-      switch requester
-    </button>
-  );
-}
-
-function renderPage(initial = { id: 1, fullName: "Aran Suksawat" }, withSwitchTo?: { id: number; fullName: string }) {
-  sessionStorage.setItem("toktickit:lab2:selectedRequester", JSON.stringify(initial));
+// Issue 64 (REG) — session-authenticated instead of a sessionStorage-based
+// Requester selection; the mocked /api/auth/me handler in msw/handlers.ts
+// supplies the identity.
+function renderPage() {
   return render(
     <MemoryRouter>
-      <RequesterProvider>
-        {withSwitchTo && <SwitchRequesterButton to={withSwitchTo} />}
+      <AuthProvider>
         <MyTicketsPage />
-      </RequesterProvider>
+      </AuthProvider>
     </MemoryRouter>,
   );
 }
 
 describe("My Tickets screen", () => {
-  afterEach(() => {
-    sessionStorage.clear();
-  });
-
-  it("lists the selected Requester's own tickets", async () => {
+  it("lists the authenticated user's own tickets", async () => {
     renderPage();
     expect(await screen.findByText("Requester A ticket one")).toBeInTheDocument();
     expect(screen.getByText("Requester A ticket two")).toBeInTheDocument();
@@ -77,16 +63,15 @@ describe("My Tickets screen", () => {
     expect(screen.queryByText(/no tickets yet/i)).not.toBeInTheDocument();
   });
 
-  // UI-10
-  it("refetches and drops the previous Requester's rows when the Requester changes", async () => {
-    renderPage({ id: 1, fullName: "Aran Suksawat" }, { id: 2, fullName: "Buppha Ratanakorn" });
-
-    expect(await screen.findByText("Requester A ticket one")).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole("button", { name: /switch requester/i }));
-
-    await waitFor(() => expect(screen.queryByText("Requester A ticket one")).not.toBeInTheDocument());
-    expect(await screen.findByText("Requester B ticket one")).toBeInTheDocument();
+  // UI-10 (adapted) — Lab 2's mid-session Requester-switch capability is
+  // removed entirely (BR-39): identity is now fixed for the session, so
+  // there is no "switch requester" control anywhere on this screen, and
+  // no client-side affordance can make it show another identity's data.
+  it("has no Change Requester or Requester-switching control anywhere on the screen", async () => {
+    renderPage();
+    await screen.findByText("Requester A ticket one");
+    expect(screen.queryByText(/change requester/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: /development requester/i })).not.toBeInTheDocument();
   });
 
   // UI-11

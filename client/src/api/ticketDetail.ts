@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { apiFetch } from "./http.js";
+import { TicketStatus } from "../components/ui/Badge.js";
 
 export interface TicketDetailAttachment {
   id: number;
@@ -24,8 +25,8 @@ export interface TicketDetail {
   relatedSystemId: number;
   relatedSystemName: string;
   requestedPriority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  itPriority: string | null;
-  currentStatus: "NEW";
+  itPriority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  currentStatus: TicketStatus;
   createdAt: string;
   updatedAt: string;
   attachments: TicketDetailAttachment[];
@@ -35,11 +36,10 @@ export interface TicketDetail {
 // distinguishing "doesn't exist" from "not yours" (BR-10/BR-28).
 export class TicketNotFoundError extends Error {}
 
-// Issue 30 — GET /api/tickets/:id (api-spec.md §6).
-export async function fetchTicketDetail(requesterId: number, ticketId: string): Promise<TicketDetail> {
-  const res = await fetch(`${API_URL}/api/tickets/${ticketId}`, {
-    headers: { "X-Dev-Requester-Id": String(requesterId) },
-  });
+// Issue 30/64 — GET /api/tickets/:id (api-spec.md §6). Ownership now
+// comes from the session (BR-03); no requesterId is sent.
+export async function fetchTicketDetail(ticketId: string): Promise<TicketDetail> {
+  const res = await apiFetch(`/api/tickets/${ticketId}`);
   if (res.status === 404) {
     throw new TicketNotFoundError("Ticket not found.");
   }

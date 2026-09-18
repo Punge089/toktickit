@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { apiFetch } from "./http.js";
 
 export interface CreateTicketResult {
   id: number;
@@ -28,7 +28,6 @@ export class ValidationError extends Error {
 }
 
 export interface CreateTicketInput {
-  requesterId: number;
   summary: string;
   description: string;
   categoryId: string;
@@ -37,8 +36,8 @@ export interface CreateTicketInput {
   files: File[];
 }
 
-// Issue 27 — POST /api/tickets (api-spec.md §4). multipart/form-data with
-// the Requester identity on X-Dev-Requester-Id, per api-spec.md §0.
+// Issue 27/64 — POST /api/tickets (api-spec.md §4). multipart/form-data;
+// the Requester identity comes from the session (BR-03), not a header.
 export async function createTicket(input: CreateTicketInput): Promise<CreateTicketResult> {
   const formData = new FormData();
   formData.append("summary", input.summary);
@@ -50,16 +49,7 @@ export async function createTicket(input: CreateTicketInput): Promise<CreateTick
     formData.append("attachments", file);
   }
 
-  let res: Response;
-  try {
-    res = await fetch(`${API_URL}/api/tickets`, {
-      method: "POST",
-      headers: { "X-Dev-Requester-Id": String(input.requesterId) },
-      body: formData,
-    });
-  } catch {
-    throw new Error("Unable to connect to TokTickIT API. Please try again.");
-  }
+  const res = await apiFetch("/api/tickets", { method: "POST", body: formData });
 
   if (res.status === 400) {
     const body = await res.json().catch(() => ({}));

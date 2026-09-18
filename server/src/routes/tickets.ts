@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import { getPrisma } from "../prisma.js";
-import { requesterAuth } from "../middleware/requesterAuth.js";
+import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 import { validateCreateTicketInput } from "../lib/ticketValidation.js";
 import { nextTicketNumber } from "../lib/ticketNumber.js";
 import { checkAttachmentFile, generateStoredFilename, MAX_ATTACHMENT_BYTES } from "../lib/attachmentRules.js";
@@ -32,7 +32,9 @@ function parseAttachments(req: Request, res: Response, next: NextFunction) {
 
 ticketsRouter.post(
   "/api/tickets",
-  requesterAuth,
+  requireAuth,
+  requirePasswordCurrent,
+  requireRole("REQUESTER"),
   parseAttachments,
   async (req: Request, res: Response) => {
     const validation = validateCreateTicketInput(req.body);
@@ -72,7 +74,7 @@ ticketsRouter.post(
         return tx.ticket.create({
           data: {
             ticketNumber,
-            requesterId: req.requester!.id,
+            requesterId: req.user!.id,
             categoryId,
             relatedSystemId,
             summary,
@@ -112,7 +114,7 @@ ticketsRouter.post(
               storedFilename,
               mimeType: file.mimetype,
               sizeBytes: file.size,
-              uploadedById: req.requester!.id,
+              uploadedById: req.user!.id,
             },
           });
           attachments.push({ id: attachment.id, originalFilename: attachment.originalFilename });
