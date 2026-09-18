@@ -36,19 +36,89 @@ enum Priority {
 
 enum TicketStatus {
   NEW
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_REQUESTER
+  RESOLVED
+  CLOSED
+  REOPENED
+  CANCELLED
 }
 
-model RequesterUser {
-  id         Int      @id @default(autoincrement())
-  fullName   String
-  email      String   @unique
-  department String?
-  isActive   Boolean  @default(true)
-  createdAt  DateTime @default(now())
+// ---------------------------------------------------------------------------
+// Lab 3 — Issue 63: RequesterUser evolves into User (real auth + 3 roles).
+// See docs/lab-03/specification.md §7 for the migration rationale — this is
+// a rename, not a drop/recreate, so every existing Ticket/Attachment FK
+// keeps pointing at the same rows.
+// ---------------------------------------------------------------------------
+enum Role {
+  REQUESTER
+  IT_STAFF
+  ADMINISTRATOR
+}
 
-  tickets             Ticket[]
-  uploadedAttachments Attachment[] @relation("AttachmentUploadedBy")
-  removedAttachments  Attachment[] @relation("AttachmentRemovedBy")
+model User {
+  id                 Int      @id @default(autoincrement())
+  fullName           String
+  email              String   @unique
+  department         String? // legacy Lab 2 field, kept so no data is lost; no Lab 3 screen shows it
+  role               Role     @default(REQUESTER)
+  passwordHash       String? // null until an Administrator or the migration sets one; such a user cannot log in
+  mustChangePassword Boolean  @default(true)
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+
+  tickets             Ticket[]        @relation("TicketRequester")
+  ownedTickets        Ticket[]        @relation("TicketOwner")
+  uploadedAttachments Attachment[]    @relation("AttachmentUploadedBy")
+  removedAttachments  Attachment[]    @relation("AttachmentRemovedBy")
+  publicComments      PublicComment[]
+  internalNotes       InternalNote[]
+  sessions            Session[]
+
+  @@index([role, isActive])
+}
+
+// Issue 63 — one row per active login. The httpOnly cookie carries the raw
+// token; only its SHA-256 hash is ever stored, so a DB leak alone cannot be
+// replayed as a session.
+model Session {
+  id        Int      @id @default(autoincrement())
+  tokenHash String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([userId])
+}
+
+// Issue 66 — Public Comments and Internal Notes are separate tables (not one
+// table with a visibility flag) so a query for one can never accidentally
+// return the other. Both are append-only in Lab 3 (BR-24).
+model PublicComment {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model InternalNote {
+  id        Int      @id @default(autoincrement())
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
 }
 
 model RelatedSystem {
@@ -64,7 +134,7 @@ model Ticket {
   id                Int           @id @default(autoincrement())
   ticketNumber      String        @unique
   requesterId       Int
-  requester         RequesterUser @relation(fields: [requesterId], references: [id])
+  requester         User          @relation("TicketRequester", fields: [requesterId], references: [id])
   categoryId        Int
   category          Category      @relation(fields: [categoryId], references: [id])
   relatedSystemId   Int
@@ -72,17 +142,29 @@ model Ticket {
   summary           String
   description       String
   requestedPriority Priority
-  itPriority        Priority?
+  itPriority        Priority
   currentStatus     TicketStatus  @default(NEW)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  attachments Attachment[]
+  // Issue 63/66 — ownership, resolution evidence, and the Requester's own
+  // "problem appears resolved" signal (BR-05, BR-17, BR-21, BR-23).
+  ownerId             Int?
+  owner               User?     @relation("TicketOwner", fields: [ownerId], references: [id])
+  resolutionSummary   String?
+  requesterResolvedAt DateTime?
+
+  attachments    Attachment[]
+  publicComments PublicComment[]
+  internalNotes  InternalNote[]
 
   // My Tickets defaults to sorting by createdAt within one Requester's own
   // tickets (BR-12); status filtering is the other common access pattern.
   @@index([requesterId, createdAt])
   @@index([requesterId, currentStatus])
+  // IT Staff Ticket Queue's default view and its ownership filter (Issue 65).
+  @@index([currentStatus, createdAt])
+  @@index([ownerId])
 }
 
 model Attachment {
@@ -95,14 +177,14 @@ model Attachment {
   sizeBytes        Int
   uploadedAt       DateTime @default(now())
   uploadedById     Int
-  uploadedBy       RequesterUser @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id])
+  uploadedBy       User     @relation("AttachmentUploadedBy", fields: [uploadedById], references: [id])
 
   // Soft removal (BR-22): removedAt doubles as the "is it removed" flag and
   // the audit timestamp, so an index on [ticketId, removedAt] serves both the
   // 5-active-attachment check and the active/removed split display.
   removedAt     DateTime?
   removedById   Int?
-  removedBy     RequesterUser? @relation("AttachmentRemovedBy", fields: [removedById], references: [id])
+  removedBy     User?     @relation("AttachmentRemovedBy", fields: [removedById], references: [id])
   removalReason String?
 
   @@index([ticketId, removedAt])

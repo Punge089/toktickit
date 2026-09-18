@@ -13,7 +13,7 @@ describe("GET /api/tickets/:id", () => {
   beforeAll(async () => {
     await seedAll();
     const prisma = getPrisma();
-    const requesters = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 });
+    const requesters = await prisma.user.findMany({ where: { role: "REQUESTER", isActive: true }, take: 2 });
     requesterA = requesters[0].id;
     requesterB = requesters[1].id;
     const category = await prisma.category.findFirstOrThrow({ where: { isActive: true } });
@@ -28,6 +28,7 @@ describe("GET /api/tickets/:id", () => {
         summary: "Detail-endpoint test ticket",
         description: "A".repeat(30),
         requestedPriority: "MEDIUM",
+        itPriority: "MEDIUM",
       },
     });
     ownedTicketId = ticket.id;
@@ -81,7 +82,7 @@ describe("GET /api/tickets/:id", () => {
   });
 
   it("rejects an inactive Requester with 403", async () => {
-    const inactive = await getPrisma().requesterUser.findFirstOrThrow({ where: { isActive: false } });
+    const inactive = await getPrisma().user.findFirstOrThrow({ where: { role: "REQUESTER", isActive: false } });
     const res = await request(app)
       .get(`/api/tickets/${ownedTicketId}`)
       .set("X-Dev-Requester-Id", String(inactive.id));

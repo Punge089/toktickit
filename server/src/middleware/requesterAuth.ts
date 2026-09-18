@@ -4,6 +4,13 @@ import { getPrisma } from "../prisma.js";
 // Issue 26 — resolves X-Dev-Requester-Id into req.requester for every
 // Requester-scoped endpoint (api-spec.md §0). This is a Lab 2 testing
 // mechanism, not authentication — see specification.md BR-05/BR-29.
+//
+// Issue 63 (transitional) — RequesterUser is now User with a role column.
+// This middleware, its header, and the screens that depend on it are
+// removed entirely in Issue 64 once session auth replaces them
+// (docs/lab-03/specification.md BR-39). Until then it only resolves
+// role=REQUESTER users, so a stray header value naming an IT Staff or
+// Administrator id can never be used to impersonate a Requester.
 export interface AuthedRequester {
   id: number;
   fullName: string;
@@ -31,9 +38,9 @@ export async function requesterAuth(req: Request, res: Response, next: NextFunct
     return;
   }
 
-  const requester = await getPrisma().requesterUser.findUnique({ where: { id } });
+  const requester = await getPrisma().user.findUnique({ where: { id } });
 
-  if (!requester) {
+  if (!requester || requester.role !== "REQUESTER") {
     res.status(400).json({
       error: "UNKNOWN_REQUESTER",
       message: "No Development Requester with that id",

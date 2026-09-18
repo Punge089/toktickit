@@ -76,7 +76,7 @@ describe("GET /api/dev-requesters", () => {
   });
 
   it("returns a safe 500 when the database is unreachable", async () => {
-    const spy = vi.spyOn(getPrisma().requesterUser, "findMany").mockRejectedValueOnce(new Error("boom"));
+    const spy = vi.spyOn(getPrisma().user, "findMany").mockRejectedValueOnce(new Error("boom"));
     const res = await request(app).get("/api/dev-requesters");
     expect(res.status).toBe(500);
     expect(res.body).toEqual({ error: "INTERNAL_ERROR", message: "Unable to load Development Requesters." });

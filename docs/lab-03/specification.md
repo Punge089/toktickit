@@ -360,10 +360,15 @@ rewritten to an incompatible shape.
    preserved by construction rather than by a data-copy step that could go wrong.
 2. **New `User` columns get safe defaults**: `role` defaults to `REQUESTER` (every existing row was a
    Lab 2 Requester), `mustChangePassword` defaults to `true`, and `passwordHash` is nullable so a
-   migrated row is valid before it has a password. A documented, non-production seed password is then
-   assigned to every migrated Requester (see §5.3 of `api-spec.md` and the README), and
-   `mustChangePassword` stays `true` for all of them, so nobody can log in with a password they never
-   set without immediately being asked to choose their own.
+   migrated row is valid — but cannot log in — before it has a password. The idempotent seed script
+   (§5.3, `server/prisma/seed.ts`) then converges every named seeded account to its documented state: a
+   single local-development password (`SEED_PASSWORD`) is assigned to each, with `mustChangePassword`
+   set to `false` for the original Lab 2 Requesters (already "onboarded" for convenient local testing)
+   and left `true` for one dedicated account that exists specifically to demonstrate the mandatory
+   first-login change. A migrated account that the seed script never names (a real production migration
+   would have more than five) keeps the migration's own default of `passwordHash = null`,
+   `mustChangePassword = true`, and simply cannot authenticate until an Administrator sets its initial
+   password (BR-30).
 3. **`TicketStatus` gains its 7 new values with `ALTER TYPE ... ADD VALUE`**, one statement per value,
    never in the same transaction that uses the new value — PostgreSQL forbids using a new enum value
    before the transaction that added it commits. Every existing Ticket keeps `currentStatus = NEW`

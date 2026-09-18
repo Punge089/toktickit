@@ -78,6 +78,9 @@ ticketsRouter.post(
             summary,
             description,
             requestedPriority,
+            // Issue 63 — AC-12: IT Priority starts equal to Requested
+            // Priority; only IT Staff can change it afterward.
+            itPriority: requestedPriority,
           },
         });
       });
