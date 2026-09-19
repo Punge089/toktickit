@@ -82,7 +82,9 @@ describe("Lab 3 seed data", () => {
   it("gives every RESOLVED or CLOSED seeded Ticket a Resolution Summary", async () => {
     await seedAll();
     const resolvedOrClosed = await getPrisma().ticket.findMany({
-      where: { currentStatus: { in: ["RESOLVED", "CLOSED"] } },
+      // Only the seeded Tickets (fixed 2024 ticket numbers): other test files
+      // share this database and create their own Resolved/Closed fixtures.
+      where: { currentStatus: { in: ["RESOLVED", "CLOSED"] }, ticketNumber: { startsWith: "TKT-2024-" } },
     });
     expect(resolvedOrClosed.length).toBeGreaterThan(0);
     for (const ticket of resolvedOrClosed) {

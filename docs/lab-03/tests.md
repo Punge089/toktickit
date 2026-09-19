@@ -22,7 +22,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 |---|---|---|---|---|---|
 | UNIT-01 | BR-08 | Password policy validator: length, upper/lower/digit/special | Accepts a compliant password; rejects one missing each rule individually | `server/tests/lab-03/password.unit.test.ts` | **Pass** |
 | UNIT-02 | BR-07, BR-09 | `hashPassword`/`verifyPassword` round trip; wrong password; same password fails "must differ" check | Correct password verifies true, wrong verifies false, hash is never the plaintext | `server/tests/lab-03/password.unit.test.ts` | **Pass** |
-| UNIT-03 | BR-19–BR-23 | Transition-matrix function for every (from, to) pair in specification.md §5a | Listed pairs return allowed; every other pair, including same-status, returns rejected | `server/tests/lab-03/transitions.unit.test.ts` | Planned |
+| UNIT-03 | BR-19–BR-23 | Transition-matrix function for every (from, to) pair in specification.md §5, checked against an independently written table | Listed pairs return allowed; every other pair, including same-status, returns rejected | `server/tests/lab-03/transitions.unit.test.ts` | **Pass** |
 | UNIT-04 | §6.3, AC-24 | Queue query parser: valid and invalid `sort`/`status`/`itPriority`/`categoryId`/`owner`/`page`/`pageSize`/`search`, and repeated parameters | Valid values parse to the expected filter object; each invalid value returns the specific field name that failed | `server/tests/lab-03/staff-queue.api.test.ts` (`parseQueueQuery` exercised directly) | **Pass** |
 
 ### API — Authentication
@@ -45,13 +45,13 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
 | SEC-01 | AC-03, BR-03 | Requester sends another user's id as `requesterId` in the body, in the query string, and on the legacy `X-Dev-Requester-Id` header while creating/listing tickets | All three ignored; only the authenticated user's own data is returned/created | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
-| SEC-02 | AC-11 | Requester calls `GET /api/staff/tickets` and `GET /api/staff/tickets/:id` directly | Both `403 FORBIDDEN`, no ticket data in the body | `server/tests/lab-03/authorization.api.test.ts` | Planned |
-| SEC-03 | AC-04, AC-20 | Requester calls `GET`/`POST /api/staff/tickets/:id/notes` on their own ticket | Both `403`, no note content anywhere in the response | `server/tests/lab-03/authorization.api.test.ts` | Planned |
+| SEC-02 | AC-11 | Requester calls `GET /api/staff/tickets` and `GET /api/staff/tickets/:id` directly | Both `403 FORBIDDEN`, no ticket data in the body | `server/tests/lab-03/comments-notes.api.test.ts` (and `staff-queue.api.test.ts` for the list half of SEC-02) | **Pass** |
+| SEC-03 | AC-04, AC-20 | Requester calls `GET`/`POST /api/staff/tickets/:id/notes` on their own ticket | Both `403`, no note content anywhere in the response | `server/tests/lab-03/comments-notes.api.test.ts` (and `staff-queue.api.test.ts` for the list half of SEC-02) | **Pass** |
 | SEC-04 | AC-29 | IT Staff and Requester each call every `/api/admin/*` endpoint | All `403`; unauthenticated caller gets `401` on the same endpoints | `server/tests/lab-03/authorization.api.test.ts` | Planned |
 | SEC-05 | BR-36 | Every Requester-scoped endpoint plus `/api/auth/me` is called once unauthenticated | All return `401` | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
 | SEC-06 | BR-13 | State-changing request with a mismatched `Origin` header vs. one with none vs. the correct one | Mismatched `Origin` → `403 ORIGIN_NOT_ALLOWED`; missing or matching `Origin` → normal handling | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
 | SEC-07 | BR-39 | `GET /api/dev-requesters` | `404` — route no longer exists | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
-| SEC-08 | BR-36 | IT Staff attempts to write a Comment/Note/status change on a Ticket that belongs to a Requester, called with a Requester B's ticket id that does exist | Confirms `404` is used only for true nonexistence at Requester routes, and staff routes never 404 solely due to ownership | `server/tests/lab-03/authorization.api.test.ts` | Planned |
+| SEC-08 | BR-36 | IT Staff attempts to write a Comment/Note/status change on a Ticket that belongs to a Requester, called with a Requester B's ticket id that does exist | Confirms `404` is used only for true nonexistence at Requester routes, and staff routes never 404 solely due to ownership | `server/tests/lab-03/comments-notes.api.test.ts` (and `staff-queue.api.test.ts` for the list half of SEC-02) | **Pass** |
 
 ### Migration and Regression
 
@@ -83,29 +83,29 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| DET-01 | AC-13 | `PATCH .../owner` claiming an unassigned Ticket | `200`; owner set; reflected in a subsequent Queue fetch | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-02 | AC-14 | `PATCH .../owner` reassigning from IT Staff A to IT Staff B | `200`; owner becomes B | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-03 | BR-17 | `PATCH .../owner` with a Requester's id, and with an inactive IT Staff id | Both `409 INVALID_OWNER` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-04 | AC-15, BR-20 | `PATCH .../status` to `IN_PROGRESS` on an unassigned Ticket | `409 OWNER_REQUIRED`; status unchanged | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-05 | AC-16, BR-19 | `PATCH .../status` to a status not reachable from the current one (e.g. `NEW` → `CLOSED` directly) | `409 INVALID_TRANSITION`; status unchanged | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-06 | AC-17, BR-21 | `PATCH .../status` to `RESOLVED` with no `resolutionSummary`, and separately with one 2001 characters long | Both `400` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-07 | AC-18, BR-22 | `PATCH .../owner`, `.../it-priority`, `.../status` on a `CLOSED` Ticket | All three `409 TICKET_CLOSED` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-08 | BR-23 | Move a Ticket to `REOPENED` after the Requester had set `requesterResolvedAt` | `requesterResolvedAt` is cleared (`null`) in the response | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
-| DET-09 | FR-13 | `PATCH .../it-priority` to each of the 4 `Priority` values | `200`; value persists independently of `requestedPriority` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | Planned |
+| DET-01 | AC-13 | `PATCH .../owner` claiming an unassigned Ticket | `200`; owner set; reflected in a subsequent Queue fetch | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-02 | AC-14 | `PATCH .../owner` reassigning from IT Staff A to IT Staff B | `200`; owner becomes B | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-03 | BR-17 | `PATCH .../owner` with a Requester's id, and with an inactive IT Staff id | Both `409 INVALID_OWNER` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-04 | AC-15, BR-20 | `PATCH .../status` to `IN_PROGRESS` on an unassigned Ticket | `409 OWNER_REQUIRED`; status unchanged | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-05 | AC-16, BR-19 | `PATCH .../status` to a status not reachable from the current one (e.g. `NEW` → `CLOSED` directly) | `409 INVALID_TRANSITION`; status unchanged | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-06 | AC-17, BR-21 | `PATCH .../status` to `RESOLVED` with no `resolutionSummary`, and separately with one 2001 characters long | Both `400` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-07 | AC-18, BR-22 | `PATCH .../owner`, `.../it-priority`, `.../status` on a `CLOSED` Ticket | All three `409 TICKET_CLOSED` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-08 | BR-23 | Move a Ticket to `REOPENED` after the Requester had set `requesterResolvedAt` | `requesterResolvedAt` is cleared (`null`) in the response | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
+| DET-09 | FR-13 | `PATCH .../it-priority` to each of the 4 `Priority` values | `200`; value persists independently of `requestedPriority` | `server/tests/lab-03/staff-ticket-detail.api.test.ts` | **Pass** |
 
 ### Comments and Internal Notes
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| CMT-01 | AC-19, BR-04 | Requester posts a Public Comment; IT Staff then fetches the same Ticket's comments | IT Staff sees the comment with the correct `authorName`/`authorRole`/`createdAt` from the backend | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-02 | AC-20, BR-04 | IT Staff posts an Internal Note; Requester then requests notes on their own ticket | Requester gets `403`, zero note content anywhere in the response | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-03 | BR-36 (§11 Assumption) | Administrator reads notes (allowed), then attempts to `POST` a note | `GET` `200`; `POST` `403` | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-04 | BR-25 | Post an empty (whitespace-only) comment, and separately a 2001-character comment | Both `400`, no row created | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-05 | BR-26 | Post a comment body containing `<script>` and `<b>` tags | Stored and returned as literal text; UI test STY-04 confirms it never renders as markup | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-06 | BR-27 | Post a comment supplying a spoofed `authorId` and `createdAt` in the body | Both ignored; author is the session user, `createdAt` is server time | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-07 | AC-21, BR-05 | Requester calls `POST /api/tickets/:id/problem-resolved` on an Open Ticket | `200`; `requesterResolvedAt` set; `currentStatus` unchanged | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-08 | AC-22 | Calling `problem-resolved` a second time on the same open period | `409 TICKET_NOT_ACTIVE` | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
-| CMT-09 | BR-22 | Comment/Note/problem-resolved calls on a `CLOSED` Ticket | All rejected with `409` | `server/tests/lab-03/comments-notes.api.test.ts` | Planned |
+| CMT-01 | AC-19, BR-04 | Requester posts a Public Comment; IT Staff then fetches the same Ticket's comments | IT Staff sees the comment with the correct `authorName`/`authorRole`/`createdAt` from the backend | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-02 | AC-20, BR-04 | IT Staff posts an Internal Note; Requester then requests notes on their own ticket | Requester gets `403`, zero note content anywhere in the response | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-03 | BR-36 (§11 Assumption) | Administrator reads notes (allowed), then attempts to `POST` a note | `GET` `200`; `POST` `403` | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-04 | BR-25 | Post an empty (whitespace-only) comment, and separately a 2001-character comment | Both `400`, no row created | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-05 | BR-26 | Post a comment body containing `<script>` and `<b>` tags | Stored and returned as literal text; UI test STY-04 confirms it never renders as markup | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-06 | BR-27 | Post a comment supplying a spoofed `authorId` and `createdAt` in the body | Both ignored; author is the session user, `createdAt` is server time | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-07 | AC-21, BR-05 | Requester calls `POST /api/tickets/:id/problem-resolved` on an Open Ticket | `200`; `requesterResolvedAt` set; `currentStatus` unchanged | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-08 | AC-22 | Calling `problem-resolved` a second time on the same open period | `409 TICKET_NOT_ACTIVE` | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-09 | BR-22 | Comment/Note/problem-resolved calls on a `CLOSED` Ticket | All rejected with `409` | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
 
 ### Administrator
 
@@ -135,22 +135,22 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | UI-09 | §7 (empty/no-results) | Queue mocked with 0 tickets ever, and separately 0 matches with a filter active | Distinct empty vs. no-results copy | `client/tests/lab-03/StaffTicketQueue.test.tsx` | **Pass** |
 | UI-08b | §7 | Queue rows with an assigned owner, an unassigned Ticket, an inactive owner, and `requesterResolvedAt` set | Owner name / "Unassigned" / "(inactive)" render; both priority badges, status badge, an Open link to `/staff/tickets/:id`; the "Requester reports resolved" tag appears beside, not instead of, the status | `client/tests/lab-03/StaffTicketQueue.test.tsx` | **Pass** |
 | UI-09b | §7 | Queue API failure then Retry; 403 from the API | Failure callout with Retry that recovers; forbidden message | `client/tests/lab-03/StaffTicketQueue.test.tsx` | **Pass** |
-| UI-10 | AC-16 | Staff Ticket Detail's Status `<select>`, Ticket currently `RESOLVED` | Options list contains only `Closed` and `Reopened` | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
-| UI-11 | AC-17 | Submit Status change to Resolved with an empty Resolution Summary | Client-side validation blocks submission; no PATCH fired | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
-| UI-12 | BR-04 | Staff Ticket Detail with mocked comments and notes | Notes render inside the visually distinct panel (§8 of ui-spec.md); comments do not | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
+| UI-10 | AC-16 | Staff Ticket Detail's Status `<select>`, Ticket currently `RESOLVED` | Options list contains only `Closed` and `Reopened` | `client/tests/lab-03/StaffTicketDetail.test.tsx` | **Pass** |
+| UI-11 | AC-17 | Submit Status change to Resolved with an empty Resolution Summary | Client-side validation blocks submission; no PATCH fired | `client/tests/lab-03/StaffTicketDetail.test.tsx` | **Pass** |
+| UI-12 | BR-04 | Staff Ticket Detail with mocked comments and notes | Notes render inside the visually distinct panel (§8 of ui-spec.md); comments do not | `client/tests/lab-03/StaffTicketDetail.test.tsx` | **Pass** |
 | UI-13 | AC-25 | Create User panel submitted, mocked `409 EMAIL_TAKEN` | Field-level message under Email | `client/tests/lab-03/UserManagement.test.tsx` | Planned |
 | UI-14 | AC-27, AC-28 | Edit panel opened on the current user's own account, and separately on the only active Administrator | Active toggle and Role select disabled with the explanatory caption in both cases | `client/tests/lab-03/UserManagement.test.tsx` | Planned |
-| UI-15 | AC-21 | Requester Ticket Detail, click "Problem Appears Resolved", confirm | Button replaced by the resolved indicator after the mocked success response | `client/tests/lab-03/RequesterComments.test.tsx` | Planned |
-| UI-16 | AC-19 | Post a Public Comment from Requester Ticket Detail, mocked success | New comment appears at the end of the list with the current user's name | `client/tests/lab-03/RequesterComments.test.tsx` | Planned |
+| UI-15 | AC-21 | Requester Ticket Detail, click "Problem Appears Resolved", confirm | Button replaced by the resolved indicator after the mocked success response | `client/tests/lab-03/RequesterComments.test.tsx` | **Pass** |
+| UI-16 | AC-19 | Post a Public Comment from Requester Ticket Detail, mocked success | New comment appears at the end of the list with the current user's name | `client/tests/lab-03/RequesterComments.test.tsx` | **Pass** |
 
 ### UI Style
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| STY-01 | §1 of ui-spec.md | Internal Note panel vs. Public Comment panel, rendered together | Different background token/class; the note panel has the lock-icon `aria-label` | `client/tests/lab-03/lab3.style.test.tsx` | Planned |
-| STY-02 | §1 of ui-spec.md | Role badge for each of the 3 roles | Correct token class per role, text label always present (never color-only) | `client/tests/lab-03/lab3.style.test.tsx` | Planned |
-| STY-03 | §1 of ui-spec.md | Status badge for each of the 8 statuses | Distinct token class per status, all 8 render without a fallback/unstyled case | `client/tests/lab-03/lab3.style.test.tsx` | Planned |
-| STY-04 | BR-26 | Comment body containing `<script>` rendered in the DOM | Appears as literal text (`textContent`), never parsed as an element | `client/tests/lab-03/RequesterComments.test.tsx` | Planned |
+| STY-01 | §1 of ui-spec.md | Internal Note panel vs. Public Comment panel, rendered together | Different background token/class; the note panel has the lock-icon `aria-label` | `client/tests/lab-03/lab3.style.test.tsx` | **Pass** |
+| STY-02 | §1 of ui-spec.md | Role badge for each of the 3 roles | Correct token class per role, text label always present (never color-only) | `client/tests/lab-03/lab3.style.test.tsx` | **Pass** |
+| STY-03 | §1 of ui-spec.md | Status badge for each of the 8 statuses | Distinct token class per status, all 8 render without a fallback/unstyled case | `client/tests/lab-03/lab3.style.test.tsx` | **Pass** |
+| STY-04 | BR-26 | Comment body containing `<script>` rendered in the DOM | Appears as literal text (`textContent`), never parsed as an element | `client/tests/lab-03/RequesterComments.test.tsx` | **Pass** |
 
 ### Responsive
 

@@ -172,7 +172,8 @@ hidden or disabled in the UI is not authorization.
 - **BR-19** A Ticket's status may only move along the approved Status Transition Matrix (§5a); an
   unlisted transition, or a transition to the Ticket's current status, is rejected as a conflict.
 - **BR-20** Moving a Ticket to In Progress, Waiting for Requester, or Resolved requires the Ticket to
-  already have an owner; otherwise the request is rejected.
+  already have an owner; otherwise the request is rejected For the same reason, a Ticket cannot be unassigned while its
+  status is In Progress, Waiting for Requester, or Resolved (`409 OWNER_REQUIRED`).
 - **BR-21** Moving a Ticket to Resolved requires a non-empty Resolution Summary of at most 2000
   characters, which is visible to the Requester.
 - **BR-22** Closed and Cancelled Tickets accept no further status transition, ownership change, IT

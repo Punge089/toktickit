@@ -57,6 +57,8 @@ ticketDetailRouter.get(
       requestedPriority: ticket.requestedPriority,
       itPriority: ticket.itPriority,
       currentStatus: ticket.currentStatus,
+      resolutionSummary: ticket.resolutionSummary,
+      requesterResolvedAt: ticket.requesterResolvedAt,
       createdAt: ticket.createdAt,
       updatedAt: ticket.updatedAt,
       attachments: ticket.attachments.map((a) => ({

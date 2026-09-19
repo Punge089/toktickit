@@ -33,6 +33,19 @@ function parseSingleFile(req: Request, res: Response, next: NextFunction) {
   });
 }
 
+// Requesters only ever see attachments on their own Tickets (404 otherwise);
+// IT Staff and Administrator read attachments on any Ticket (Issue 66,
+// docs/lab-03/ui-spec.md section 8 - attachment continuity).
+async function findReadableAttachment(attachmentId: number, user: { id: number; role: string }) {
+  return getPrisma().attachment.findFirst({
+    where: { id: attachmentId, ...(user.role === "REQUESTER" ? { ticket: { requesterId: user.id } } : {}) },
+    include: {
+      uploadedBy: { select: { fullName: true } },
+      removedBy: { select: { fullName: true } },
+    },
+  });
+}
+
 async function findOwnedAttachment(attachmentId: number, requesterId: number) {
   return getPrisma().attachment.findFirst({
     where: { id: attachmentId, ticket: { requesterId } },
@@ -151,7 +164,7 @@ attachmentsRouter.get(
   "/api/attachments/:id",
   requireAuth,
   requirePasswordCurrent,
-  requireRole("REQUESTER"),
+  requireRole("REQUESTER", "IT_STAFF", "ADMINISTRATOR"),
   async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
@@ -159,7 +172,7 @@ attachmentsRouter.get(
     return;
   }
   try {
-    const attachment = await findOwnedAttachment(id, req.user!.id);
+    const attachment = await findReadableAttachment(id, req.user!);
     if (!attachment) {
       res.status(404).json(ATTACHMENT_NOT_FOUND);
       return;
@@ -172,14 +185,12 @@ attachmentsRouter.get(
 );
 
 // §9 — GET /api/attachments/:id/download (active only — 410 if removed).
-// REQUESTER-only for now; Issue 66 extends this to IT_STAFF/ADMINISTRATOR
-// read access once staff Ticket Detail needs attachment continuity
-// (docs/lab-03/ui-spec.md §8).
+// Requesters (owner only), IT Staff, and Administrator (Issue 66).
 attachmentsRouter.get(
   "/api/attachments/:id/download",
   requireAuth,
   requirePasswordCurrent,
-  requireRole("REQUESTER"),
+  requireRole("REQUESTER", "IT_STAFF", "ADMINISTRATOR"),
   async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) {
@@ -187,7 +198,7 @@ attachmentsRouter.get(
       return;
     }
     try {
-      const attachment = await findOwnedAttachment(id, req.user!.id);
+      const attachment = await findReadableAttachment(id, req.user!);
       if (!attachment) {
         res.status(404).json(ATTACHMENT_NOT_FOUND);
         return;

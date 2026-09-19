@@ -27,6 +27,8 @@ export interface TicketDetail {
   requestedPriority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   itPriority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
   currentStatus: TicketStatus;
+  resolutionSummary: string | null;
+  requesterResolvedAt: string | null;
   createdAt: string;
   updatedAt: string;
   attachments: TicketDetailAttachment[];

@@ -7,6 +7,8 @@ import { ticketDetailRouter } from "./routes/ticketDetail.js";
 import { attachmentsRouter } from "./routes/attachments.js";
 import { authRouter } from "./routes/auth.js";
 import { staffQueueRouter } from "./routes/staffQueue.js";
+import { staffTicketsRouter } from "./routes/staffTickets.js";
+import { commentsRouter } from "./routes/comments.js";
 import { originCheck } from "./middleware/auth.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
@@ -34,6 +36,11 @@ app.use(authRouter);
 
 // Issue 65 — IT Staff Ticket Queue + assignable users. See routes/staffQueue.ts.
 app.use(staffQueueRouter);
+
+// Issue 66 - staff Ticket Detail/operations/Internal Notes, Public Comments,
+// and the Requester's problem-resolved action.
+app.use(staffTicketsRouter);
+app.use(commentsRouter);
 
 // Issue 4 (Lab 1) — /api/categories, now Issue 24 (Lab 2) — plus
 // /api/related-systems and /api/dev-requesters. See routes/reference.ts.

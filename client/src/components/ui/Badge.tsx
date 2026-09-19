@@ -52,7 +52,7 @@ const STATUS_TONE: Record<TicketStatus, BadgeTone> = {
   CANCELLED: "neutral",
 };
 
-const STATUS_LABEL: Record<TicketStatus, string> = {
+export const STATUS_LABEL: Record<TicketStatus, string> = {
   NEW: "New",
   OPEN: "Open",
   IN_PROGRESS: "In Progress",

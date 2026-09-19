@@ -812,3 +812,118 @@ textarea.zen-field-control {
     display: none;
   }
 }
+
+/* ---------------------------- Comments, Notes, Operations (Issue 66) ------ */
+
+.zen-entry-panel {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+}
+
+/* Internal Notes must never be mistaken for Public Comments (ui-spec.md §8). */
+.zen-entry-internal {
+  background: var(--zen-warning-bg);
+  border-color: var(--zen-warning);
+}
+
+.zen-entry-lock {
+  margin: 0 0 var(--zen-space-3);
+  font-weight: 600;
+  color: var(--zen-warning);
+}
+
+.zen-entry-list {
+  list-style: none;
+  margin: var(--zen-space-4) 0 0;
+  padding: 0;
+}
+
+.zen-entry {
+  padding: var(--zen-space-3) 0;
+  border-top: 1px solid var(--zen-border);
+}
+
+.zen-entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--zen-space-2);
+}
+
+.zen-entry-time {
+  margin-left: auto;
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-entry-body {
+  margin-top: var(--zen-space-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.zen-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-1);
+  border-bottom: 1px solid var(--zen-border);
+  margin-bottom: var(--zen-space-3);
+}
+
+.zen-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: var(--zen-space-2) var(--zen-space-3);
+  font-size: var(--zen-fs-body);
+  font-weight: 600;
+  color: var(--zen-text-muted);
+  cursor: pointer;
+}
+
+.zen-tab:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
+.zen-tab[aria-selected="true"] {
+  color: var(--zen-primary);
+  border-bottom-color: var(--zen-primary);
+}
+
+.zen-ops-card {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+  margin: var(--zen-space-4) 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--zen-space-4);
+}
+
+@media (min-width: 768px) {
+  .zen-ops-card {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.zen-ops-card .zen-field {
+  margin-bottom: 0;
+}
+
+.zen-ops-wide {
+  grid-column: 1 / -1;
+}
+
+.zen-confirm {
+  border: 1px solid var(--zen-warning);
+  background: var(--zen-warning-bg);
+  border-radius: 6px;
+  padding: var(--zen-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-2);
+}
