@@ -7,7 +7,7 @@ import { LoginPage } from "./pages/LoginPage.js";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage.js";
 import { ForbiddenPage } from "./pages/ForbiddenPage.js";
 import { NotFoundPage } from "./pages/NotFoundPage.js";
-import { ComingSoonPage } from "./pages/ComingSoonPage.js";
+import { UserManagementPage } from "./pages/UserManagementPage.js";
 import { StaffTicketQueuePage } from "./pages/StaffTicketQueuePage.js";
 import { StaffTicketDetailPage } from "./pages/StaffTicketDetailPage.js";
 import { CreateTicketPage } from "./pages/CreateTicketPage.js";
@@ -84,12 +84,12 @@ export function AppRouter() {
             </RequireAuth>
           }
         />
-        {/* Placeholder until Issue 67 ships User Management. */}
+        {/* Administrator User Management (Issue 67). */}
         <Route
           path="/admin/users"
           element={
             <RequireAuth roles={["ADMINISTRATOR"]}>
-              <ComingSoonPage title="Users" />
+              <UserManagementPage />
             </RequireAuth>
           }
         />

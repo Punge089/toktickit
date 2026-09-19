@@ -5,10 +5,11 @@ slice (categories list). Lab 2 built the Requester-facing ticketing MVP behind a
 Requester selector (Create Ticket with attachments, a searchable/filterable/paginated My Tickets list, a
 read-only Ticket Detail screen, and the full attachment lifecycle). **Lab 3** replaces that selector with
 real email/password authentication and three roles — Requester, IT Staff, Administrator — enforced on the
-backend for every endpoint, and is in progress: the auth foundation, Requester regression, and IT Staff
-Ticket Queue, and IT Staff Ticket Detail (ownership, IT Priority, status workflow, Public Comments, Internal
-Notes, Requester "Problem Appears Resolved") are done; Administrator User Management is not built yet (see
-`docs/lab-03/specification.md` for current scope).
+backend for every endpoint, and is in progress: the auth foundation, Requester regression, IT Staff
+Ticket Queue, IT Staff Ticket Detail (ownership, IT Priority, status workflow, Public Comments, Internal
+Notes, Requester "Problem Appears Resolved"), and Administrator User Management (list, search, role
+filter, create, edit, activate/deactivate, set a new initial password) are done; the E2E suite and the
+final evidence are still to come (see `docs/lab-03/specification.md` for current scope).
 
 ## Tech stack
 
@@ -30,25 +31,30 @@ Notes, Requester "Problem Appears Resolved") are done; Administrator User Manage
 toktickit/
 ├── client/                    React + Vite + Bootstrap + Zen Green frontend
 │   ├── src/
-│   │   ├── api/                auth, reference, ticket, attachment API clients (http.ts is the shared
+│   │   ├── api/                auth, reference, ticket, attachment, staff queue/detail, comments/notes
+│   │   │                        and admin-users API clients (http.ts is the shared
 │   │   │                        credentials:"include" fetch wrapper)
 │   │   ├── components/
-│   │   │   ├── ui/              Button, TextField, TextArea, Select, Badge, Alert, Spinner, EmptyState
+│   │   │   ├── ui/              Button, TextField, TextArea, Select, Badge, Alert, Spinner, EmptyState,
+│   │   │   │                    PasswordChecklist
 │   │   │   ├── shell/           AppShell (role-aware nav + identity dropdown), RequireAuth route guard
-│   │   │   └── tickets/         AttachmentSection
+│   │   │   └── tickets/         AttachmentSection, EntryThread
 │   │   ├── context/             AuthContext (session-cookie-backed identity, replaces Lab 2's
 │   │   │                        sessionStorage-based RequesterContext)
 │   │   ├── pages/                LoginPage, ChangePasswordPage, ForbiddenPage, NotFoundPage,
-│   │   │                        ComingSoonPage, CreateTicketPage, MyTicketsPage, TicketDetailPage
+│   │   │                        CreateTicketPage, MyTicketsPage, TicketDetailPage,
+│   │   │                        StaffTicketQueuePage, StaffTicketDetailPage, UserManagementPage
 │   │   └── styles/zen-green.css  Zen Green tokens and component classes
 │   └── tests/lab-01/, tests/lab-02/, tests/lab-03/, tests/msw/  Vitest UI/component/style tests + msw handlers
 ├── server/                     Express + TypeScript API, Prisma schema, seed
 │   ├── prisma/                  schema.prisma, seed.ts, migrations
 │   ├── src/
-│   │   ├── routes/               auth, reference, tickets, myTickets, ticketDetail, attachments
+│   │   ├── routes/               auth, reference, tickets, myTickets, ticketDetail, attachments,
+│   │   │                          staffQueue, staffTickets, comments, adminUsers
 │   │   ├── middleware/            auth.ts (requireAuth/requirePasswordCurrent/requireRole/originCheck)
 │   │   └── lib/                   password, session, loginThrottle, cookies, ticketNumber,
-│   │                              ticketValidation, attachmentRules, attachmentStorage
+│   │                              ticketValidation, attachmentRules, attachmentStorage,
+│   │                              staffQueueQuery, transitions, entries, adminUserInput
 │   ├── uploads/                  attachment files on disk (gitignored)
 │   └── tests/lab-01/, tests/lab-02/, tests/lab-03/, tests/helpers/  Supertest unit/API tests
 ├── e2e/lab-02/                  Playwright E2E + responsive/visual specs (session-authenticated)
@@ -122,8 +128,8 @@ toktickit/
 
 6. Open `http://localhost:5173`. You'll land on the **Login** screen. Sign in with any seeded account's
    email and `SEED_PASSWORD` (e.g. `aran.suksawat@example.dev`) to reach My Tickets and Create Ticket.
-   IT Staff accounts (e.g. `jennifer.anderson@example.dev`) land on the Ticket Queue; Administrator
-   User Management is not built yet (see `docs/lab-03/specification.md` §3 Scope).
+   IT Staff accounts (e.g. `jennifer.anderson@example.dev`) land on the Ticket Queue, and the seeded
+   Administrator (`john.smith@example.dev`) lands on **Users** (User Management).
 
 ## Testing
 
@@ -188,6 +194,9 @@ All endpoints are documented in full (request/response shapes, validation, statu
 | GET/POST | `/api/staff/tickets/:id/notes`  | Internal Notes (IT Staff read+write, Administrator read)         |
 | GET/POST | `/api/tickets/:id/comments`     | Public Comments (Requester owner, IT Staff, Administrator read)   |
 | POST   | `/api/tickets/:id/problem-resolved` | Requester says the problem appears resolved (status unchanged) |
+| GET/POST | `/api/admin/users`              | Administrator: list users (`search` by name/email, optional `role`), create a user |
+| PATCH  | `/api/admin/users/:id`            | Administrator: edit name, email, role, active state (self and last-Administrator rules) |
+| POST   | `/api/admin/users/:id/initial-password` | Administrator: set a new initial password; the user must change it at next login |
 | GET    | `/api/categories`                 | Active IT request categories                                    |
 | GET    | `/api/related-systems`            | Active related systems                                          |
 | POST   | `/api/tickets`                    | Create a Ticket (multipart, optional attachments)                |
@@ -199,8 +208,9 @@ All endpoints are documented in full (request/response shapes, validation, statu
 | DELETE | `/api/attachments/:id`            | Soft-remove an attachment (reason required)                      |
 
 Every Requester-scoped endpoint requires an authenticated session (an httpOnly cookie set by
-`/api/auth/login`); ownership comes from that session, never a client-supplied id (BR-03). Administrator
-User Management endpoints are planned but not built yet this sprint — see `docs/lab-03/specification.md` §8 and §3 Scope.
+`/api/auth/login`); ownership comes from that session, never a client-supplied id (BR-03). The
+`/api/admin/*` endpoints answer `403` to every role except Administrator, and there is deliberately no
+endpoint that deletes a user (BR-34): access is removed by deactivating the account.
 
 ## Documentation
 

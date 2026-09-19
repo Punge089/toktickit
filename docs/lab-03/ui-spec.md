@@ -235,6 +235,18 @@ they'd otherwise apply:
 | API failure | banner inside the panel; table area unaffected |
 | Forbidden (non-Administrator reaching this route) | not reachable — redirected before render (§5) |
 
+Implementation notes (Issue 67): Role defaults to Requester and Active to Yes in create mode. The Active
+control is a native checkbox with `role="switch"` and a visible Yes/No, so it is keyboard- and
+screen-reader-operable. The rows are `role="table"`/`row`/`cell` elements (one DOM, laid out as cards below
+992px and as a five-column table from 992px), not a scrolling `<table>`. Edit sends only the fields that
+changed, and pressing Save with nothing changed shows "No changes to save." instead of calling the API. When
+editing your own account the self caption wins over the last-Administrator caption; the last-Administrator
+caption uses `activeAdministratorCount` from the list response, which is counted over all users so a role
+filter cannot hide the fact. "Set New Initial Password" is its own action inside the panel ("Set password"):
+it confirms in place, keeps the panel open, and tells the Administrator the user must change it at next
+login (for their own account it warns they will be signed out). A duplicate email (`409 EMAIL_TAKEN`) is
+shown under the Email field; the other `409` safety refusals appear as a message at the top of the panel.
+
 ## 10. Responsive rules
 
 Unchanged breakpoints from Lab 2 (`docs/lab-02/ui-spec.md` §9): desktop ≥992px, tablet 768-991px, mobile
