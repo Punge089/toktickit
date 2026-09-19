@@ -9,6 +9,7 @@ import { authRouter } from "./routes/auth.js";
 import { staffQueueRouter } from "./routes/staffQueue.js";
 import { staffTicketsRouter } from "./routes/staffTickets.js";
 import { commentsRouter } from "./routes/comments.js";
+import { adminUsersRouter } from "./routes/adminUsers.js";
 import { originCheck } from "./middleware/auth.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
@@ -41,6 +42,9 @@ app.use(staffQueueRouter);
 // and the Requester's problem-resolved action.
 app.use(staffTicketsRouter);
 app.use(commentsRouter);
+
+// Issue 67 - Administrator user management. See routes/adminUsers.ts.
+app.use(adminUsersRouter);
 
 // Issue 4 (Lab 1) — /api/categories, now Issue 24 (Lab 2) — plus
 // /api/related-systems and /api/dev-requesters. See routes/reference.ts.

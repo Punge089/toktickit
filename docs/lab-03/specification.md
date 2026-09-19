@@ -191,9 +191,12 @@ hidden or disabled in the UI is not authorization.
   must remain unique.
 - **BR-30** An Administrator may set a new initial password for any user; this forces
   `mustChangePassword` to `true` and immediately deletes that user's existing sessions.
-- **BR-31** An Administrator cannot deactivate or change the role of their own account.
+- **BR-31** An Administrator cannot deactivate or change the role of their own account. Sending the
+  account's current role or current active state unchanged is not a change and is accepted.
 - **BR-32** The system rejects any edit that would leave zero active Administrators (deactivating or
-  changing the role of the last one).
+  changing the role of the last one). The count is taken under a database row lock on the active
+  Administrators, so two Administrators demoting or deactivating each other at the same moment cannot both
+  succeed.
 - **BR-34** Lab 3 has no user-deletion capability; removing access is always done by deactivating the
   account.
 - **BR-35** Deactivating a user, or resetting their initial password, deletes all of that user's existing
@@ -479,7 +482,9 @@ Lab 2 used) unable to impersonate a user, and it is what BR-03/AC-03 rely on: th
 - **AC-27** Given an Administrator attempts to deactivate their own account, then the request is
   rejected and the account remains active.
 - **AC-28** Given exactly one active Administrator exists, when an attempt is made to deactivate that
-  Administrator or change their role, then the request is rejected.
+  Administrator or change their role, then the request is rejected. (The caller is always an active
+  Administrator, so a lone Administrator can only be attempting this on themselves and BR-31 answers first;
+  BR-32 is what stops two Administrators from removing each other at the same moment.)
 - **AC-29** Given a Requester, IT Staff user, or unauthenticated caller calls an Administrator-only
   endpoint directly, then the response is `403` (or `401` if unauthenticated) and no user data returns.
 - **AC-30** Given the application is viewed at desktop, tablet, and mobile widths, when Login, Ticket
@@ -538,6 +543,13 @@ Lab 2 used) unable to impersonate a user, and it is what BR-03/AC-03 rely on: th
 - **Password hashing algorithm**: `scrypt` from Node's built-in `crypto` module, chosen over `bcrypt`
   specifically to avoid a native-addon dependency that needs a matching prebuilt binary per OS/Node
   version — relevant since this project is developed on Windows and graded elsewhere.
+- **Order of the Administrator safety checks.** A request to `PATCH /api/admin/users/:id` is checked in
+  this order: input validation (`400`), user exists (`404`), the self rules of BR-31 (`409`), the
+  last-active-Administrator rule of BR-32 (`409`), then duplicate email (`409`). A lone Administrator
+  deactivating themselves therefore hears the self rule, not the last-Administrator rule. Because the
+  caller must themselves be an active Administrator to make the request at all, BR-32 can only fire when
+  two Administrators act on each other concurrently; it is enforced under a row lock for that reason and
+  tested with two simultaneous requests (ADM-06).
 - **Login throttle, not account lock**: a 5-attempts/15-minute per-email throttle that resets on success
   or after the window, not a persisted lock a user cannot escape. Account unlocking and administrator
   approval workflows are explicitly out of scope (§4.2), so a mechanism that would need one is avoided.

@@ -51,7 +51,9 @@ describe("Application shell — role-aware navigation", () => {
     const nav = within(await screen.findByRole("navigation"));
     expect(nav.getByRole("link", { name: /^users$/i })).toBeInTheDocument();
     expect(nav.queryByRole("link", { name: /my tickets/i })).not.toBeInTheDocument();
-    expect(screen.getByText("Administrator")).toBeInTheDocument();
+    // Scoped to the header: the User Management screen below it also lists
+    // "Administrator" (as a role filter option).
+    expect(within(screen.getByRole("banner")).getByText("Administrator")).toBeInTheDocument();
   });
 
   // UI-07, AC-11 — a role hitting a route it cannot use lands on Forbidden

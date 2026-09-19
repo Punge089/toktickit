@@ -5,9 +5,9 @@ import { getPrisma } from "../../src/prisma.js";
 import { seedAll } from "../../prisma/seed.js";
 import { createAndLoginUser } from "../helpers/auth.js";
 
-// docs/lab-03/tests.md SEC-01, SEC-05, SEC-06 — specification.md BR-03,
-// BR-13, BR-36; AC-03. (SEC-02..04/08 depend on /api/staff and /api/admin,
-// which don't exist until later Issues; SEC-07 is covered in
+// docs/lab-03/tests.md SEC-01, SEC-04, SEC-05, SEC-06 — specification.md
+// BR-03, BR-13, BR-36; AC-03, AC-29. (SEC-02/03/08 live in the staff test
+// files next to the routes they protect; SEC-07 is covered in
 // server/tests/lab-02/reference.api.test.ts, next to the other reference
 // routes it removes.)
 describe("Authorization", () => {
@@ -80,6 +80,41 @@ describe("Authorization", () => {
     for (const res of results) {
       expect(res.status).toBe(401);
     }
+  });
+
+  // SEC-04, AC-29, BR-36: the authorization matrix row "List / search Users",
+  // "Create / edit User, reset initial password". Every /api/admin endpoint
+  // gives 401 with no session and 403 to both non-Administrator roles, and a
+  // 403 body never contains user data.
+  describe("SEC-04 Administrator endpoints", () => {
+    const calls: Array<[string, (a: ReturnType<typeof request.agent>) => request.Test]> = [
+      ["GET /api/admin/users", (a) => a.get("/api/admin/users")],
+      ["POST /api/admin/users", (a) => a.post("/api/admin/users").send({ fullName: "X", email: "x@example.dev", role: "REQUESTER", initialPassword: "Temp#Passw0rd1" })],
+      ["PATCH /api/admin/users/:id", (a) => a.patch("/api/admin/users/1").send({ fullName: "X" })],
+      ["POST /api/admin/users/:id/initial-password", (a) => a.post("/api/admin/users/1/initial-password").send({ initialPassword: "Temp#Passw0rd1" })],
+    ];
+
+    it.each(calls)("%s answers 401 to an unauthenticated caller", async (_name, call) => {
+      const res = await call(request.agent(app));
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe("UNAUTHENTICATED");
+    });
+
+    it.each(["IT_STAFF", "REQUESTER"] as const)("every endpoint answers 403 to a %s with no user data in the body", async (role) => {
+      const { agent } = await createAndLoginUser({ role });
+      for (const [, call] of calls) {
+        const res = await call(agent);
+        expect(res.status).toBe(403);
+        expect(res.body).toEqual({ error: "FORBIDDEN", message: "You do not have access to this resource." });
+      }
+    });
+
+    it("an Administrator who has not yet changed their initial password is stopped with 403 PASSWORD_CHANGE_REQUIRED", async () => {
+      const { agent } = await createAndLoginUser({ role: "ADMINISTRATOR", mustChangePassword: true });
+      const res = await agent.get("/api/admin/users");
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe("PASSWORD_CHANGE_REQUIRED");
+    });
   });
 
   // SEC-06, BR-13

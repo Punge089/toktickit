@@ -927,3 +927,235 @@ textarea.zen-field-control {
   flex-direction: column;
   gap: var(--zen-space-2);
 }
+
+/* ------------------------------------ User Management (Issue 67) ---------- */
+/* One pane on small screens (the create/edit panel replaces the list), two
+   panes at >=992px (docs/lab-03/ui-spec.md section 9). Rows are cards below
+   992px and a 5-column table at >=992px; no horizontal scrolling anywhere. */
+
+.zen-users-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-users-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--zen-space-5);
+  align-items: start;
+  margin-top: var(--zen-space-4);
+}
+
+.zen-users-layout-panel-open .zen-users-list-pane {
+  display: none;
+}
+
+.zen-users-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-users-controls .zen-users-role-filter {
+  margin-bottom: 0;
+  min-width: 160px;
+}
+
+.zen-users-header-row {
+  display: none;
+}
+
+.zen-users-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name status"
+    "email email"
+    "role edit";
+  gap: var(--zen-space-2);
+  align-items: center;
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border-bottom: 1px solid var(--zen-border);
+}
+
+.zen-users-row:last-child {
+  border-bottom: none;
+}
+
+.zen-users-row-selected {
+  background: var(--zen-pale);
+}
+
+.zen-users-row > span {
+  min-width: 0;
+}
+
+.zen-users-cell-name {
+  grid-area: name;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zen-users-cell-email {
+  grid-area: email;
+  color: var(--zen-text-muted);
+  font-size: var(--zen-fs-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zen-users-cell-role {
+  grid-area: role;
+}
+
+.zen-users-cell-status {
+  grid-area: status;
+  justify-self: end;
+}
+
+.zen-users-cell-edit {
+  grid-area: edit;
+  justify-self: end;
+}
+
+.zen-users-cell-edit .zen-btn {
+  min-height: 32px;
+}
+
+.zen-users-panel {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+}
+
+.zen-users-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-users-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-3);
+  margin-top: var(--zen-space-4);
+}
+
+.zen-users-panel-close {
+  text-decoration: none;
+}
+
+.zen-users-password-box {
+  margin-top: var(--zen-space-4);
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border: 1px solid var(--zen-border);
+  border-radius: 6px;
+  background: var(--zen-page-bg);
+}
+
+.zen-users-password-box .zen-field {
+  margin-bottom: var(--zen-space-3);
+}
+
+/* Active on/off switch: a native checkbox (keyboard and screen-reader
+   behaviour for free), drawn as a track and knob. */
+.zen-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--zen-space-2);
+}
+
+.zen-switch input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  width: 44px;
+  height: 24px;
+  margin: 0;
+  border-radius: 999px;
+  border: 1.5px solid var(--zen-border);
+  background: var(--zen-field-readonly-bg);
+  cursor: pointer;
+}
+
+.zen-switch input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+}
+
+.zen-switch input[type="checkbox"]:checked {
+  background: var(--zen-primary);
+  border-color: var(--zen-primary);
+}
+
+.zen-switch input[type="checkbox"]:checked::after {
+  left: 22px;
+}
+
+.zen-switch input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
+.zen-switch input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 992px) {
+  .zen-users-layout-panel-open {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+  }
+
+  .zen-users-layout-panel-open .zen-users-list-pane {
+    display: block;
+  }
+
+  .zen-users-header-row,
+  .zen-users-row {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.1fr) minmax(0, 0.9fr) 72px;
+    grid-template-areas: none;
+  }
+
+  .zen-users-header-row {
+    display: grid;
+    gap: var(--zen-space-2);
+    padding: var(--zen-space-3) var(--zen-space-4);
+    border-bottom: 1px solid var(--zen-border);
+    font-size: var(--zen-fs-caption);
+    font-weight: 600;
+    color: var(--zen-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .zen-users-cell-name,
+  .zen-users-cell-email,
+  .zen-users-cell-role,
+  .zen-users-cell-status,
+  .zen-users-cell-edit {
+    grid-area: auto;
+    justify-self: start;
+  }
+
+  .zen-users-cell-email {
+    color: var(--zen-text);
+  }
+}

@@ -56,6 +56,10 @@ export const handlers = [
     ]),
   ),
 
+  // Issue 67 - Administrator user list (api-spec.md section 15). Default:
+  // no users, so a test that only needs the screen to mount overrides nothing.
+  http.get(`${API_URL}/api/admin/users`, () => HttpResponse.json({ items: [], activeAdministratorCount: 1 })),
+
   // Issue 66 - Public Comments (api-spec.md section 7). Default: none yet.
   http.get(`${API_URL}/api/tickets/:id/comments`, () => HttpResponse.json([])),
 

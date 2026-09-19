@@ -5,17 +5,8 @@ import { changePassword, ValidationError } from "../api/auth.js";
 import { TextField } from "../components/ui/TextField.js";
 import { Button } from "../components/ui/Button.js";
 import { Alert } from "../components/ui/Alert.js";
-
-// docs/lab-03/specification.md BR-08 — kept identical to the server's
-// validatePasswordPolicy so the live checklist never disagrees with what
-// the backend will actually accept.
-const POLICY_RULES: { key: string; label: string; test: (pw: string) => boolean }[] = [
-  { key: "length", label: "8-72 characters", test: (pw) => pw.length >= 8 && pw.length <= 72 },
-  { key: "upper", label: "An uppercase letter", test: (pw) => /[A-Z]/.test(pw) },
-  { key: "lower", label: "A lowercase letter", test: (pw) => /[a-z]/.test(pw) },
-  { key: "digit", label: "A digit", test: (pw) => /[0-9]/.test(pw) },
-  { key: "special", label: "A special character", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
-];
+import { PasswordChecklist } from "../components/ui/PasswordChecklist.js";
+import { passwordPolicyMet } from "../lib/passwordPolicy.js";
 
 // Issue 64 — Change Password screen (ui-spec.md §4). Reachable both as the
 // mandatory first-login flow (mustChangePassword) and as a voluntary
@@ -33,7 +24,7 @@ export function ChangePasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const policyMet = POLICY_RULES.every((rule) => rule.test(newPassword));
+  const policyMet = passwordPolicyMet(newPassword);
   const confirmMatches = newPassword.length > 0 && newPassword === confirmPassword;
   const canSubmit = currentPassword.length > 0 && policyMet && confirmMatches;
 
@@ -107,29 +98,7 @@ export function ChangePasswordPage() {
           disabled={submitting}
         />
 
-        <div>
-          <p className="zen-field-label" style={{ marginBottom: "var(--zen-space-1)" }}>
-            Password must have:
-          </p>
-          <ul className="zen-password-checklist">
-            {POLICY_RULES.map((rule) => {
-              const met = rule.test(newPassword);
-              return (
-                <li
-                  key={rule.key}
-                  className={["zen-password-checklist-item", met ? "zen-password-checklist-item-met" : ""]
-                    .filter(Boolean)
-                    .join(" ")}
-                >
-                  <span className="zen-password-checklist-icon" aria-hidden="true">
-                    {met ? "✓" : "○"}
-                  </span>
-                  {rule.label}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+        <PasswordChecklist password={newPassword} />
 
         <Button type="submit" variant="primary" disabled={!canSubmit} busy={submitting} busyText="Saving…">
           {isFirstLogin ? "Continue" : "Save"}

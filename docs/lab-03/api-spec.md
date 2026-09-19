@@ -308,15 +308,25 @@ TICKET_CLOSED` on a terminal Ticket.
 
 Purpose: search/list users (FR-17). Auth: `ADMINISTRATOR`.
 
-**Query**: `search` (name/email substring, ≤100 chars), `role` (one of the 3 `Role` values, optional).
-Invalid `role` → `400`.
+**Query**: `search` (name/email substring, case-insensitive, ≤100 chars), `role` (one of the 3 `Role`
+values, optional; an empty value means no filter). Both may be combined. There is no pagination and no
+`sort` parameter: users always come back in `fullName`, then `id`, order (labsheet §8.5 does not require
+either).
 
 **200 OK**
 ```json
 { "items": [{ "id": 1, "fullName": "Aran Suksawat", "email": "aran.suksawat@example.dev",
-              "role": "REQUESTER", "isActive": true }] }
+              "role": "REQUESTER", "isActive": true }],
+  "activeAdministratorCount": 2 }
 ```
-Never includes `passwordHash`. **401/403** — per §0. **500** — standard shape.
+Never includes `passwordHash`. `activeAdministratorCount` is counted over every user, not just the filtered
+`items`, so the screen can tell that an Administrator is the last active one (ui-spec.md §9).
+**400** — invalid `role` or an over-long `search`:
+```json
+{ "error": "INVALID_QUERY", "message": "role: role must be REQUESTER, IT_STAFF, or ADMINISTRATOR.",
+  "fieldErrors": { "role": "role must be REQUESTER, IT_STAFF, or ADMINISTRATOR." } }
+```
+**401/403** — per §0. **500** — standard shape.
 
 ## 16. `POST /api/admin/users`
 
@@ -327,9 +337,19 @@ Purpose: create a user (BR-28, AC-25). Auth: `ADMINISTRATOR`.
 { "fullName": "Ekkachai New", "email": "ekkachai.new@example.dev", "role": "REQUESTER",
   "isActive": true, "initialPassword": "Temp#Passw0rd1" }
 ```
-**201 Created** — user shape from §15's `items`. **400** — missing field, invalid role, or
-`initialPassword` failing the password policy (specification.md BR-08). **409 `EMAIL_TAKEN`** — email
-already in use (case-insensitive). **401/403** — per §0. **500** — standard shape.
+`fullName` is trimmed (1-100 characters). `email` is trimmed, lowercased and stored that way (at most 254
+characters, a local part, one `@`, a dotted domain, no spaces). `role` must be exactly one of `REQUESTER`, `IT_STAFF`, `ADMINISTRATOR`.
+`isActive` is optional and defaults to `true`. The created user always has `mustChangePassword = true`
+(BR-28).
+
+**201 Created** — user shape from §15's `items`. **400** — a missing or malformed field, an invalid role,
+or an `initialPassword` failing the password policy (specification.md BR-08), each named in `fieldErrors`
+(`fullName`, `email`, `role`, `isActive`, `initialPassword`). **409 `EMAIL_TAKEN`** — email already in use,
+compared case-insensitively:
+```json
+{ "error": "EMAIL_TAKEN", "message": "That email address is already in use." }
+```
+**401/403** — per §0. **500** — standard shape.
 
 ## 17. `PATCH /api/admin/users/:id`
 
@@ -339,14 +359,20 @@ Purpose: edit a user (BR-29, BR-31, BR-32, AC-27, AC-28). Auth: `ADMINISTRATOR`.
 ```json
 { "fullName": "Aran S.", "email": "aran.s@example.dev", "role": "IT_STAFF", "isActive": false }
 ```
-**200 OK** — updated user shape. **400** — invalid role/email format. **404** — user not found.
-**409** — one of:
+Only supplied fields change; `fullName` and `email` are normalised as in §16. **200 OK** — updated user
+shape. **400** — an invalid field (named in `fieldErrors`), or a body with none of the four fields. **404
+`USER_NOT_FOUND`** — no such user. **409** — one of, checked in this order (specification.md §11):
 ```json
-{ "error": "EMAIL_TAKEN", "message": "..." }
 { "error": "CANNOT_DEACTIVATE_SELF", "message": "You cannot deactivate your own account." }
 { "error": "CANNOT_CHANGE_OWN_ROLE", "message": "You cannot change your own role." }
 { "error": "LAST_ACTIVE_ADMIN", "message": "At least one active Administrator must remain." }
+{ "error": "EMAIL_TAKEN", "message": "That email address is already in use." }
 ```
+The self rules refuse a real change only: re-sending the caller's current role, or `isActive: true`, is
+accepted. `LAST_ACTIVE_ADMIN` is evaluated under a row lock on the active Administrators, so two
+Administrators deactivating or demoting each other at the same instant cannot both succeed. Deactivating a
+user (`isActive` true to false) also deletes all of that user's sessions (BR-35). Changing a role takes
+effect on the user's very next request, because the role is read from the database on every request.
 **401/403** — per §0. **500** — standard shape.
 
 ## 18. `POST /api/admin/users/:id/initial-password`
@@ -361,7 +387,12 @@ Purpose: reset a user's password and force a change at next login (BR-30, AC-26)
 ```json
 { "id": 1, "mustChangePassword": true }
 ```
-**400** — policy violation. **404** — user not found. **401/403** — per §0. **500** — standard shape.
+**400** — policy violation or missing `initialPassword` (`fieldErrors.initialPassword`); nothing changes
+and the user's sessions survive. **404 `USER_NOT_FOUND`** — no such user. **401/403** — per §0. **500** —
+standard shape. An Administrator may set their own initial password; doing so ends their own session too.
+
+There is no `DELETE /api/admin/users/:id`: calling it returns `404` because the route does not exist
+(BR-34, verified by ADM-09).
 
 ---
 
