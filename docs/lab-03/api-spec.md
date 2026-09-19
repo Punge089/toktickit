@@ -205,13 +205,13 @@ condition).
   "items": [{ "id": 42, "ticketNumber": "TKT-2026-000042", "createdAt": "...", "updatedAt": "...",
               "summary": "Laptop battery drains quickly", "categoryName": "Hardware",
               "requestedPriority": "MEDIUM", "itPriority": "MEDIUM", "currentStatus": "OPEN",
-              "owner": { "id": 6, "fullName": "Michael Brown" }, "requesterName": "Jennifer Anderson",
+              "owner": { "id": 6, "fullName": "Michael Brown", "isActive": true }, "requesterName": "Jennifer Anderson",
               "requesterResolvedAt": null }],
   "page": 1, "pageSize": 10, "totalItems": 87, "totalPages": 9, "sort": "createdAt:desc",
   "appliedFilters": { "search": null, "status": null, "itPriority": null, "categoryId": null, "owner": null }
 }
 ```
-`owner` is `null` when unassigned. **401/403** — per §0. **500** — standard shape.
+`owner` is `null` when unassigned; `owner.isActive` lets the UI mark a since-deactivated owner "(inactive)" (ui-spec.md §7). `appliedFilters.owner` echoes `me`, `unassigned`, or the user id as a string. Every invalid parameter is reported together in `fieldErrors`. **401/403** — per §0. **500** — standard shape.
 
 ## 9. `GET /api/staff/tickets/:id`
 
@@ -225,7 +225,7 @@ someone else" case here). **401/403** — per §0. **500** — standard shape.
 
 ## 10. `GET /api/staff/assignable-users`
 
-Purpose: the list offered when claiming/reassigning a Ticket (BR-17). Auth: `IT_STAFF`.
+Purpose: the list offered by the Queue's Owner filter (Issue 65) and by claim/reassign (BR-17, Issue 66). Auth: `IT_STAFF`, `ADMINISTRATOR` (read-only names, since an Administrator may read the Queue).
 
 **200 OK**
 ```json

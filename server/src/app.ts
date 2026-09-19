@@ -6,6 +6,7 @@ import { myTicketsRouter } from "./routes/myTickets.js";
 import { ticketDetailRouter } from "./routes/ticketDetail.js";
 import { attachmentsRouter } from "./routes/attachments.js";
 import { authRouter } from "./routes/auth.js";
+import { staffQueueRouter } from "./routes/staffQueue.js";
 import { originCheck } from "./middleware/auth.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
@@ -30,6 +31,9 @@ app.get("/api/health", (_req: Request, res: Response) => {
 
 // Issue 63 — login/logout/me/change-password. See routes/auth.ts.
 app.use(authRouter);
+
+// Issue 65 — IT Staff Ticket Queue + assignable users. See routes/staffQueue.ts.
+app.use(staffQueueRouter);
 
 // Issue 4 (Lab 1) — /api/categories, now Issue 24 (Lab 2) — plus
 // /api/related-systems and /api/dev-requesters. See routes/reference.ts.

@@ -628,3 +628,187 @@ textarea.zen-field-control {
 .zen-shell-identity-menu-item:focus-visible {
   background: var(--zen-pale);
 }
+
+/* ------------------------------------------- IT Staff Queue (Issue 65) --- */
+/* One set of DOM rows: cards below 992px, a 10-column table at >=992px
+   (docs/lab-03/ui-spec.md §7). No horizontal scrolling at any width. */
+
+.zen-queue-search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-3);
+}
+
+.zen-queue-filters {
+  display: none;
+}
+
+.zen-queue-filters.zen-queue-filters-open {
+  display: flex;
+}
+
+.zen-queue-header {
+  display: none;
+}
+
+.zen-queue-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "number status"
+    "summary summary"
+    "req it"
+    "category category"
+    "owner updated"
+    "open open";
+  gap: var(--zen-space-2);
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border-bottom: 1px solid var(--zen-border);
+  color: var(--zen-text);
+  text-decoration: none;
+  align-items: center;
+}
+
+.zen-queue-row:last-child {
+  border-bottom: none;
+}
+
+.zen-queue-row:hover {
+  background: var(--zen-pale);
+}
+
+.zen-queue-row > span {
+  min-width: 0;
+}
+
+.zen-queue-cell-number {
+  grid-area: number;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.zen-queue-cell-created {
+  display: none;
+}
+.zen-queue-cell-summary {
+  grid-area: summary;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.zen-queue-cell-category {
+  grid-area: category;
+  color: var(--zen-text-muted);
+  font-size: var(--zen-fs-caption);
+}
+.zen-queue-cell-req {
+  grid-area: req;
+}
+.zen-queue-cell-it {
+  grid-area: it;
+}
+.zen-queue-cell-status {
+  grid-area: status;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-1);
+  justify-content: flex-end;
+}
+.zen-queue-cell-owner {
+  grid-area: owner;
+  font-size: var(--zen-fs-caption);
+}
+.zen-queue-cell-updated {
+  grid-area: updated;
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+  text-align: right;
+}
+.zen-queue-cell-open {
+  grid-area: open;
+  font-weight: 600;
+  color: var(--zen-secondary);
+  text-decoration: underline;
+}
+
+.zen-queue-mini-label {
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-queue-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: var(--zen-space-3);
+  margin-top: var(--zen-space-4);
+}
+
+.zen-queue-pager .zen-field {
+  margin-bottom: 0;
+}
+
+@media (min-width: 992px) {
+  .zen-queue-filters-toggle {
+    display: none;
+  }
+
+  .zen-queue-filters {
+    display: flex;
+  }
+
+  .zen-queue-header,
+  .zen-queue-row {
+    grid-template-columns: 1.35fr 1.1fr 1.7fr 1fr 0.9fr 0.9fr 1.3fr 1.1fr 1.1fr 0.5fr;
+    grid-template-areas: none;
+    gap: var(--zen-space-2);
+  }
+
+  .zen-queue-header {
+    display: grid;
+    padding: var(--zen-space-3) var(--zen-space-4);
+    border-bottom: 1px solid var(--zen-border);
+    font-size: var(--zen-fs-caption);
+    font-weight: 600;
+    color: var(--zen-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .zen-queue-row > span,
+  .zen-queue-cell-number,
+  .zen-queue-cell-summary,
+  .zen-queue-cell-category,
+  .zen-queue-cell-req,
+  .zen-queue-cell-it,
+  .zen-queue-cell-status,
+  .zen-queue-cell-owner,
+  .zen-queue-cell-updated,
+  .zen-queue-cell-open {
+    grid-area: auto;
+  }
+
+  .zen-queue-cell-created {
+    display: block;
+    font-size: var(--zen-fs-caption);
+  }
+
+  .zen-queue-cell-category {
+    color: var(--zen-text);
+    font-size: var(--zen-fs-caption);
+  }
+
+  .zen-queue-cell-status {
+    justify-content: flex-start;
+  }
+
+  .zen-queue-cell-updated {
+    text-align: left;
+    color: var(--zen-text);
+  }
+
+  .zen-queue-mini-label {
+    display: none;
+  }
+}

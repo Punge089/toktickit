@@ -8,6 +8,7 @@ import { ChangePasswordPage } from "./pages/ChangePasswordPage.js";
 import { ForbiddenPage } from "./pages/ForbiddenPage.js";
 import { NotFoundPage } from "./pages/NotFoundPage.js";
 import { ComingSoonPage } from "./pages/ComingSoonPage.js";
+import { StaffTicketQueuePage } from "./pages/StaffTicketQueuePage.js";
 import { CreateTicketPage } from "./pages/CreateTicketPage.js";
 import { MyTicketsPage } from "./pages/MyTicketsPage.js";
 import { TicketDetailPage } from "./pages/TicketDetailPage.js";
@@ -63,16 +64,26 @@ export function AppRouter() {
           }
         />
 
-        {/* Placeholder home routes until Issue 65 (Queue) and Issue 67
-            (User Management) ship the real screens. */}
+        {/* IT Staff Ticket Queue (Issue 65). Administrator may read it too
+            (BR-36) but has no nav link: their home is User Management. */}
         <Route
           path="/staff/queue"
           element={
-            <RequireAuth roles={["IT_STAFF"]}>
-              <ComingSoonPage title="My Queue" />
+            <RequireAuth roles={["IT_STAFF", "ADMINISTRATOR"]}>
+              <StaffTicketQueuePage />
             </RequireAuth>
           }
         />
+        {/* Placeholder until Issue 66 ships the real Staff Ticket Detail. */}
+        <Route
+          path="/staff/tickets/:id"
+          element={
+            <RequireAuth roles={["IT_STAFF", "ADMINISTRATOR"]}>
+              <ComingSoonPage title="Ticket Detail" />
+            </RequireAuth>
+          }
+        />
+        {/* Placeholder until Issue 67 ships User Management. */}
         <Route
           path="/admin/users"
           element={

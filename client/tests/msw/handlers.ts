@@ -34,6 +34,28 @@ export const handlers = [
 
   http.post(`${API_URL}/api/auth/change-password`, () => HttpResponse.json({ user: { ...DEFAULT_USER, mustChangePassword: false } })),
 
+  // Issue 65 — IT Staff Ticket Queue (api-spec.md §8, §10). Default: an
+  // empty queue, so tests that only need the page to mount don't have to
+  // override anything.
+  http.get(`${API_URL}/api/staff/tickets`, ({ request }) => {
+    const url = new URL(request.url);
+    return HttpResponse.json({
+      items: [],
+      page: 1,
+      pageSize: Number(url.searchParams.get("pageSize") ?? "10"),
+      totalItems: 0,
+      totalPages: 1,
+      sort: "createdAt:desc",
+      appliedFilters: { search: null, status: null, itPriority: null, categoryId: null, owner: null },
+    });
+  }),
+  http.get(`${API_URL}/api/staff/assignable-users`, () =>
+    HttpResponse.json([
+      { id: 8, fullName: "Jennifer Anderson" },
+      { id: 9, fullName: "Michael Brown" },
+    ]),
+  ),
+
   // Issue 27
   http.get(`${API_URL}/api/categories`, () =>
     HttpResponse.json([

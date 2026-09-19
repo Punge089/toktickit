@@ -5,8 +5,8 @@ slice (categories list). Lab 2 built the Requester-facing ticketing MVP behind a
 Requester selector (Create Ticket with attachments, a searchable/filterable/paginated My Tickets list, a
 read-only Ticket Detail screen, and the full attachment lifecycle). **Lab 3** replaces that selector with
 real email/password authentication and three roles — Requester, IT Staff, Administrator — enforced on the
-backend for every endpoint, and is in progress: the auth foundation and Requester regression are done;
-the IT Staff Ticket Queue/Detail and Administrator User Management screens are not built yet (see
+backend for every endpoint, and is in progress: the auth foundation, Requester regression, and IT Staff
+Ticket Queue are done; IT Staff Ticket Detail and Administrator User Management are not built yet (see
 `docs/lab-03/specification.md` for current scope).
 
 ## Tech stack
@@ -121,8 +121,8 @@ toktickit/
 
 6. Open `http://localhost:5173`. You'll land on the **Login** screen. Sign in with any seeded account's
    email and `SEED_PASSWORD` (e.g. `aran.suksawat@example.dev`) to reach My Tickets and Create Ticket.
-   IT Staff and Administrator accounts can also log in, but their screens are not built yet this sprint
-   (see `docs/lab-03/specification.md` §3 Scope).
+   IT Staff accounts (e.g. `jennifer.anderson@example.dev`) land on the Ticket Queue; Administrator
+   User Management and IT Staff Ticket Detail are not built yet (see `docs/lab-03/specification.md` §3 Scope).
 
 ## Testing
 
@@ -181,6 +181,8 @@ All endpoints are documented in full (request/response shapes, validation, statu
 | POST   | `/api/auth/logout`                | Log out, invalidates the session                                 |
 | GET    | `/api/auth/me`                    | Current authenticated identity                                   |
 | POST   | `/api/auth/change-password`       | Change password (also the mandatory first-login flow)            |
+| GET    | `/api/staff/tickets`              | IT Staff / Administrator Ticket Queue — search/filter/sort/pagination |
+| GET    | `/api/staff/assignable-users`     | Active IT Staff (Queue Owner filter; claim/reassign later)       |
 | GET    | `/api/categories`                 | Active IT request categories                                    |
 | GET    | `/api/related-systems`            | Active related systems                                          |
 | POST   | `/api/tickets`                    | Create a Ticket (multipart, optional attachments)                |
@@ -193,7 +195,7 @@ All endpoints are documented in full (request/response shapes, validation, statu
 
 Every Requester-scoped endpoint requires an authenticated session (an httpOnly cookie set by
 `/api/auth/login`); ownership comes from that session, never a client-supplied id (BR-03). IT Staff
-Ticket Queue/Detail and Administrator User Management endpoints are planned but not built yet this
+Ticket Detail and Administrator User Management endpoints are planned but not built yet this
 sprint — see `docs/lab-03/specification.md` §8 and §3 Scope.
 
 ## Documentation
