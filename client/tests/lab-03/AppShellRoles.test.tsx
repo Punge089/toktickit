@@ -76,6 +76,18 @@ describe("Application shell — role-aware navigation", () => {
     expect(await screen.findByRole("heading", { name: /access denied/i })).toBeInTheDocument();
   });
 
+  // AC-02: a first-login user can reach nothing but Change Password, so the shell
+  // must not advertise destinations that would only bounce them back.
+  it("offers no navigation, and no menu button, while the user must still change their password", async () => {
+    renderAs({ ...REQUESTER, mustChangePassword: true }, "/change-password");
+    expect(await screen.findByRole("heading", { name: /change your password/i })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /navigation menu/i })).not.toBeInTheDocument();
+    // Who is signed in, and the way out, are still there.
+    expect(within(screen.getByRole("banner")).getByText("Aran Suksawat")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /aran suksawat/i })).toBeInTheDocument();
+  });
+
   it("opens and closes the identity dropdown with Change Password and Log Out actions", async () => {
     const user = userEvent.setup();
     renderAs(REQUESTER);

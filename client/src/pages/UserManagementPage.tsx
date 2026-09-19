@@ -240,11 +240,13 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
   const isSelf = editing !== null && me?.id === editing.id;
   const isLastAdmin =
     editing !== null && editing.role === "ADMINISTRATOR" && editing.isActive && activeAdministratorCount <= 1;
-  const safetyNote = isSelf
-    ? "You cannot change your own role or active state."
-    : isLastAdmin
-      ? "At least one active Administrator must remain."
-      : null;
+  // Both rules can apply at once (the only active Administrator is always the
+  // person looking at their own account), so every one that applies is shown.
+  const safetyNotes = [
+    ...(isSelf ? ["You cannot change your own role or active state."] : []),
+    ...(isLastAdmin ? ["At least one active Administrator must remain."] : []),
+  ];
+  const restricted = safetyNotes.length > 0;
 
   const [fullName, setFullName] = useState(editing?.fullName ?? "");
   const [email, setEmail] = useState(editing?.email ?? "");
@@ -377,8 +379,8 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
           onChange={(e) => setRole(e.target.value as Role)}
           options={ROLE_OPTIONS}
           error={fieldErrors.role}
-          disabled={saving || safetyNote !== null}
-          aria-describedby={safetyNote ? "user-safety-note" : undefined}
+          disabled={saving || restricted}
+          aria-describedby={restricted ? "user-safety-note" : undefined}
         />
 
         <div className="zen-field">
@@ -392,8 +394,8 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
               role="switch"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              disabled={saving || safetyNote !== null}
-              aria-describedby={safetyNote ? "user-safety-note" : undefined}
+              disabled={saving || restricted}
+              aria-describedby={restricted ? "user-safety-note" : undefined}
             />
             <span>{isActive ? "Yes" : "No"}</span>
           </span>
@@ -402,10 +404,14 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
               {fieldErrors.isActive}
             </p>
           )}
-          {safetyNote && (
-            <p id="user-safety-note" className="zen-field-caption">
-              {safetyNote}
-            </p>
+          {restricted && (
+            <div id="user-safety-note">
+              {safetyNotes.map((note) => (
+                <p key={note} className="zen-field-caption">
+                  {note}
+                </p>
+              ))}
+            </div>
           )}
         </div>
 

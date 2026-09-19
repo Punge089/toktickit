@@ -53,6 +53,9 @@ informational, not a status.
   - **IT Staff**: nav shows "My Queue" (the Ticket Queue) / "Create Ticket" is not shown (IT Staff do not
     file their own tickets in Lab 3). Same identity dropdown, IT Staff role badge.
   - **Administrator**: nav shows "Users". Same identity dropdown, Administrator role badge.
+- While a user must still change their password (`mustChangePassword`), the nav and the mobile menu button
+  are not rendered at all: every destination would only bounce them back to Change Password (AC-02). Their
+  name, role and the Log Out action stay.
 - No route destination for a role the current user cannot use is ever rendered in the nav — this is
   presentation only; the backend enforces the same restriction independently (§5a of specification.md).
 - The shell renders only after `/api/auth/me` resolves; while it is pending, a skeleton header (no nav
@@ -274,34 +277,77 @@ that would just be rejected.
   width) — kept expanded ≥992px for discoverability; still collapses below that width to protect the
   no-horizontal-scroll rule.
 
-## 13. Visual inspection checklist (to be completed with real screenshots in `tests.md` §4, PR 7)
+- **Numbered page buttons on the Queue** (mockup p.9 shows `1 2 3 ... 9`) - not built; the Queue uses the
+  same Previous / Next control with "Page x of y" and a page-size select as Lab 2 My Tickets, for one
+  pagination pattern across the app.
+- **"Deactivate User" button in the user panel** (mockup p.12) - deactivation is the Active switch in the
+  form, saved with the rest of the edit, so name, role and state are changed in one place and the same
+  safeguards (§9) disable it when it would be refused.
+- **Login failure is a banner, not a field message.** Login shows its one safe message ("Invalid email or
+  password.") above the form and never marks a field, because naming the field would reveal whether the
+  email or the password was wrong (BR-12).
 
-- [ ] Zen Green colors match the Lab 2 token table on every new screen; no new hex value introduced
-      outside the existing tokens.
-- [ ] Role navigation shows only the current role's permitted destinations on Requester, IT Staff, and
-      Administrator accounts, verified at all three viewports.
-- [ ] Status, IT Priority, and Role badges are visually consistent wherever they appear (Queue, Staff
-      Detail, Requester Detail, User Management).
-- [ ] Editable vs. read-only fields are visually distinguishable on Staff Ticket Detail (Administrator
-      view) and on Requester Ticket Detail's system-generated fields.
-- [ ] Validation messages sit directly under their field on Login, Change Password, and the
-      Create/Edit User panel.
-- [ ] Internal Notes are visually distinguishable from Public Comments at a glance, without reading the
-      section heading.
-- [ ] Focus is visible on every new interactive control (profile dropdown, tabs, Queue filters, User
-      Management panel fields) using only the keyboard.
-- [ ] No clipped labels, overlapping messages, hidden buttons, or horizontal scrolling at 375px, 850px,
-      or 1280px on any screen listed in §14.
+## 13. Visual inspection checklist (completed against real screenshots, PR 7)
+
+Method: `e2e/lab-03/responsive.spec.ts` captures every screen state below at 1280, 850 and 375 px into
+`artifacts/lab-03/screenshots/` after asserting there is no horizontal page scroll. Each image was then
+viewed (desktop, tablet and mobile side by side) and compared with this document. A checked box means the
+statement is true of the screenshots at all three widths; the evidence column says where it is proved.
+
+- [x] Zen Green colours match the Lab 2 token table on every new screen; no new colour value introduced.
+      Evidence: the only colour literals outside `:root` in `zen-green.css` are `#ffffff` (equal to
+      `--zen-surface`) and two existing `rgba` shadows; every other colour is a `var(--zen-*)` token.
+- [x] Role navigation shows only the current role's permitted destinations on Requester, IT Staff and
+      Administrator accounts, at all three viewports. Evidence: E2E-01 (links per role at 1280 px);
+      `responsive.spec.ts` opens the 375 px menu for each role and asserts the same links; UI-06; UI-23
+      (no navigation at all while a first-login password change is pending).
+- [x] Status, IT Priority and Role badges are visually consistent wherever they appear (Queue, Staff Detail,
+      Requester Detail, User Management). Evidence: `requester/*`, `staff-queue/loaded`,
+      `staff-ticket-detail/*`, `user-management/list`; STY-02, STY-03.
+- [x] Editable vs. read-only fields are visually distinguishable on Staff Ticket Detail (Administrator
+      view) and on Requester Ticket Detail's system-generated fields. Evidence:
+      `staff-ticket-detail/*-admin-readonly.png` (plain text, no selects, read-only note) against
+      `*-loaded.png` (selects); `requester/*-detail.png`.
+- [x] Validation messages sit directly under their field on Change Password and the Create/Edit User panel
+      (Login is the documented exception, §12). Evidence: `authentication/*-change-password.png`,
+      `user-management/*-validation.png`, `*-duplicate.png`; UI-13, UI-19; E2E-01, E2E-03.
+- [x] Internal Notes are visually distinguishable from Public Comments at a glance, without reading the
+      section heading (amber panel, lock label, outline button). Evidence:
+      `staff-ticket-detail/*-notes.png` against `*-loaded.png`; STY-01.
+- [x] Focus is visible on every new interactive control using only the keyboard. Evidence: RESP-06
+      (computed outline on 14 controls) and `focus/*.png`, where the white ring on the green header and the
+      ring on the Active switch were checked by eye.
+- [x] No clipped labels, overlapping messages, hidden buttons, or horizontal scrolling at 375, 850, or 1280 px
+      on any screen listed in §14, after the fixes below. Evidence: the no-scroll assertion in `shot()` for all
+      86 images and the images themselves.
+
+**Defects the audit found, all fixed in the same PR** (a passing suite had not caught any of them):
+
+| # | What the screenshots showed | Fix | Guarded by |
+|---|---|---|---|
+| 1 | At 375 px the ☰ menu button was green on the green header, almost invisible, on every screen | Button is white | RESP-02 asserts the computed colour |
+| 2 | Keyboard focus ring on header links and the identity button was green on green | White 2 px ring inside the header | RESP-06, `focus/shell-identity.png` |
+| 3 | A first-login user still saw "My Tickets / Create Ticket", links that only bounced back to Change Password | No nav or menu button until the password is changed | UI-23 |
+| 4 | Queue cards at 375 px clipped the ticket number ("TKT-2026-0...") when the status cell held two badges, and the Req/IT priority pair wrapped | Card is a wrapping flex row; the number never shrinks and the status badges wrap | RESP-03 screenshots |
+| 5 | Queue search placeholder was cut off at 375 px | Shorter placeholder ("Number, summary, requester") | RESP-03 screenshots |
+| 6 | With the panel open at 1280 px, long user names ran over the Email column | Name and Email cells truncate with an ellipsis | RESP-05 screenshots |
+| 7 | Editing the only active Administrator's own account showed only the self rule, so the last-Administrator rule was invisible | Both captions are shown when both rules apply | UI-14 |
+| 8 | "My Queue" lost its active underline on a ticket's detail page | Active for `/staff/tickets/*` | screenshots |
+| 9 | Capture artefacts: a stray hover highlight on the first Queue row, and a User Management shot taken before the debounced search applied | The spec moves the pointer away and waits for the filtered list | `responsive.spec.ts` |
 
 ## 14. Screenshot paths
 
-| Screen | Path |
-|---|---|
-| Login / first-login change password | `artifacts/lab-03/screenshots/authentication/{desktop,tablet,mobile}-{login,invalid,inactive,change-password}.png` |
-| Requester regression + comments | `artifacts/lab-03/screenshots/requester/{desktop,tablet,mobile}-{tickets,detail,comments,resolved}.png` |
-| IT Staff Ticket Queue | `artifacts/lab-03/screenshots/staff-queue/{desktop,tablet,mobile}-{loaded,empty,no-results}.png` |
-| IT Staff Ticket Detail | `artifacts/lab-03/screenshots/staff-ticket-detail/{desktop,tablet,mobile}-{loaded,notes,resolved}.png` |
-| User Management | `artifacts/lab-03/screenshots/user-management/{desktop,tablet,mobile}-{list,create,edit}.png` |
+All files are `artifacts/lab-03/screenshots/<folder>/<viewport>-<state>.png`, with `<viewport>` one of
+`desktop` (1280x900), `tablet` (850x1100), `mobile` (375x812). Full-page captures, 86 files.
 
-Captured by `e2e/lab-03/responsive.spec.ts` (Playwright `page.screenshot()`), regenerated from `main`
-before the release PR per the Kickoff Guide checklist.
+| Screen | Folder | States |
+|---|---|---|
+| Login / first-login Change Password | `authentication/` | `login`, `invalid`, `inactive`, `busy`, `change-password` |
+| Requester regression + comments | `requester/` | `tickets`, `detail`, `comments`, `resolved` |
+| IT Staff Ticket Queue | `staff-queue/` | `loaded`, `empty` (API response mocked), `no-results`, `failure` (API response mocked), `forbidden` |
+| IT Staff Ticket Detail | `staff-ticket-detail/` | `loaded`, `notes`, `attachments`, `validation`, `resolved`, `admin-readonly` |
+| User Management | `user-management/` | `list`, `create`, `validation`, `duplicate`, `edit`, `self`, `forbidden` |
+| Keyboard focus (desktop only) | `focus/` | `login-button`, `shell-identity`, `queue-row`, `detail-tab`, `user-switch` |
+
+Captured by `e2e/lab-03/responsive.spec.ts` (Playwright `page.screenshot()`), regenerated by the final run on
+the release branch before the release PR per the Kickoff Guide checklist.

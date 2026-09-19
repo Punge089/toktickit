@@ -39,19 +39,20 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | API-08 | BR-09 | Successful change-password while a second session (different login) exists for the same user | The second session's next request is `401`; the session used to change the password still works | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
 | API-09 | AC-08, BR-10 | `POST /api/auth/logout` then reuse of the old cookie | Logout `204`; the reused cookie gets `401` on `/me` | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
 | API-10 | FR-04 | `GET /api/auth/me` with no cookie | `401` | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
+| API-11 | BR-11 | Log in and inspect the session cookie; push the user's sessions past `expiresAt`; call `/api/auth/me`; log in again | Cookie is `HttpOnly`, `SameSite=Lax`, `Path=/` with `Max-Age` of about 8 hours; the expired session gets `401 UNAUTHENTICATED`; a new login works | `server/tests/lab-03/auth.api.test.ts` | **Pass** |
 
 ### Security / Authorization
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
 | SEC-01 | AC-03, BR-03 | Requester sends another user's id as `requesterId` in the body, in the query string, and on the legacy `X-Dev-Requester-Id` header while creating/listing tickets | All three ignored; only the authenticated user's own data is returned/created | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
-| SEC-02 | AC-11 | Requester calls `GET /api/staff/tickets` and `GET /api/staff/tickets/:id` directly | Both `403 FORBIDDEN`, no ticket data in the body | `server/tests/lab-03/comments-notes.api.test.ts` (and `staff-queue.api.test.ts` for the list half of SEC-02) | **Pass** |
-| SEC-03 | AC-04, AC-20 | Requester calls `GET`/`POST /api/staff/tickets/:id/notes` on their own ticket | Both `403`, no note content anywhere in the response | `server/tests/lab-03/comments-notes.api.test.ts` (and `staff-queue.api.test.ts` for the list half of SEC-02) | **Pass** |
+| SEC-02 | AC-11 | Requester calls `GET /api/staff/tickets` and `GET /api/staff/tickets/:id` directly | Both `403 FORBIDDEN`, no ticket data in the body | `server/tests/lab-03/comments-notes.api.test.ts`, `server/tests/lab-03/staff-queue.api.test.ts` | **Pass** |
+| SEC-03 | AC-04, AC-20 | Requester calls `GET`/`POST /api/staff/tickets/:id/notes` on their own ticket | Both `403`, no note content anywhere in the response | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
 | SEC-04 | AC-29 | IT Staff and Requester each call every `/api/admin/*` endpoint (list, create, edit, initial password); an unauthenticated caller does the same; an Administrator who still must change their initial password calls the list | IT Staff and Requester: identical `403 FORBIDDEN` body with no user data on all four; no session: `401 UNAUTHENTICATED` on all four; the unchanged-password Administrator gets `403 PASSWORD_CHANGE_REQUIRED` | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
 | SEC-05 | BR-36 | Every Requester-scoped endpoint plus `/api/auth/me` is called once unauthenticated | All return `401` | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
 | SEC-06 | BR-13 | State-changing request with a mismatched `Origin` header vs. one with none vs. the correct one | Mismatched `Origin` → `403 ORIGIN_NOT_ALLOWED`; missing or matching `Origin` → normal handling | `server/tests/lab-03/authorization.api.test.ts` | **Pass** |
 | SEC-07 | BR-39 | `GET /api/dev-requesters` | `404` — route no longer exists | `server/tests/lab-02/reference.api.test.ts` | **Pass** |
-| SEC-08 | BR-36 | IT Staff attempts to write a Comment/Note/status change on a Ticket that belongs to a Requester, called with a Requester B's ticket id that does exist | Confirms `404` is used only for true nonexistence at Requester routes, and staff routes never 404 solely due to ownership | `server/tests/lab-03/comments-notes.api.test.ts` (and `staff-queue.api.test.ts` for the list half of SEC-02) | **Pass** |
+| SEC-08 | BR-36 | IT Staff attempts to write a Comment/Note/status change on a Ticket that belongs to a Requester, called with a Requester B's ticket id that does exist | Confirms `404` is used only for true nonexistence at Requester routes, and staff routes never 404 solely due to ownership | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
 
 ### Migration and Regression
 
@@ -65,7 +66,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | REG-02 | BR-37, BR-38 | `server/tests/lab-02/my-tickets.api.test.ts`, adapted | Same assertions, session-authenticated (11/11) | `server/tests/lab-02/my-tickets.api.test.ts` | **Pass** |
 | REG-03 | BR-37, BR-38 | `server/tests/lab-02/ticket-detail.api.test.ts`, adapted | Same assertions, session-authenticated (5/5) | `server/tests/lab-02/ticket-detail.api.test.ts` | **Pass** |
 | REG-04 | BR-37, BR-38 | `server/tests/lab-02/attachments.api.test.ts`, adapted | Same assertions, session-authenticated (7/7) | `server/tests/lab-02/attachments.api.test.ts` | **Pass** |
-| REG-05 | BR-38 | `client/tests/lab-02/RequesterSelect.test.tsx`, repurposed, plus `zen-green.style.test.tsx`, `CreateTicket.test.tsx`, `MyTickets.test.tsx`, `RequesterTicketDetail.test.tsx`, `AttachmentSection.test.tsx` adapted to the session-cookie identity | Asserts `/select-requester` no longer exists and redirects to `/login`; every other Lab 2 client test's original assertions still pass under `AuthContext` | `client/tests/lab-02/*.test.tsx` | **Pass** |
+| REG-05 | BR-38 | `client/tests/lab-02/RequesterSelect.test.tsx`, repurposed, plus `zen-green.style.test.tsx`, `CreateTicket.test.tsx`, `MyTickets.test.tsx`, `RequesterTicketDetail.test.tsx`, `AttachmentSection.test.tsx` adapted to the session-cookie identity | Asserts `/select-requester` no longer exists (the catch-all Not Found screen renders) and that a guarded route without a session redirects to `/login`; every other Lab 2 client test's original assertions still pass under `AuthContext` | `client/tests/lab-02/*.test.tsx` | **Pass** |
 | REG-06 | BR-38 | `e2e/lab-02/requester-ticket-flow.spec.ts` and `responsive.spec.ts`, adapted to log in via the real Login screen instead of the Dev Requester selector; "switching Requester" is logout + log back in | Full Lab 2 flow (create → find → remove attachment → cross-Requester 404) plus all 27 responsive/visual screenshots still pass end to end (28/28) | `e2e/lab-02/requester-ticket-flow.spec.ts`, `e2e/lab-02/responsive.spec.ts` | **Pass** |
 
 ### Queue
@@ -106,6 +107,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | CMT-07 | AC-21, BR-05 | Requester calls `POST /api/tickets/:id/problem-resolved` on an Open Ticket | `200`; `requesterResolvedAt` set; `currentStatus` unchanged | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
 | CMT-08 | AC-22 | Calling `problem-resolved` a second time on the same open period | `409 TICKET_NOT_ACTIVE` | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
 | CMT-09 | BR-22 | Comment/Note/problem-resolved calls on a `CLOSED` Ticket | All rejected with `409` | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
+| CMT-10 | BR-24 | `PATCH`, `PUT` and `DELETE` on an existing Comment and on an existing Note | All `404` (no such route); the Comment and the Note are unchanged | `server/tests/lab-03/comments-notes.api.test.ts` | **Pass** |
 
 ### Administrator
 
@@ -140,7 +142,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | UI-11 | AC-17 | Submit Status change to Resolved with an empty Resolution Summary | Client-side validation blocks submission; no PATCH fired | `client/tests/lab-03/StaffTicketDetail.test.tsx` | **Pass** |
 | UI-12 | BR-04 | Staff Ticket Detail with mocked comments and notes | Notes render inside the visually distinct panel (§8 of ui-spec.md); comments do not | `client/tests/lab-03/StaffTicketDetail.test.tsx` | **Pass** |
 | UI-13 | AC-25 | Create User panel submitted, mocked `409 EMAIL_TAKEN` | Message under the Email field (linked with `aria-describedby`, field `aria-invalid`), panel stays open, no success toast | `client/tests/lab-03/UserManagement.test.tsx` | **Pass** |
-| UI-14 | AC-27, AC-28 | Edit panel opened on the current user's own account, on an Administrator that the list reports as the only active one (`activeAdministratorCount: 1`, not the caller), and on an inactive Administrator | Role select and Active switch disabled with the matching caption ("You cannot change your own role or active state." / "At least one active Administrator must remain.") in the first two cases; enabled with no caption for the inactive one. In real use the only active Administrator is always the caller, so the second caption is a defensive guard for a stale list | `client/tests/lab-03/UserManagement.test.tsx` | **Pass** |
+| UI-14 | AC-27, AC-28 | Edit panel opened on the current user's own account (another active Administrator exists); on the current user's own account when they are the only active Administrator; on a different Administrator that the list reports as the only active one (`activeAdministratorCount: 1`); and on an inactive Administrator | Role select and Active switch disabled with the matching caption(s): only the self caption in the first case, both captions in the second, only "At least one active Administrator must remain." in the third; enabled with no caption for the inactive one | `client/tests/lab-03/UserManagement.test.tsx` | **Pass** |
 | UI-15 | AC-21 | Requester Ticket Detail, click "Problem Appears Resolved", confirm | Button replaced by the resolved indicator after the mocked success response | `client/tests/lab-03/RequesterComments.test.tsx` | **Pass** |
 | UI-16 | AC-19 | Post a Public Comment from Requester Ticket Detail, mocked success | New comment appears at the end of the list with the current user's name | `client/tests/lab-03/RequesterComments.test.tsx` | **Pass** |
 | UI-17 | FR-17 | User Management list with four mocked users | Columns Name, Email, Role, Status, Action; role and Active/Inactive badges with text; an Edit button per row; no pager | `client/tests/lab-03/UserManagement.test.tsx` | **Pass** |
@@ -149,6 +151,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | UI-20 | BR-29 | Edit a user's role and active state; press Save with no changes | PATCH body contains only `role` and `isActive`; no request and "No changes to save." when nothing changed; edit mode has no password field until the disclosure is opened | `client/tests/lab-03/UserManagement.test.tsx` | **Pass** |
 | UI-21 | AC-26, BR-30 | Open "Set new initial password" in edit mode | Collapsed by default (`aria-expanded`); "Set password" stays disabled until every policy rule is met; then POSTs `initialPassword`, confirms the user must change it at next login, clears the field, keeps the panel open | `client/tests/lab-03/UserManagement.test.tsx` | **Pass** |
 | UI-22 | BR-31, BR-32, ui-spec §9 (safe failure) | Save with a mocked `409 LAST_ACTIVE_ADMIN`; save with a mocked `500` | The refusal is an alert at the top of the panel and no field is marked invalid; the `500` shows a safe message and keeps what was typed | `client/tests/lab-03/UserManagement.test.tsx` | **Pass** |
+| UI-23 | AC-02, AC-10 | Shell rendered for a Requester whose `mustChangePassword` is true, on `/change-password` | No navigation landmark and no menu button (nothing to bounce to); the user's name and the way out remain | `client/tests/lab-03/AppShellRoles.test.tsx` | **Pass** |
 
 ### UI Style
 
@@ -163,26 +166,27 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| RESP-01 | AC-30 | Login + Change Password at 375/850/1280px | No horizontal scroll; screenshots saved to `authentication/` | `e2e/lab-03/responsive.spec.ts` | Planned |
-| RESP-02 | AC-30 | Requester Ticket Detail (comments + resolved) at 3 widths | No horizontal scroll; screenshots saved to `requester/` | `e2e/lab-03/responsive.spec.ts` | Planned |
-| RESP-03 | AC-30 | Ticket Queue (table → card collapse) at 3 widths | No horizontal scroll at any width, including the 9-column desktop table; screenshots to `staff-queue/` | `e2e/lab-03/responsive.spec.ts` | Planned |
-| RESP-04 | AC-30 | Staff Ticket Detail (comments + notes tabs) at 3 widths | No horizontal scroll; screenshots to `staff-ticket-detail/` | `e2e/lab-03/responsive.spec.ts` | Planned |
-| RESP-05 | AC-30 | User Management (list + panel collapse) at 3 widths | No horizontal scroll; screenshots to `user-management/` | `e2e/lab-03/responsive.spec.ts` | Planned |
+| RESP-01 | AC-30 | Login initial, invalid, inactive and busy states, and Change Password with the checklist part-way met, at 375/850/1280px | No horizontal scroll at any width (asserted before every screenshot); 15 screenshots saved to `authentication/` | `e2e/lab-03/responsive.spec.ts` | **Pass** |
+| RESP-02 | AC-30 | Requester My Tickets, Ticket Detail of a new ticket, a ticket with a Public Comment thread, and a resolved ticket with the Requester's own indicator, at 3 widths; at 375px the menu button must be white on the header | No horizontal scroll; Internal Notes never appear on the Requester screens; 12 screenshots saved to `requester/` | `e2e/lab-03/responsive.spec.ts` | **Pass** |
+| RESP-03 | AC-30 | Ticket Queue loaded (table at 1280px, cards at 850 and 375px), empty and failure (API responses mocked), real no-results, and a Requester denied at the URL, at 3 widths | No horizontal scroll at any width, including the 10-column desktop table; 15 screenshots saved to `staff-queue/` | `e2e/lab-03/responsive.spec.ts` | **Pass** |
+| RESP-04 | AC-30 | Staff Ticket Detail with Public Comments, Internal Notes, Attachments, the missing-Resolution-Summary validation, a resolved ticket, and the read-only Administrator view, at 3 widths | No horizontal scroll; 18 screenshots saved to `staff-ticket-detail/` | `e2e/lab-03/responsive.spec.ts` | **Pass** |
+| RESP-05 | AC-30 | User Management list, create panel, field validation, duplicate-email conflict, edit panel with the set-new-initial-password section, own-account edit, and an IT Staff member denied at the URL, at 3 widths | No horizontal scroll (list table with the panel open, single-pane below 992px); 21 screenshots saved to `user-management/` | `e2e/lab-03/responsive.spec.ts` | **Pass** |
+| RESP-06 | ui-spec §13 (focus) | Keyboard focus on the Login field and button, shell nav link and identity button, Queue search, filter, row and pager, Staff Detail tab and select, and the User Management button, panel field, Active switch and Cancel | Every control reports a visible outline (computed style); 5 screenshots saved to `focus/` for judging colour and contrast by eye | `e2e/lab-03/responsive.spec.ts` | **Pass** |
 
 ### End-to-End
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| E2E-01 | AC-01, AC-02, AC-05–AC-10 | Full authentication flow: wrong login, inactive login, first-login change, shell identity, logout, direct-URL access after logout, Requester blocked from `/staff/queue` | Every step matches its AC; final direct-access attempt lands on Login, not the protected screen | `e2e/lab-03/authentication.spec.ts` | Planned |
-| E2E-02 | AC-12–AC-21 | Requester creates a Ticket and comments → IT Staff finds it in the Queue, claims it, sets IT Priority, moves it to In Progress, posts a Public Comment and an Internal Note → Requester sees the comment but not the note → Requester marks it resolved → IT Staff resolves with a summary → closes with confirmation → a second IT Staff account reassigns before close | Each step's visible state (badges, comment list, resolved indicator) matches the API state | `e2e/lab-03/staff-ticket-flow.spec.ts` | Planned |
-| E2E-03 | AC-25–AC-29 | Admin lists/searches/filters users, creates one (then hits a duplicate-email error), edits one, resets an initial password and confirms forced change on next login, is blocked from self-deactivation and from removing the last Administrator, and Requester/IT Staff are blocked from `/admin/users` | Every step matches its AC | `e2e/lab-03/user-administration.spec.ts` | Planned |
+| E2E-01 | AC-01, AC-02, AC-05–AC-11 | 8 tests: wrong password and unknown email give one safe message and clear the password; inactive account; busy state; first login held on Change Password (URL bounce and `403 PASSWORD_CHANGE_REQUIRED`, weak and mismatched and wrong-current password, then a valid change); shell identity and Log Out with Back, typed URLs and direct API calls all refused afterwards; role home and navigation for each role; each role denied the others' URLs and APIs; the removed selector route | Every step matches its AC; the final direct-access attempts land on Login or `401`, never on the protected screen | `e2e/lab-03/authentication.spec.ts` | **Pass** |
+| E2E-02 | AC-12–AC-22 | 4 tests. (1) Requester creates a ticket and comments; IT Staff finds it in the Queue, claims it, sets IT Priority, moves it to In Progress, posts a Public Comment and an Internal Note; the Requester sees the comment but not the note (and `403` from the notes API); the Requester marks it resolved; IT Staff sees the indicator, needs a Resolution Summary, resolves it; a second IT Staff member reassigns it and closes it with a confirmation; the Requester sees the outcome. (2) The Status control offers only the matrix's transitions and an unowned ticket is refused In Progress. (3) Attachment continuity: IT Staff list and download a Requester's attachment but cannot add or remove one (UI and API). (4) Direct API calls by each role against Internal Notes, the Queue and the ticket operations | Each step's visible state matches the API state; every `403`/`401`/`404` is the one the authorization matrix gives | `e2e/lab-03/staff-ticket-flow.spec.ts` | **Pass** |
+| E2E-03 | AC-25–AC-29 | 6 tests: list, search and role filter (no pager); create with empty/weak input, a duplicate email in different case, then a valid user who is held on Change Password at first login; edit name/role/active and deactivation ending the session; set a new initial password (old session dead, next login forced to change); self-deactivate and self-demote blocked on the screen and by the API, including with a second Administrator; Requester and IT Staff denied the screen and all four APIs | Every step matches its AC | `e2e/lab-03/user-administration.spec.ts` | **Pass** |
 
 ## 3. Acceptance-Criterion Traceability
 
 | AC | Covered by |
 |---|---|
 | AC-01 | API-01, E2E-01 |
-| AC-02 | API-05, E2E-01 |
+| AC-02 | API-05, UI-23, E2E-01 |
 | AC-03 | SEC-01 |
 | AC-04 | SEC-03, CMT-02 |
 | AC-05 | API-02, UI-01, E2E-01 |
@@ -190,7 +194,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | AC-07 | API-04, UI-02, E2E-01 |
 | AC-08 | API-09, E2E-01 |
 | AC-09 | SEC-05, E2E-01 |
-| AC-10 | UI-06, E2E-01 |
+| AC-10 | UI-06, UI-23, E2E-01 |
 | AC-11 | SEC-02, UI-07, E2E-01 |
 | AC-12 | QUE-05, E2E-02 |
 | AC-13 | DET-01, E2E-02 |
@@ -198,7 +202,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | AC-15 | DET-04, E2E-02 |
 | AC-16 | DET-05, UI-10 |
 | AC-17 | DET-06, UI-11, E2E-02 |
-| AC-18 | DET-07 |
+| AC-18 | DET-07, E2E-02 |
 | AC-19 | CMT-01, UI-16, E2E-02 |
 | AC-20 | CMT-02, SEC-03, E2E-02 |
 | AC-21 | CMT-07, UI-15, E2E-02 |
@@ -210,13 +214,88 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | AC-27 | ADM-05, UI-14, E2E-03 |
 | AC-28 | ADM-05, ADM-06, UI-14, E2E-03 |
 | AC-29 | SEC-04, ADM-08, E2E-03 |
-| AC-30 | RESP-01, RESP-02, RESP-03, RESP-04, RESP-05 |
+| AC-30 | RESP-01, RESP-02, RESP-03, RESP-04, RESP-05, RESP-06 |
+
+### Functional requirements and business rules
+
+Every FR and BR in `specification.md` maps to at least one row above. (AC traceability is the table
+before this one.)
+
+| FR | Covered by |
+|---|---|
+| FR-01 | API-01, API-02, API-03, UI-01, E2E-01 |
+| FR-02 | API-05, API-06, API-07, UI-04, UI-05, UI-23, E2E-01 |
+| FR-03 | API-09, E2E-01 |
+| FR-04 | API-01, API-10, UI-06 |
+| FR-05 | UI-06, UI-07, UI-23, E2E-01 |
+| FR-06 | REG-01, REG-02, REG-05, REG-06, SEC-01 |
+| FR-07 | REG-03, REG-04, REG-05, REG-06, E2E-02 |
+| FR-08 | CMT-01, UI-16, E2E-02 |
+| FR-09 | CMT-07, CMT-08, UI-15, E2E-02 |
+| FR-10 | QUE-01 to QUE-06, UI-08, UI-08b, UI-09, UI-09b |
+| FR-11 | DET-01 to DET-09, UI-10, UI-11, UI-12, E2E-02 |
+| FR-12 | DET-01, DET-02, DET-03, E2E-02 |
+| FR-13 | DET-09, QUE-05, E2E-02 |
+| FR-14 | UNIT-03, DET-04 to DET-08, UI-10, UI-11, E2E-02 |
+| FR-15 | CMT-01, CMT-02, CMT-04, CMT-05, CMT-06, UI-12, E2E-02 |
+| FR-16 | QUE-06, CMT-03, E2E-02 |
+| FR-17 | ADM-01, UI-17, UI-18, E2E-03 |
+| FR-18 | ADM-02, ADM-03, UI-13, UI-19, E2E-03 |
+| FR-19 | ADM-04, UI-20, E2E-03 |
+| FR-20 | ADM-07, UI-21, E2E-03 |
+| FR-21 | ADM-05, ADM-06, UI-14, E2E-03 |
+| FR-22 | MIG-01, MIG-02, MIG-03, MIG-04 |
+| FR-23 | UI-01, UI-02, UI-03, UI-09, UI-09b, UI-18, UI-22, RESP-01 to RESP-05, E2E-01 |
+| FR-24 | STY-01, STY-02, STY-03, RESP-01 to RESP-06, UI-23 |
+
+| BR | Covered by |
+|---|---|
+| BR-01 | API-01, API-02, API-03 |
+| BR-02 | API-05, API-07, UI-23, E2E-01 |
+| BR-03 | SEC-01, REG-01 |
+| BR-04 | CMT-01, CMT-02, CMT-03, SEC-03, E2E-02 |
+| BR-05 | CMT-07, E2E-02 |
+| BR-06 | API-04 |
+| BR-07 | UNIT-02, ADM-03 |
+| BR-08 | UNIT-01, API-06, ADM-03, UI-04, UI-19 |
+| BR-09 | UNIT-02, API-06, UI-05 |
+| BR-10 | API-09, E2E-01 |
+| BR-11 | API-11 |
+| BR-12 | API-02, API-03, UI-02, E2E-01 |
+| BR-13 | SEC-06 |
+| BR-14 | API-01, API-10 |
+| BR-15 | REG-02, REG-03, REG-04, E2E-02 |
+| BR-16 | ADM-03, ADM-04 |
+| BR-17 | DET-03, QUE-06 |
+| BR-18 | QUE-05, DET-09, E2E-02 |
+| BR-19 | UNIT-03, DET-05, UI-10, E2E-02 |
+| BR-20 | DET-04, E2E-02 |
+| BR-21 | DET-06, UI-11, E2E-02 |
+| BR-22 | DET-07, CMT-09, E2E-02 |
+| BR-23 | DET-08 |
+| BR-24 | CMT-10 |
+| BR-25 | CMT-04 |
+| BR-26 | CMT-05, STY-04 |
+| BR-27 | CMT-06 |
+| BR-28 | ADM-03, UI-19 |
+| BR-29 | ADM-04, UI-20 |
+| BR-30 | ADM-07, UI-21, E2E-03 |
+| BR-31 | ADM-05, UI-14, E2E-03 |
+| BR-32 | ADM-06, UI-14 |
+| BR-33 | ADM-02 |
+| BR-34 | ADM-09 |
+| BR-35 | ADM-07, E2E-03 |
+| BR-36 | CMT-03, QUE-06, E2E-02 |
+| BR-37 | SEC-02, SEC-04, SEC-05, E2E-01, E2E-02 |
+| BR-38 | REG-01 to REG-06 |
+| BR-39 | SEC-01, SEC-07, REG-05, E2E-01 |
 
 ## 4. Responsive and Visual Checklist
 
-To be completed in PR 7 (#68) once `e2e/lab-03/responsive.spec.ts` produces the screenshots listed in
-`ui-spec.md` §14. The checklist itself lives in `ui-spec.md` §13 and will be checked off there against
-real screenshots, not assumed from a passing test suite (Kickoff Guide rule 4).
+Completed in `ui-spec.md` §13, item by item, against the screenshots in
+`artifacts/lab-03/screenshots/` (86 images: 81 screen states at desktop, tablet and mobile, plus 5 keyboard-focus
+captures). Each screenshot was viewed and compared with `ui-spec.md`; the defects that viewing found are listed
+in `ui-spec.md` §13 together with their fixes and the tests that now guard them.
 
 ## 5. Test Commands
 
@@ -227,27 +306,100 @@ cd server && npm test
 # UI component + UI style (Vitest + React Testing Library)
 cd client && npm test
 
-# responsive + E2E (Playwright, run from repo root, needs both dev servers running
-# or the configured webServer in playwright.config.ts)
+# responsive + E2E (Playwright, run from repo root; playwright.config.ts starts both dev servers,
+# runs one worker, removes leftover e2e.* users and re-seeds the dev database first)
 npx playwright test
+npx playwright test e2e/lab-03      # Lab 3 only (100 tests); writes artifacts/lab-03/screenshots
 ```
 
 ## 6. Final Results
 
-To be filled in PR 7 (#68) with real counts from `lab3-staging`, then re-confirmed identical once released
-to `main`, per the Kickoff Guide release checklist. Placeholder until then:
+Run on 2026-09-19 from the PR #68 branch (`feature/68-e2e-evidence`, which is `lab3-staging` plus this PR; the
+release PR adds nothing else), with the commands in section 5, after `tsc --noEmit` passed in `server/` and
+`client/`. Output below is copied from those runs (file order sorted, timings omitted). The same commands are
+re-run on `lab3-staging` after this PR merges and on `main` after the release, and the numbers must match.
 
 ```
-server:     Test Files  ?? passed   Tests  ?? passed
-client:     Test Files  ?? passed   Tests  ?? passed
-playwright:             ?? passed
+server (cd server && npm test)
+ ✓ tests/lab-01/categories.test.ts (1 tests)
+ ✓ tests/lab-01/health.test.ts (1 tests)
+ ✓ tests/lab-02/attachment-rules.unit.test.ts (6 tests)
+ ✓ tests/lab-02/attachments.api.test.ts (7 tests)
+ ✓ tests/lab-02/create-ticket.api.test.ts (8 tests)
+ ✓ tests/lab-02/my-tickets.api.test.ts (11 tests)
+ ✓ tests/lab-02/reference.api.test.ts (6 tests)
+ ✓ tests/lab-02/seed.unit.test.ts (4 tests)
+ ✓ tests/lab-02/ticket-detail.api.test.ts (5 tests)
+ ✓ tests/lab-02/ticket-number.unit.test.ts (2 tests)
+ ✓ tests/lab-03/auth.api.test.ts (13 tests)
+ ✓ tests/lab-03/authorization.api.test.ts (12 tests)
+ ✓ tests/lab-03/comments-notes.api.test.ts (15 tests)
+ ✓ tests/lab-03/migration.test.ts (5 tests)
+ ✓ tests/lab-03/password.unit.test.ts (5 tests)
+ ✓ tests/lab-03/seed.lab3.test.ts (6 tests)
+ ✓ tests/lab-03/staff-queue.api.test.ts (23 tests)
+ ✓ tests/lab-03/staff-ticket-detail.api.test.ts (13 tests)
+ ✓ tests/lab-03/transitions.unit.test.ts (5 tests)
+ ✓ tests/lab-03/users-admin.api.test.ts (23 tests)
+
+ Test Files  20 passed (20)
+      Tests  171 passed (171)
+
+client (cd client && npm test)
+ ✓ tests/lab-01/App.test.tsx (3 tests)
+ ✓ tests/lab-02/AttachmentSection.test.tsx (5 tests)
+ ✓ tests/lab-02/CreateTicket.test.tsx (5 tests)
+ ✓ tests/lab-02/MyTickets.test.tsx (6 tests)
+ ✓ tests/lab-02/RequesterSelect.test.tsx (4 tests)
+ ✓ tests/lab-02/RequesterTicketDetail.test.tsx (3 tests)
+ ✓ tests/lab-02/zen-green.style.test.tsx (6 tests)
+ ✓ tests/lab-03/AppShellRoles.test.tsx (7 tests)
+ ✓ tests/lab-03/ChangePassword.test.tsx (5 tests)
+ ✓ tests/lab-03/Login.test.tsx (6 tests)
+ ✓ tests/lab-03/RequesterComments.test.tsx (7 tests)
+ ✓ tests/lab-03/StaffTicketDetail.test.tsx (13 tests)
+ ✓ tests/lab-03/StaffTicketQueue.test.tsx (8 tests)
+ ✓ tests/lab-03/UserManagement.test.tsx (14 tests)
+ ✓ tests/lab-03/lab3.style.test.tsx (3 tests)
+
+ Test Files  15 passed (15)
+      Tests  95 passed (95)
+
+playwright (npx playwright test)
+ e2e/lab-02/requester-ticket-flow.spec.ts: 1 passed
+ e2e/lab-02/responsive.spec.ts: 27 passed
+ e2e/lab-03/authentication.spec.ts: 8 passed
+ e2e/lab-03/responsive.spec.ts: 82 passed
+ e2e/lab-03/staff-ticket-flow.spec.ts: 4 passed
+ e2e/lab-03/user-administration.spec.ts: 6 passed
+
+ 128 passed
 ```
+
+| Suite | Files | Tests |
+|---|---|---|
+| Server: unit, API, authorization, migration, regression | 20 | 171 |
+| Client: UI component, UI style, regression | 15 | 95 |
+| Playwright: E2E and responsive (28 Lab 2 + 100 Lab 3) | 6 | 128 |
+| **Total** | **41** | **394** |
+
+Test counts in this file, `README.md` and the submission report must all equal the table above.
 
 ## 7. Known Limitations or Deferred Tests
 
 - The login throttle (BR-06) is exercised in-process against a single server instance; it does not model
   a multi-instance deployment sharing the throttle state, which is out of scope for a course lab.
-- Session expiry (BR-11, 8 hours) is unit-level only over the stored `expiresAt` comparison; no test waits
-  8 real hours for an integration-level expiry check.
+- Session expiry (BR-11, 8 hours) is tested by moving the stored `expiresAt` into the past (API-11) and by
+  checking the cookie's `Max-Age`; no test waits 8 real hours.
+- LAST_ACTIVE_ADMIN (BR-32) is reachable through the API only when two Administrators act on each other at
+  the same moment (the caller is always an active Administrator, so a single one is stopped by the self rule
+  first). ADM-06 therefore fires two simultaneous requests; the E2E test shows the sole seeded Administrator
+  cannot deactivate or demote themselves, on the screen and by the API.
+- The Queue "empty" and "failure" screenshots use mocked API responses (the seeded database always has
+  Tickets, and a real 500 cannot be triggered on demand); every other screenshot is the real application
+  against the real API.
+- The E2E and screenshot runs use the development database, not the test database: they log in through the
+  real screens with the documented seed accounts. `e2e/global-setup.ts` removes the throwaway `e2e.*` users
+  and re-seeds before each run.
 - As in Lab 2, accessibility testing is limited to programmatic assertions (labels, `aria-*`, keyboard
   operability); a full screen-reader pass is out of scope.

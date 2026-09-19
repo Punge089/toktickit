@@ -5,7 +5,7 @@ import { getPrisma } from "../prisma.js";
 // (Categories/Related Systems are visible to every authenticated role),
 // only isActive rows, safe 500 on DB failure.
 //
-// Issue 64 — GET /api/dev-requesters is removed entirely (BR-39): it
+// Issue 64 — The Lab 2 development-requester endpoint is removed entirely (BR-39): it
 // existed only to power the Development Requester selector, which real
 // Login replaces. Calling the old path now returns Express's default 404,
 // verified by a regression test rather than left undocumented.

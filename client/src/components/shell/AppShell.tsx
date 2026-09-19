@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.js";
 import { RoleBadge } from "../ui/Badge.js";
 
@@ -20,8 +20,13 @@ const NAV_LINK_CLASS = ({ isActive }: { isActive: boolean }) =>
 export function AppShell({ children }: AppShellProps) {
   const { status, user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [identityMenuOpen, setIdentityMenuOpen] = useState(false);
+
+  // A user who must still change their password can reach nothing but that screen
+  // (AC-02), so the navigation offers no destinations at all until they have.
+  const showNav = user !== null && !user.mustChangePassword;
 
   async function handleLogout() {
     setIdentityMenuOpen(false);
@@ -41,7 +46,7 @@ export function AppShell({ children }: AppShellProps) {
           TokTickIT
         </a>
 
-        {user && (
+        {showNav && (
           <button
             type="button"
             className="zen-shell-hamburger zen-btn zen-btn-tertiary"
@@ -54,7 +59,7 @@ export function AppShell({ children }: AppShellProps) {
           </button>
         )}
 
-        {user && (
+        {showNav && (
           <nav
             className={["zen-shell-nav", mobileNavOpen ? "zen-shell-nav-open" : ""].filter(Boolean).join(" ")}
             aria-label="Primary"
@@ -70,7 +75,10 @@ export function AppShell({ children }: AppShellProps) {
               </>
             )}
             {user.role === "IT_STAFF" && (
-              <NavLink to="/staff/queue" className={NAV_LINK_CLASS}>
+              <NavLink
+                to="/staff/queue"
+                className={({ isActive }) => NAV_LINK_CLASS({ isActive: isActive || pathname.startsWith("/staff/tickets/") })}
+              >
                 My Queue
               </NavLink>
             )}

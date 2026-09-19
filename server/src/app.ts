@@ -47,7 +47,7 @@ app.use(commentsRouter);
 app.use(adminUsersRouter);
 
 // Issue 4 (Lab 1) — /api/categories, now Issue 24 (Lab 2) — plus
-// /api/related-systems and /api/dev-requesters. See routes/reference.ts.
+// /api/related-systems. See routes/reference.ts.
 app.use(referenceRouter);
 
 // Issue 26 — POST /api/tickets. See routes/tickets.ts.

@@ -5,11 +5,11 @@ slice (categories list). Lab 2 built the Requester-facing ticketing MVP behind a
 Requester selector (Create Ticket with attachments, a searchable/filterable/paginated My Tickets list, a
 read-only Ticket Detail screen, and the full attachment lifecycle). **Lab 3** replaces that selector with
 real email/password authentication and three roles — Requester, IT Staff, Administrator — enforced on the
-backend for every endpoint, and is in progress: the auth foundation, Requester regression, IT Staff
-Ticket Queue, IT Staff Ticket Detail (ownership, IT Priority, status workflow, Public Comments, Internal
-Notes, Requester "Problem Appears Resolved"), and Administrator User Management (list, search, role
-filter, create, edit, activate/deactivate, set a new initial password) are done; the E2E suite and the
-final evidence are still to come (see `docs/lab-03/specification.md` for current scope).
+backend for every endpoint. The sprint's features are all in place: the auth foundation, Requester
+regression, IT Staff Ticket Queue, IT Staff Ticket Detail (ownership, IT Priority, status workflow, Public
+Comments, Internal Notes, Requester "Problem Appears Resolved"), and Administrator User Management (list,
+search, role filter, create, edit, activate/deactivate, set a new initial password), together with the
+end-to-end suite, the responsive screenshots and the review records (see `docs/lab-03/specification.md`).
 
 ## Tech stack
 
@@ -57,8 +57,12 @@ toktickit/
 │   │                              staffQueueQuery, transitions, entries, adminUserInput
 │   ├── uploads/                  attachment files on disk (gitignored)
 │   └── tests/lab-01/, tests/lab-02/, tests/lab-03/, tests/helpers/  Supertest unit/API tests
-├── e2e/lab-02/                  Playwright E2E + responsive/visual specs (session-authenticated)
+├── e2e/                        Playwright: global-setup.ts (re-seeds), cleanup.ts,
+│   ├── lab-02/                  Requester flow + responsive/visual specs (session-authenticated)
+│   └── lab-03/                  authentication, staff-ticket-flow, user-administration, responsive specs
 ├── artifacts/lab-02/screenshots/  Committed visual evidence (desktop/tablet/mobile x every state)
+├── artifacts/lab-03/screenshots/  Lab 3 visual evidence: authentication, requester, staff-queue,
+│                                  staff-ticket-detail, user-management, focus (86 images)
 ├── docs/lab-01/, docs/lab-02/, docs/lab-03/  specification.md, api-spec.md, ui-spec.md, tests.md,
 │                                             reviewer.md, ai-use.md
 ├── playwright.config.ts
@@ -131,6 +135,19 @@ toktickit/
    IT Staff accounts (e.g. `jennifer.anderson@example.dev`) land on the Ticket Queue, and the seeded
    Administrator (`john.smith@example.dev`) lands on **Users** (User Management).
 
+   | Account (all `@example.dev`) | Role / state | Use it to see |
+   |---|---|---|
+   | `aran.suksawat` | Requester, active | My Tickets, Create Ticket, comments |
+   | `buppha.ratanakorn` | Requester, active, owns no Tickets | the empty My Tickets state |
+   | `ekkachai.mai` | Requester, must change password | the mandatory first-login change |
+   | `somsak.jantawong` | Requester, **inactive** | the inactive-account message |
+   | `jennifer.anderson`, `michael.brown` | IT Staff, active | Ticket Queue and Detail |
+   | `robert.wilson` | IT Staff, **inactive** | an inactive owner / user |
+   | `john.smith` | Administrator, active (the only one) | User Management |
+
+   All use `SEED_PASSWORD` (default `TokTick-Dev#2026`, local development only). The Playwright suite
+   re-seeds before each run, which puts these accounts back in this state.
+
 ## Testing
 
 Server tests run against a **dedicated test database**, never the dev database in `server/.env`, so
@@ -168,9 +185,20 @@ npx playwright test
 
 The Playwright suite starts the real server and client dev servers itself (see `playwright.config.ts`)
 and runs against the actual PostgreSQL-backed API. Nothing is mocked except one deliberately
-aborted request, used to produce the Create Ticket API-failure state. It writes screenshots to
-`artifacts/lab-02/screenshots/` (committed to the repo as visual evidence, see `docs/lab-02/ui-spec.md`
-§11-12) and creates real Ticket rows in your dev database as it exercises the flow.
+aborted request, used to produce the Create Ticket API-failure state. Before each run
+`e2e/global-setup.ts` removes leftover `e2e.*` users and re-seeds the dev database, and the run uses one
+worker because the specs share that database. It writes screenshots to `artifacts/lab-02/screenshots/`
+(see `docs/lab-02/ui-spec.md` §11-12) and `artifacts/lab-03/screenshots/` (see `docs/lab-03/ui-spec.md`
+§13-14), and creates real Ticket and User rows in your dev database as it exercises the flows.
+`npx playwright test e2e/lab-03` runs only the Lab 3 specs.
+
+**Current results** (all passing; the same numbers are in `docs/lab-03/tests.md` §6):
+
+| Suite | Command | Result |
+|---|---|---|
+| Server (unit + API + authorization + migration) | `cd server && npm test` | 20 files, 171 tests |
+| Client (UI component + style) | `cd client && npm test` | 15 files, 95 tests |
+| End to end + responsive (Playwright) | `npx playwright test` | 128 tests (28 Lab 2 + 100 Lab 3) |
 
 `server/vitest.config.ts` runs test files sequentially (`fileParallelism: false`): every server test
 file shares the one real test database with no per-file transaction isolation, so parallel files can
@@ -225,11 +253,13 @@ endpoint that deletes a user (BR-34): access is removed by deactivating the acco
 - [`docs/lab-02/ai-use.md`](docs/lab-02/ai-use.md) - AI tool used and reflection.
 - [`docs/lab-02/reviewer.md`](docs/lab-02/reviewer.md) - peer review record.
 
-**Lab 3** (in progress)
+**Lab 3**
 - [`docs/lab-03/specification.md`](docs/lab-03/specification.md) - functional requirements, business rules, authorization matrix, status transition matrix, migration decisions, acceptance criteria, Definition of Done.
 - [`docs/lab-03/api-spec.md`](docs/lab-03/api-spec.md) - full REST contract, including the session/CSRF conventions.
 - [`docs/lab-03/ui-spec.md`](docs/lab-03/ui-spec.md) - Zen Green extensions for the new screens, deliberate deviations from the mockups.
-- [`docs/lab-03/tests.md`](docs/lab-03/tests.md) - planned-test table, AC traceability, results (updated per PR as each test lands).
+- [`docs/lab-03/tests.md`](docs/lab-03/tests.md) - planned-test table, AC / FR / BR traceability, final results.
+- [`docs/lab-03/reviewer.md`](docs/lab-03/reviewer.md) - peer review record in both directions, with the real GitHub conversations.
+- [`docs/lab-03/ai-use.md`](docs/lab-03/ai-use.md) - the LLMs used, key prompts, and my reflection.
 
 ## Git workflow
 

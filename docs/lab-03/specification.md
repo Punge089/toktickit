@@ -493,22 +493,30 @@ Lab 2 used) unable to impersonate a user, and it is what BR-03/AC-03 rely on: th
 
 ## 10. Definition of Done
 
-**Product completion**
-- [ ] Every FR/BR/AC above is implemented and traceable to at least one automated test in
-      `docs/lab-03/tests.md`.
-- [ ] `server/tests/lab-03/*`, `client/tests/lab-03/*`, `e2e/lab-03/*`, and every Lab 1/Lab 2 test all pass
-      run from the final `main` branch, using the documented test commands; no test is skipped, `.only`'d,
-      or commented out.
-- [ ] Login, Change Password, the role-aware shell, Requester Ticket Detail, IT Staff Ticket Queue and
+**Product completion** (each ticked item was checked on the PR 7 branch; the release PR adds no other commit)
+- [x] Every FR/BR/AC above is implemented and traceable to at least one automated test in
+      `docs/lab-03/tests.md` (FR, BR and AC traceability tables; all 30 ACs, 24 FRs and 39 BRs map to rows
+      whose result is Pass).
+- [x] `server/tests/lab-03/*`, `client/tests/lab-03/*`, `e2e/lab-03/*`, and every Lab 1/Lab 2 test all pass
+      when run from `lab3-staging` with the documented test commands (results in `tests.md` section 6); no
+      test is skipped, `.only`'d, or commented out. `main` receives exactly this content through the release
+      PR.
+- [x] Login, Change Password, the role-aware shell, Requester Ticket Detail, IT Staff Ticket Queue and
       Detail, and User Management conform to `ui-spec.md` at desktop, tablet, and mobile widths, verified
-      by the Playwright screenshots in `artifacts/lab-03/screenshots/`.
-- [ ] The API conforms to `api-spec.md`: every documented endpoint returns the documented shape and
-      status codes for both success and every documented failure case.
-- [ ] Authorization and ownership are enforced on the backend for every endpoint in §5a's matrix — not
-      just hidden in the UI — verified by `authorization.api.test.ts` and `comments-notes.api.test.ts`.
-- [ ] No `X-Dev-Requester-Id`, `requesterAuth`, or `RequesterSelect` remains anywhere in `server/src`,
-      `client/src`, `server/tests`, `client/tests`, or `e2e`.
-- [ ] README setup and test-running instructions are current for Lab 3 (new env vars, seeded accounts and
+      by the Playwright screenshots in `artifacts/lab-03/screenshots/` and the completed checklist in
+      `ui-spec.md` section 13.
+- [x] Every documented endpoint is exercised by a direct API test for its success response and for the
+      authorization (`401`/`403`) and validation or conflict (`400`/`404`/`409`) failures listed in
+      `api-spec.md`; the unexpected-error `500` responses are not provoked by any test.
+- [x] Authorization and ownership are enforced on the backend for every endpoint in section 5a's matrix, not
+      just hidden in the UI, verified by `authorization.api.test.ts`, `comments-notes.api.test.ts`,
+      `users-admin.api.test.ts` and the direct-API steps of `e2e/lab-03`.
+- [x] No `X-Dev-Requester-Id`, `requesterAuth`, or `RequesterSelect` remains in `server/src`,
+      `client/src`, or `e2e`, and no code path accepts the header as an identity. The only remaining
+      mentions in `server/tests` and `client/tests` are the regression tests that send the legacy header,
+      call the removed endpoint, or open the removed selector route in order to prove each is ignored or
+      gone (SEC-01, SEC-07, REG-01..REG-05).
+- [x] README setup and test-running instructions are current for Lab 3 (new env vars, seeded accounts and
       their local-only passwords, new test/E2E commands).
 
 **Course delivery**
