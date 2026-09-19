@@ -2,15 +2,66 @@ import { http, HttpResponse } from "msw";
 
 const API_URL = "http://localhost:3000";
 
+// Issue 64 — default authenticated identity for every component test.
+// Individual tests override this with server.use(...) for the
+// unauthenticated/other-role/failure states they need to exercise.
+export const DEFAULT_USER = {
+  id: 1,
+  fullName: "Aran Suksawat",
+  email: "aran.suksawat@example.dev",
+  role: "REQUESTER" as const,
+  mustChangePassword: false,
+};
+
 // Default handlers — individual tests override these with server.use(...)
 // for empty/failure/etc. states.
 export const handlers = [
-  http.get(`${API_URL}/api/dev-requesters`, () =>
+  // Issue 64 — GET /api/auth/me (api-spec.md §3). Every screen under
+  // RequireAuth calls this on mount; tests override it with
+  // HttpResponse.json(null, { status: 401 }) to exercise the
+  // unauthenticated/redirect-to-login path.
+  http.get(`${API_URL}/api/auth/me`, () => HttpResponse.json(DEFAULT_USER)),
+
+  http.post(`${API_URL}/api/auth/login`, async ({ request }) => {
+    const body = (await request.json()) as { email?: string; password?: string };
+    if (body.email === DEFAULT_USER.email && body.password === "Correct-Pass1!") {
+      return HttpResponse.json({ user: DEFAULT_USER });
+    }
+    return HttpResponse.json({ error: "INVALID_CREDENTIALS", message: "Invalid email or password." }, { status: 401 });
+  }),
+
+  http.post(`${API_URL}/api/auth/logout`, () => new HttpResponse(null, { status: 204 })),
+
+  http.post(`${API_URL}/api/auth/change-password`, () => HttpResponse.json({ user: { ...DEFAULT_USER, mustChangePassword: false } })),
+
+  // Issue 65 — IT Staff Ticket Queue (api-spec.md §8, §10). Default: an
+  // empty queue, so tests that only need the page to mount don't have to
+  // override anything.
+  http.get(`${API_URL}/api/staff/tickets`, ({ request }) => {
+    const url = new URL(request.url);
+    return HttpResponse.json({
+      items: [],
+      page: 1,
+      pageSize: Number(url.searchParams.get("pageSize") ?? "10"),
+      totalItems: 0,
+      totalPages: 1,
+      sort: "createdAt:desc",
+      appliedFilters: { search: null, status: null, itPriority: null, categoryId: null, owner: null },
+    });
+  }),
+  http.get(`${API_URL}/api/staff/assignable-users`, () =>
     HttpResponse.json([
-      { id: 1, fullName: "Aran Suksawat", email: "aran.suksawat@example.dev" },
-      { id: 2, fullName: "Buppha Ratanakorn", email: "buppha.ratanakorn@example.dev" },
+      { id: 8, fullName: "Jennifer Anderson" },
+      { id: 9, fullName: "Michael Brown" },
     ]),
   ),
+
+  // Issue 67 - Administrator user list (api-spec.md section 15). Default:
+  // no users, so a test that only needs the screen to mount overrides nothing.
+  http.get(`${API_URL}/api/admin/users`, () => HttpResponse.json({ items: [], activeAdministratorCount: 1 })),
+
+  // Issue 66 - Public Comments (api-spec.md section 7). Default: none yet.
+  http.get(`${API_URL}/api/tickets/:id/comments`, () => HttpResponse.json([])),
 
   // Issue 27
   http.get(`${API_URL}/api/categories`, () =>
@@ -36,7 +87,7 @@ export const handlers = [
         categoryId: 2,
         relatedSystemId: 2,
         requestedPriority: "MEDIUM",
-        itPriority: null,
+        itPriority: "MEDIUM",
         currentStatus: "NEW",
         createdAt: "2026-08-24T10:15:00.000Z",
         updatedAt: "2026-08-24T10:15:00.000Z",
@@ -47,22 +98,17 @@ export const handlers = [
     ),
   ),
 
-  // Issue 29 — GET /api/tickets. Returns different fixtures per requester
-  // so the Requester-switch test doesn't need an override.
+  // Issue 29/64 — GET /api/tickets. Ownership now comes from the session
+  // (mocked as DEFAULT_USER above), not a per-request header.
   http.get(`${API_URL}/api/tickets`, ({ request }) => {
     const url = new URL(request.url);
-    const requesterId = request.headers.get("X-Dev-Requester-Id");
     const page = Number(url.searchParams.get("page") ?? "1");
     const pageSize = Number(url.searchParams.get("pageSize") ?? "10");
 
-    const byRequester: Record<string, { id: number; ticketNumber: string; summary: string }[]> = {
-      "1": [
-        { id: 1, ticketNumber: "TKT-2026-000001", summary: "Requester A ticket one" },
-        { id: 2, ticketNumber: "TKT-2026-000002", summary: "Requester A ticket two" },
-      ],
-      "2": [{ id: 3, ticketNumber: "TKT-2026-000003", summary: "Requester B ticket one" }],
-    };
-    const rows = byRequester[requesterId ?? ""] ?? [];
+    const rows = [
+      { id: 1, ticketNumber: "TKT-2026-000001", summary: "Requester A ticket one" },
+      { id: 2, ticketNumber: "TKT-2026-000002", summary: "Requester A ticket two" },
+    ];
 
     return HttpResponse.json({
       data: rows.map((r) => ({
@@ -91,12 +137,10 @@ export const handlers = [
     });
   }),
 
-  // Issue 30 — GET /api/tickets/:id. id 1 exists and is owned by requester
-  // "1"; anything else 404s, matching the real endpoint's not-found-vs-
-  // not-owned behavior (BR-10/BR-28).
-  http.get(`${API_URL}/api/tickets/:id`, ({ params, request }) => {
-    const requesterId = request.headers.get("X-Dev-Requester-Id");
-    if (params.id !== "1" || requesterId !== "1") {
+  // Issue 30/64 — GET /api/tickets/:id. id 1 exists and is owned by the
+  // mocked session user; anything else 404s (BR-10/BR-28).
+  http.get(`${API_URL}/api/tickets/:id`, ({ params }) => {
+    if (params.id !== "1") {
       return HttpResponse.json({ error: "TICKET_NOT_FOUND", message: "Ticket not found." }, { status: 404 });
     }
     return HttpResponse.json({
@@ -111,8 +155,10 @@ export const handlers = [
       relatedSystemId: 1,
       relatedSystemName: "Corporate Laptop",
       requestedPriority: "MEDIUM",
-      itPriority: null,
+      itPriority: "MEDIUM",
       currentStatus: "NEW",
+      resolutionSummary: null,
+      requesterResolvedAt: null,
       createdAt: "2026-08-24T10:00:00.000Z",
       updatedAt: "2026-08-24T10:00:00.000Z",
       attachments: [

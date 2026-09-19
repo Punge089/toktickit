@@ -1,11 +1,15 @@
 # TokTickIT
 
 TokTickIT is an IT service desk application. Lab 1 proved the stack end to end with a thin vertical
-slice (categories list). **Lab 2** builds the Requester-facing ticketing MVP: a Development Requester
-selector (a testing stand-in for login, not real authentication), Create Ticket with attachments, a
-searchable/filterable/paginated My Tickets list, a read-only Ticket Detail screen, and the full
-attachment lifecycle (add, download, soft-remove) — all on a shared Zen Green visual system, with the
-backend enforcing that a Requester can never see or modify another Requester's data.
+slice (categories list). Lab 2 built the Requester-facing ticketing MVP behind a temporary Development
+Requester selector (Create Ticket with attachments, a searchable/filterable/paginated My Tickets list, a
+read-only Ticket Detail screen, and the full attachment lifecycle). **Lab 3** replaces that selector with
+real email/password authentication and three roles — Requester, IT Staff, Administrator — enforced on the
+backend for every endpoint. The sprint's features are all in place: the auth foundation, Requester
+regression, IT Staff Ticket Queue, IT Staff Ticket Detail (ownership, IT Priority, status workflow, Public
+Comments, Internal Notes, Requester "Problem Appears Resolved"), and Administrator User Management (list,
+search, role filter, create, edit, activate/deactivate, set a new initial password), together with the
+end-to-end suite, the responsive screenshots and the review records (see `docs/lab-03/specification.md`).
 
 ## Tech stack
 
@@ -27,26 +31,40 @@ backend enforcing that a Requester can never see or modify another Requester's d
 toktickit/
 ├── client/                    React + Vite + Bootstrap + Zen Green frontend
 │   ├── src/
-│   │   ├── api/                Requester/reference/ticket/attachment API clients
+│   │   ├── api/                auth, reference, ticket, attachment, staff queue/detail, comments/notes
+│   │   │                        and admin-users API clients (http.ts is the shared
+│   │   │                        credentials:"include" fetch wrapper)
 │   │   ├── components/
-│   │   │   ├── ui/              Button, TextField, TextArea, Select, Badge, Alert, Spinner, EmptyState
-│   │   │   ├── shell/           AppShell, RequireRequester route guard
-│   │   │   └── tickets/         AttachmentSection
-│   │   ├── context/             RequesterContext (sessionStorage-backed, BR-08)
-│   │   ├── pages/                RequesterSelectPage, CreateTicketPage, MyTicketsPage, TicketDetailPage
+│   │   │   ├── ui/              Button, TextField, TextArea, Select, Badge, Alert, Spinner, EmptyState,
+│   │   │   │                    PasswordChecklist
+│   │   │   ├── shell/           AppShell (role-aware nav + identity dropdown), RequireAuth route guard
+│   │   │   └── tickets/         AttachmentSection, EntryThread
+│   │   ├── context/             AuthContext (session-cookie-backed identity, replaces Lab 2's
+│   │   │                        sessionStorage-based RequesterContext)
+│   │   ├── pages/                LoginPage, ChangePasswordPage, ForbiddenPage, NotFoundPage,
+│   │   │                        CreateTicketPage, MyTicketsPage, TicketDetailPage,
+│   │   │                        StaffTicketQueuePage, StaffTicketDetailPage, UserManagementPage
 │   │   └── styles/zen-green.css  Zen Green tokens and component classes
-│   └── tests/lab-01/, tests/lab-02/, tests/msw/  Vitest UI/component/style tests + msw handlers
+│   └── tests/lab-01/, tests/lab-02/, tests/lab-03/, tests/msw/  Vitest UI/component/style tests + msw handlers
 ├── server/                     Express + TypeScript API, Prisma schema, seed
 │   ├── prisma/                  schema.prisma, seed.ts, migrations
 │   ├── src/
-│   │   ├── routes/               reference, tickets, myTickets, ticketDetail, attachments
-│   │   ├── middleware/            requesterAuth (X-Dev-Requester-Id resolution)
-│   │   └── lib/                   ticketNumber, ticketValidation, attachmentRules, attachmentStorage
+│   │   ├── routes/               auth, reference, tickets, myTickets, ticketDetail, attachments,
+│   │   │                          staffQueue, staffTickets, comments, adminUsers
+│   │   ├── middleware/            auth.ts (requireAuth/requirePasswordCurrent/requireRole/originCheck)
+│   │   └── lib/                   password, session, loginThrottle, cookies, ticketNumber,
+│   │                              ticketValidation, attachmentRules, attachmentStorage,
+│   │                              staffQueueQuery, transitions, entries, adminUserInput
 │   ├── uploads/                  attachment files on disk (gitignored)
-│   └── tests/lab-01/, tests/lab-02/  Supertest unit/API tests
-├── e2e/lab-02/                  Playwright E2E + responsive/visual specs
+│   └── tests/lab-01/, tests/lab-02/, tests/lab-03/, tests/helpers/  Supertest unit/API tests
+├── e2e/                        Playwright: global-setup.ts (re-seeds), cleanup.ts,
+│   ├── lab-02/                  Requester flow + responsive/visual specs (session-authenticated)
+│   └── lab-03/                  authentication, staff-ticket-flow, user-administration, responsive specs
 ├── artifacts/lab-02/screenshots/  Committed visual evidence (desktop/tablet/mobile x every state)
-├── docs/lab-01/, docs/lab-02/    specification.md, api-spec.md, ui-spec.md, tests.md, reviewer.md, ai-use.md
+├── artifacts/lab-03/screenshots/  Lab 3 visual evidence: authentication, requester, staff-queue,
+│                                  staff-ticket-detail, user-management, focus (86 images)
+├── docs/lab-01/, docs/lab-02/, docs/lab-03/  specification.md, api-spec.md, ui-spec.md, tests.md,
+│                                             reviewer.md, ai-use.md
 ├── playwright.config.ts
 └── .gitignore
 ```
@@ -75,7 +93,13 @@ toktickit/
    ```
    DATABASE_URL="postgresql://toktickit:toktickit@localhost:5432/toktickit?schema=public"
    PORT=3000
+   CLIENT_ORIGIN="http://localhost:5173"
+   SESSION_TTL_HOURS=8
+   SEED_PASSWORD="TokTick-Dev#2026"
    ```
+   `CLIENT_ORIGIN` is the only browser origin the API accepts session cookies from and state-changing
+   requests from (BR-13); `SESSION_TTL_HOURS` sets how long a login lasts; `SEED_PASSWORD` is the local
+   password assigned to every seeded account (never a real personal password).
 
 4. **Run the database migration and seed** (from `server/`)
 
@@ -89,8 +113,13 @@ toktickit/
    npx prisma migrate dev
    npm run prisma:seed
    ```
-   The seed is idempotent: 4 required Categories, 7 Related Systems, 4 active + 1 inactive Development
-   Requester. Re-running it never creates duplicates.
+   The seed is idempotent (re-running it converges rather than duplicating): 4 Categories, 7 Related
+   Systems, 6 Requesters (5 active + 1 inactive), 5 IT Staff (4 active + 1 inactive), 1 Administrator,
+   and ~26 Tickets spanning all 8 statuses. Every seeded account's password is the value of
+   `SEED_PASSWORD` in `server/.env` (defaults to `TokTick-Dev#2026` outside `NODE_ENV=production` — never
+   a real personal password; see `docs/lab-03/specification.md` §7). One seeded Requester
+   (`ekkachai.mai@example.dev`) is left with `mustChangePassword: true` specifically to demonstrate the
+   mandatory first-login password change.
 
 5. **Run the apps** (two terminals)
    ```bash
@@ -101,9 +130,23 @@ toktickit/
    cd client && npm run dev
    ```
 
-6. Open `http://localhost:5173`. You'll land on the **Development Requester Selection** screen — pick
-   one of the seeded active Requesters (this is a Lab 2 testing mechanism, not real authentication; see
-   `docs/lab-02/specification.md` BR-05) to reach My Tickets and Create Ticket.
+6. Open `http://localhost:5173`. You'll land on the **Login** screen. Sign in with any seeded account's
+   email and `SEED_PASSWORD` (e.g. `aran.suksawat@example.dev`) to reach My Tickets and Create Ticket.
+   IT Staff accounts (e.g. `jennifer.anderson@example.dev`) land on the Ticket Queue, and the seeded
+   Administrator (`john.smith@example.dev`) lands on **Users** (User Management).
+
+   | Account (all `@example.dev`) | Role / state | Use it to see |
+   |---|---|---|
+   | `aran.suksawat` | Requester, active | My Tickets, Create Ticket, comments |
+   | `buppha.ratanakorn` | Requester, active, owns no Tickets | the empty My Tickets state |
+   | `ekkachai.mai` | Requester, must change password | the mandatory first-login change |
+   | `somsak.jantawong` | Requester, **inactive** | the inactive-account message |
+   | `jennifer.anderson`, `michael.brown` | IT Staff, active | Ticket Queue and Detail |
+   | `robert.wilson` | IT Staff, **inactive** | an inactive owner / user |
+   | `john.smith` | Administrator, active (the only one) | User Management |
+
+   All use `SEED_PASSWORD` (default `TokTick-Dev#2026`, local development only). The Playwright suite
+   re-seeds before each run, which puts these accounts back in this state.
 
 ## Testing
 
@@ -142,9 +185,20 @@ npx playwright test
 
 The Playwright suite starts the real server and client dev servers itself (see `playwright.config.ts`)
 and runs against the actual PostgreSQL-backed API. Nothing is mocked except one deliberately
-aborted request, used to produce the Create Ticket API-failure state. It writes screenshots to
-`artifacts/lab-02/screenshots/` (committed to the repo as visual evidence, see `docs/lab-02/ui-spec.md`
-§11-12) and creates real Ticket rows in your dev database as it exercises the flow.
+aborted request, used to produce the Create Ticket API-failure state. Before each run
+`e2e/global-setup.ts` removes leftover `e2e.*` users and re-seeds the dev database, and the run uses one
+worker because the specs share that database. It writes screenshots to `artifacts/lab-02/screenshots/`
+(see `docs/lab-02/ui-spec.md` §11-12) and `artifacts/lab-03/screenshots/` (see `docs/lab-03/ui-spec.md`
+§13-14), and creates real Ticket and User rows in your dev database as it exercises the flows.
+`npx playwright test e2e/lab-03` runs only the Lab 3 specs.
+
+**Current results** (all passing; the same numbers are in `docs/lab-03/tests.md` §6):
+
+| Suite | Command | Result |
+|---|---|---|
+| Server (unit + API + authorization + migration) | `cd server && npm test` | 20 files, 171 tests |
+| Client (UI component + style) | `cd client && npm test` | 15 files, 95 tests |
+| End to end + responsive (Playwright) | `npx playwright test` | 128 tests (28 Lab 2 + 100 Lab 3) |
 
 `server/vitest.config.ts` runs test files sequentially (`fileParallelism: false`): every server test
 file shares the one real test database with no per-file transaction isolation, so parallel files can
@@ -153,24 +207,38 @@ race on the same rows.
 ## Required API endpoints
 
 All endpoints are documented in full (request/response shapes, validation, status codes) in
-[`docs/lab-02/api-spec.md`](docs/lab-02/api-spec.md). Summary:
+[`docs/lab-03/api-spec.md`](docs/lab-03/api-spec.md). Summary of what exists so far:
 
 | Method | Path                              | Description                                                    |
 |--------|-----------------------------------|------------------------------------------------------------------|
 | GET    | `/api/health`                     | Health check                                                    |
+| POST   | `/api/auth/login`                 | Log in, sets the session cookie                                  |
+| POST   | `/api/auth/logout`                | Log out, invalidates the session                                 |
+| GET    | `/api/auth/me`                    | Current authenticated identity                                   |
+| POST   | `/api/auth/change-password`       | Change password (also the mandatory first-login flow)            |
+| GET    | `/api/staff/tickets`              | IT Staff / Administrator Ticket Queue — search/filter/sort/pagination |
+| GET    | `/api/staff/assignable-users`     | Active IT Staff (Queue Owner filter; claim/reassign later)       |
+| GET    | `/api/staff/tickets/:id`          | Staff Ticket Detail; `PATCH .../owner`, `.../it-priority`, `.../status` (IT Staff only) |
+| GET/POST | `/api/staff/tickets/:id/notes`  | Internal Notes (IT Staff read+write, Administrator read)         |
+| GET/POST | `/api/tickets/:id/comments`     | Public Comments (Requester owner, IT Staff, Administrator read)   |
+| POST   | `/api/tickets/:id/problem-resolved` | Requester says the problem appears resolved (status unchanged) |
+| GET/POST | `/api/admin/users`              | Administrator: list users (`search` by name/email, optional `role`), create a user |
+| PATCH  | `/api/admin/users/:id`            | Administrator: edit name, email, role, active state (self and last-Administrator rules) |
+| POST   | `/api/admin/users/:id/initial-password` | Administrator: set a new initial password; the user must change it at next login |
 | GET    | `/api/categories`                 | Active IT request categories                                    |
 | GET    | `/api/related-systems`            | Active related systems                                          |
-| GET    | `/api/dev-requesters`             | Active Development Requesters (Lab 2 selector)                  |
 | POST   | `/api/tickets`                    | Create a Ticket (multipart, optional attachments)                |
-| GET    | `/api/tickets`                    | Selected Requester's own Tickets — search/filter/sort/pagination |
+| GET    | `/api/tickets`                    | The authenticated Requester's own Tickets — search/filter/sort/pagination |
 | GET    | `/api/tickets/:id`                | One owned Ticket's full detail + attachments                    |
 | POST   | `/api/tickets/:id/attachments`    | Add a permitted attachment to an owned Ticket                    |
 | GET    | `/api/attachments/:id`            | One attachment's metadata (active or removed)                   |
 | GET    | `/api/attachments/:id/download`   | Download an active attachment's file                             |
 | DELETE | `/api/attachments/:id`            | Soft-remove an attachment (reason required)                      |
 
-Every Requester-scoped endpoint requires an `X-Dev-Requester-Id` header identifying the selected
-Development Requester (a Lab 2 testing mechanism — see `specification.md` BR-05/BR-29).
+Every Requester-scoped endpoint requires an authenticated session (an httpOnly cookie set by
+`/api/auth/login`); ownership comes from that session, never a client-supplied id (BR-03). The
+`/api/admin/*` endpoints answer `403` to every role except Administrator, and there is deliberately no
+endpoint that deletes a user (BR-34): access is removed by deactivating the account.
 
 ## Documentation
 
@@ -185,7 +253,16 @@ Development Requester (a Lab 2 testing mechanism — see `specification.md` BR-0
 - [`docs/lab-02/ai-use.md`](docs/lab-02/ai-use.md) - AI tool used and reflection.
 - [`docs/lab-02/reviewer.md`](docs/lab-02/reviewer.md) - peer review record.
 
+**Lab 3**
+- [`docs/lab-03/specification.md`](docs/lab-03/specification.md) - functional requirements, business rules, authorization matrix, status transition matrix, migration decisions, acceptance criteria, Definition of Done.
+- [`docs/lab-03/api-spec.md`](docs/lab-03/api-spec.md) - full REST contract, including the session/CSRF conventions.
+- [`docs/lab-03/ui-spec.md`](docs/lab-03/ui-spec.md) - Zen Green extensions for the new screens, deliberate deviations from the mockups.
+- [`docs/lab-03/tests.md`](docs/lab-03/tests.md) - planned-test table, AC / FR / BR traceability, final results.
+- [`docs/lab-03/reviewer.md`](docs/lab-03/reviewer.md) - peer review record in both directions, with the real GitHub conversations.
+- [`docs/lab-03/ai-use.md`](docs/lab-03/ai-use.md) - the LLMs used, key prompts, and my reflection.
+
 ## Git workflow
 
-`main` (stable) ← `lab2-staging` (Lab 2 integration) ← `feature/*` branches, one per Issue, each merged
-via a peer-reviewed, approved Pull Request. Lab 1 used the same pattern with `lab1-staging`.
+`main` (stable) ← `lab3-staging` (Lab 3 integration) ← `feature/*` branches, one per Issue, each merged
+via a peer-reviewed, approved Pull Request. Lab 1 and Lab 2 used the same pattern with `lab1-staging`
+and `lab2-staging`.

@@ -1,5 +1,4 @@
 import { ChangeEvent, useState } from "react";
-import { useRequester } from "../../context/RequesterContext.js";
 import { TicketDetailAttachment } from "../../api/ticketDetail.js";
 import { addAttachment, removeAttachment, downloadAttachment } from "../../api/attachments.js";
 import { checkAttachmentFile, MAX_ACTIVE_ATTACHMENTS } from "../../lib/attachmentRules.js";
@@ -21,8 +20,6 @@ interface AttachmentSectionProps {
 // soft-remove-with-reason, on top of the read-only metadata list Issue 30
 // already renders (BR-23: metadata never disappears, active or removed).
 export function AttachmentSection({ ticketId, attachments, onChange }: AttachmentSectionProps) {
-  const { requester } = useRequester();
-
   const [pickerError, setPickerError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -41,7 +38,7 @@ export function AttachmentSection({ ticketId, attachments, onChange }: Attachmen
   async function handleFileSelected(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
-    if (!file || !requester) return;
+    if (!file) return;
 
     setPickerError(null);
     setUploadError(null);
@@ -58,7 +55,7 @@ export function AttachmentSection({ ticketId, attachments, onChange }: Attachmen
 
     setUploading(true);
     try {
-      await addAttachment(requester.id, ticketId, file);
+      await addAttachment(ticketId, file);
       onChange();
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : "Unable to add this attachment.");
@@ -75,7 +72,6 @@ export function AttachmentSection({ ticketId, attachments, onChange }: Attachmen
   }
 
   async function confirmRemove(id: number) {
-    if (!requester) return;
     const trimmed = removalReason.trim();
     if (trimmed.length < 5 || trimmed.length > 200) {
       setRemoveFieldError("Reason must be 5-200 characters.");
@@ -85,7 +81,7 @@ export function AttachmentSection({ ticketId, attachments, onChange }: Attachmen
     setRemoveError(null);
     setRemoving(true);
     try {
-      await removeAttachment(requester.id, id, trimmed);
+      await removeAttachment(id, trimmed);
       setRemovingId(null);
       onChange();
     } catch (err) {
@@ -96,10 +92,9 @@ export function AttachmentSection({ ticketId, attachments, onChange }: Attachmen
   }
 
   async function handleDownload(a: TicketDetailAttachment) {
-    if (!requester) return;
     setDownloadError(null);
     try {
-      await downloadAttachment(requester.id, a.id, a.originalFilename);
+      await downloadAttachment(a.id, a.originalFilename);
     } catch (err) {
       setDownloadError(err instanceof Error ? err.message : "Unable to download this attachment.");
     }

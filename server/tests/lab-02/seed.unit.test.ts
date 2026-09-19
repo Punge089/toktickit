@@ -14,14 +14,14 @@ describe("Lab 2 seed idempotency", () => {
     const [categoriesAfterFirst, systemsAfterFirst, requestersAfterFirst] = await Promise.all([
       prisma.category.count(),
       prisma.relatedSystem.count(),
-      prisma.requesterUser.count(),
+      prisma.user.count(),
     ]);
 
     await seedAll();
     const [categoriesAfterSecond, systemsAfterSecond, requestersAfterSecond] = await Promise.all([
       prisma.category.count(),
       prisma.relatedSystem.count(),
-      prisma.requesterUser.count(),
+      prisma.user.count(),
     ]);
 
     expect(categoriesAfterSecond).toBe(categoriesAfterFirst);
@@ -48,8 +48,8 @@ describe("Lab 2 seed idempotency", () => {
   it("seeds at least four active and one inactive Development Requester", async () => {
     const prisma = getPrisma();
     await seedAll();
-    const active = await prisma.requesterUser.count({ where: { isActive: true } });
-    const inactive = await prisma.requesterUser.count({ where: { isActive: false } });
+    const active = await prisma.user.count({ where: { isActive: true } });
+    const inactive = await prisma.user.count({ where: { isActive: false } });
     expect(active).toBeGreaterThanOrEqual(4);
     expect(inactive).toBeGreaterThanOrEqual(1);
   });

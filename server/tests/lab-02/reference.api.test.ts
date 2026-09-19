@@ -61,25 +61,15 @@ describe("GET /api/related-systems", () => {
   });
 });
 
-// API-20
-describe("GET /api/dev-requesters", () => {
-  it("returns only active Development Requesters, excluding the seeded inactive one", async () => {
+// Issue 64 (REG-05 / SEC-07) — the Development Requester selector and its
+// API are removed entirely (docs/lab-03/specification.md BR-39). The two
+// tests that used to live here (API-20: active-only listing, and the
+// simulated-DB-failure case) tested behavior that no longer exists; this
+// replaces them with the Lab 3 regression that proves the removal, rather
+// than deleting API-20's coverage outright.
+describe("GET /api/dev-requesters (removed in Issue 64)", () => {
+  it("no longer exists — returns 404, not the old Development Requester list", async () => {
     const res = await request(app).get("/api/dev-requesters");
-    expect(res.status).toBe(200);
-    expect(res.body.length).toBeGreaterThanOrEqual(4);
-    expect(res.body.some((r: { fullName: string }) => r.fullName === "Somsak Jantawong")).toBe(false);
-    for (const r of res.body) {
-      expect(r).toHaveProperty("id");
-      expect(r).toHaveProperty("fullName");
-      expect(r).toHaveProperty("email");
-    }
-  });
-
-  it("returns a safe 500 when the database is unreachable", async () => {
-    const spy = vi.spyOn(getPrisma().requesterUser, "findMany").mockRejectedValueOnce(new Error("boom"));
-    const res = await request(app).get("/api/dev-requesters");
-    expect(res.status).toBe(500);
-    expect(res.body).toEqual({ error: "INTERNAL_ERROR", message: "Unable to load Development Requesters." });
-    spy.mockRestore();
+    expect(res.status).toBe(404);
   });
 });

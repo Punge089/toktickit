@@ -6,6 +6,12 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
+  // One worker: every spec shares the one dev database, and several of them
+  // change shared rows (ticket state, user accounts), so files must not overlap.
+  workers: 1,
+  // Re-seeds the dev database so every run starts from the documented accounts
+  // (a previous run may have changed a seeded password or deactivated a user).
+  globalSetup: "./e2e/global-setup.ts",
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: "list",

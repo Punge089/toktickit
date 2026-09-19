@@ -217,6 +217,11 @@ textarea.zen-field-control {
   color: var(--zen-success);
 }
 
+.zen-badge-primary {
+  background: var(--zen-primary);
+  color: #ffffff;
+}
+
 /* ------------------------------------------------------------------ Alert */
 
 .zen-alert {
@@ -329,6 +334,16 @@ textarea.zen-field-control {
 
 .zen-shell-hamburger {
   display: none;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: var(--zen-fs-h2);
+}
+
+/* The header is Zen Green, so the global green focus ring would vanish on it. */
+.zen-shell-header a:focus-visible,
+.zen-shell-header button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .zen-shell-main {
@@ -510,4 +525,662 @@ textarea.zen-field-control {
 .zen-attachment-meta {
   color: var(--zen-text-muted);
   font-size: var(--zen-fs-caption);
+}
+
+/* ------------------------------------------------- Auth (Issue 64) ------ */
+/* Login, Change Password, Forbidden, Not Found — centered single-column
+   panels, distinct from the AppShell's authenticated screens (ui-spec.md
+   §3, §5). */
+
+.zen-auth-page {
+  display: flex;
+  justify-content: center;
+  padding: var(--zen-space-7) var(--zen-space-4);
+}
+
+.zen-auth-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-4);
+}
+
+.zen-auth-title {
+  font-size: var(--zen-fs-h1);
+  margin: 0;
+}
+
+/* Password policy live checklist (ui-spec.md §4). */
+.zen-password-checklist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-1);
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-password-checklist-item {
+  display: flex;
+  align-items: center;
+  gap: var(--zen-space-2);
+}
+
+.zen-password-checklist-item-met {
+  color: var(--zen-success);
+}
+
+.zen-password-checklist-icon {
+  width: 1.1em;
+  display: inline-block;
+  text-align: center;
+}
+
+/* ---------------------------------------------- Shell identity (Issue 64) */
+/* Replaces the Lab 2 "Requester name + Change Requester" pair with a
+   role-aware name/badge and a Change Password / Log Out dropdown. */
+
+.zen-shell-identity {
+  position: relative;
+}
+
+.zen-shell-identity-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--zen-space-2);
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: var(--zen-fs-caption);
+  cursor: pointer;
+  padding: var(--zen-space-1) var(--zen-space-2);
+  border-radius: 6px;
+}
+
+.zen-shell-identity-toggle:hover,
+.zen-shell-identity-toggle:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.zen-shell-identity-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  padding: var(--zen-space-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 20;
+}
+
+.zen-shell-identity-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: var(--zen-space-2) var(--zen-space-3);
+  border-radius: 6px;
+  color: var(--zen-text);
+  cursor: pointer;
+  font-size: var(--zen-fs-body);
+}
+
+.zen-shell-identity-menu-item:hover,
+.zen-shell-identity-menu-item:focus-visible {
+  background: var(--zen-pale);
+}
+
+/* ------------------------------------------- IT Staff Queue (Issue 65) --- */
+/* One set of DOM rows: cards below 992px, a 10-column table at >=992px
+   (docs/lab-03/ui-spec.md §7). No horizontal scrolling at any width. */
+
+.zen-queue-search-row {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-3);
+}
+
+.zen-queue-filters {
+  display: none;
+}
+
+.zen-queue-filters.zen-queue-filters-open {
+  display: flex;
+}
+
+.zen-queue-header {
+  display: none;
+}
+
+.zen-queue-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--zen-space-2);
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border-bottom: 1px solid var(--zen-border);
+  color: var(--zen-text);
+  text-decoration: none;
+}
+
+.zen-queue-row:last-child {
+  border-bottom: none;
+}
+
+.zen-queue-row:hover {
+  background: var(--zen-pale);
+}
+
+.zen-queue-row > span {
+  min-width: 0;
+}
+
+/* Below 992px the row is a card. `order` puts the status right after the ticket
+   number; the status cell may wrap its badges, but the number never shrinks. */
+.zen-queue-cell-number {
+  order: 1;
+  flex: 0 0 auto;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.zen-queue-cell-status {
+  order: 2;
+  flex: 1 1 0;
+  min-width: 140px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-1);
+  justify-content: flex-end;
+}
+.zen-queue-cell-created {
+  display: none;
+}
+.zen-queue-cell-summary {
+  order: 3;
+  flex: 0 0 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.zen-queue-cell-req {
+  order: 4;
+  flex: 1 1 40%;
+  white-space: nowrap;
+}
+.zen-queue-cell-it {
+  order: 5;
+  flex: 1 1 40%;
+  white-space: nowrap;
+}
+.zen-queue-cell-category {
+  order: 6;
+  flex: 0 0 100%;
+  color: var(--zen-text-muted);
+  font-size: var(--zen-fs-caption);
+}
+.zen-queue-cell-owner {
+  order: 7;
+  flex: 1 1 40%;
+  font-size: var(--zen-fs-caption);
+}
+.zen-queue-cell-updated {
+  order: 8;
+  flex: 1 1 40%;
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+  text-align: right;
+}
+.zen-queue-cell-open {
+  order: 9;
+  flex: 0 0 100%;
+  font-weight: 600;
+  color: var(--zen-secondary);
+  text-decoration: underline;
+}
+
+.zen-queue-mini-label {
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-queue-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: var(--zen-space-3);
+  margin-top: var(--zen-space-4);
+}
+
+.zen-queue-pager .zen-field {
+  margin-bottom: 0;
+}
+
+@media (min-width: 992px) {
+  .zen-queue-filters-toggle {
+    display: none;
+  }
+
+  .zen-queue-filters {
+    display: flex;
+  }
+
+  .zen-queue-header,
+  .zen-queue-row {
+    display: grid;
+    grid-template-columns: 1.35fr 1.1fr 1.7fr 1fr 0.9fr 0.9fr 1.3fr 1.1fr 1.1fr 0.5fr;
+    grid-template-areas: none;
+    gap: var(--zen-space-2);
+  }
+
+  .zen-queue-header {
+    display: grid;
+    padding: var(--zen-space-3) var(--zen-space-4);
+    border-bottom: 1px solid var(--zen-border);
+    font-size: var(--zen-fs-caption);
+    font-weight: 600;
+    color: var(--zen-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .zen-queue-row > span,
+  .zen-queue-cell-number,
+  .zen-queue-cell-summary,
+  .zen-queue-cell-category,
+  .zen-queue-cell-req,
+  .zen-queue-cell-it,
+  .zen-queue-cell-status,
+  .zen-queue-cell-owner,
+  .zen-queue-cell-updated,
+  .zen-queue-cell-open {
+    grid-area: auto;
+    order: 0;
+    flex: none;
+    min-width: 0;
+  }
+
+  .zen-queue-cell-created {
+    display: block;
+    font-size: var(--zen-fs-caption);
+  }
+
+  .zen-queue-cell-category {
+    color: var(--zen-text);
+    font-size: var(--zen-fs-caption);
+  }
+
+  .zen-queue-cell-status {
+    justify-content: flex-start;
+  }
+
+  .zen-queue-cell-updated {
+    text-align: left;
+    color: var(--zen-text);
+  }
+
+  .zen-queue-mini-label {
+    display: none;
+  }
+}
+
+/* ---------------------------- Comments, Notes, Operations (Issue 66) ------ */
+
+.zen-entry-panel {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+}
+
+/* Internal Notes must never be mistaken for Public Comments (ui-spec.md §8). */
+.zen-entry-internal {
+  background: var(--zen-warning-bg);
+  border-color: var(--zen-warning);
+}
+
+.zen-entry-lock {
+  margin: 0 0 var(--zen-space-3);
+  font-weight: 600;
+  color: var(--zen-warning);
+}
+
+.zen-entry-list {
+  list-style: none;
+  margin: var(--zen-space-4) 0 0;
+  padding: 0;
+}
+
+.zen-entry {
+  padding: var(--zen-space-3) 0;
+  border-top: 1px solid var(--zen-border);
+}
+
+.zen-entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--zen-space-2);
+}
+
+.zen-entry-time {
+  margin-left: auto;
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-entry-body {
+  margin-top: var(--zen-space-1);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.zen-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-1);
+  border-bottom: 1px solid var(--zen-border);
+  margin-bottom: var(--zen-space-3);
+}
+
+.zen-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: var(--zen-space-2) var(--zen-space-3);
+  font-size: var(--zen-fs-body);
+  font-weight: 600;
+  color: var(--zen-text-muted);
+  cursor: pointer;
+}
+
+.zen-tab:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
+.zen-tab[aria-selected="true"] {
+  color: var(--zen-primary);
+  border-bottom-color: var(--zen-primary);
+}
+
+.zen-ops-card {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+  margin: var(--zen-space-4) 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--zen-space-4);
+}
+
+@media (min-width: 768px) {
+  .zen-ops-card {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.zen-ops-card .zen-field {
+  margin-bottom: 0;
+}
+
+.zen-ops-wide {
+  grid-column: 1 / -1;
+}
+
+.zen-confirm {
+  border: 1px solid var(--zen-warning);
+  background: var(--zen-warning-bg);
+  border-radius: 6px;
+  padding: var(--zen-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-2);
+}
+
+/* ------------------------------------ User Management (Issue 67) ---------- */
+/* One pane on small screens (the create/edit panel replaces the list), two
+   panes at >=992px (docs/lab-03/ui-spec.md section 9). Rows are cards below
+   992px and a 5-column table at >=992px; no horizontal scrolling anywhere. */
+
+.zen-users-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-users-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--zen-space-5);
+  align-items: start;
+  margin-top: var(--zen-space-4);
+}
+
+.zen-users-layout-panel-open .zen-users-list-pane {
+  display: none;
+}
+
+.zen-users-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-users-controls .zen-users-role-filter {
+  margin-bottom: 0;
+  min-width: 160px;
+}
+
+.zen-users-header-row {
+  display: none;
+}
+
+.zen-users-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "name status"
+    "email email"
+    "role edit";
+  gap: var(--zen-space-2);
+  align-items: center;
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border-bottom: 1px solid var(--zen-border);
+}
+
+.zen-users-row:last-child {
+  border-bottom: none;
+}
+
+.zen-users-row-selected {
+  background: var(--zen-pale);
+}
+
+.zen-users-row > span {
+  min-width: 0;
+}
+
+.zen-users-cell-name {
+  grid-area: name;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zen-users-cell-email {
+  grid-area: email;
+  color: var(--zen-text-muted);
+  font-size: var(--zen-fs-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zen-users-cell-role {
+  grid-area: role;
+}
+
+.zen-users-cell-status {
+  grid-area: status;
+  justify-self: end;
+}
+
+.zen-users-cell-edit {
+  grid-area: edit;
+  justify-self: end;
+}
+
+.zen-users-cell-edit .zen-btn {
+  min-height: 32px;
+}
+
+.zen-users-panel {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+}
+
+.zen-users-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-4);
+}
+
+.zen-users-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-3);
+  margin-top: var(--zen-space-4);
+}
+
+.zen-users-panel-close {
+  text-decoration: none;
+}
+
+.zen-users-password-box {
+  margin-top: var(--zen-space-4);
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border: 1px solid var(--zen-border);
+  border-radius: 6px;
+  background: var(--zen-page-bg);
+}
+
+.zen-users-password-box .zen-field {
+  margin-bottom: var(--zen-space-3);
+}
+
+/* Active on/off switch: a native checkbox (keyboard and screen-reader
+   behaviour for free), drawn as a track and knob. */
+.zen-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--zen-space-2);
+}
+
+.zen-switch input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  width: 44px;
+  height: 24px;
+  margin: 0;
+  border-radius: 999px;
+  border: 1.5px solid var(--zen-border);
+  background: var(--zen-field-readonly-bg);
+  cursor: pointer;
+}
+
+.zen-switch input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+}
+
+.zen-switch input[type="checkbox"]:checked {
+  background: var(--zen-primary);
+  border-color: var(--zen-primary);
+}
+
+.zen-switch input[type="checkbox"]:checked::after {
+  left: 22px;
+}
+
+.zen-switch input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
+.zen-switch input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 992px) {
+  .zen-users-layout-panel-open {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+  }
+
+  .zen-users-layout-panel-open .zen-users-list-pane {
+    display: block;
+  }
+
+  .zen-users-header-row,
+  .zen-users-row {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.1fr) minmax(0, 0.9fr) 72px;
+    grid-template-areas: none;
+  }
+
+  .zen-users-header-row {
+    display: grid;
+    gap: var(--zen-space-2);
+    padding: var(--zen-space-3) var(--zen-space-4);
+    border-bottom: 1px solid var(--zen-border);
+    font-size: var(--zen-fs-caption);
+    font-weight: 600;
+    color: var(--zen-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .zen-users-cell-name,
+  .zen-users-cell-email {
+    grid-area: auto;
+    justify-self: stretch;
+  }
+
+  .zen-users-cell-role,
+  .zen-users-cell-status,
+  .zen-users-cell-edit {
+    grid-area: auto;
+    justify-self: start;
+  }
+
+  .zen-users-cell-email {
+    color: var(--zen-text);
+  }
 }

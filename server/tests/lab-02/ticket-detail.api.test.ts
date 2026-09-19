@@ -3,19 +3,27 @@ import request from "supertest";
 import { app } from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 import { seedAll } from "../../prisma/seed.js";
+import { createAndLoginUser } from "../helpers/auth.js";
 
 // api-spec.md §6, specification.md BR-10, BR-28, FR-05, AC-03.
+//
+// Issue 64 (REG-03) — every request now authenticates via a real session
+// cookie instead of X-Dev-Requester-Id, per docs/lab-03/BR-38.
 describe("GET /api/tickets/:id", () => {
+  let agentA: Awaited<ReturnType<typeof createAndLoginUser>>["agent"];
+  let agentB: Awaited<ReturnType<typeof createAndLoginUser>>["agent"];
   let requesterA: number;
-  let requesterB: number;
   let ownedTicketId: number;
 
   beforeAll(async () => {
     await seedAll();
+    const a = await createAndLoginUser({ role: "REQUESTER", fullName: "Ticket Detail Fixture A" });
+    const b = await createAndLoginUser({ role: "REQUESTER", fullName: "Ticket Detail Fixture B" });
+    agentA = a.agent;
+    agentB = b.agent;
+    requesterA = a.user.id;
+
     const prisma = getPrisma();
-    const requesters = await prisma.requesterUser.findMany({ where: { isActive: true }, take: 2 });
-    requesterA = requesters[0].id;
-    requesterB = requesters[1].id;
     const category = await prisma.category.findFirstOrThrow({ where: { isActive: true } });
     const relatedSystem = await prisma.relatedSystem.findFirstOrThrow({ where: { isActive: true } });
 
@@ -28,6 +36,7 @@ describe("GET /api/tickets/:id", () => {
         summary: "Detail-endpoint test ticket",
         description: "A".repeat(30),
         requestedPriority: "MEDIUM",
+        itPriority: "MEDIUM",
       },
     });
     ownedTicketId = ticket.id;
@@ -46,9 +55,7 @@ describe("GET /api/tickets/:id", () => {
 
   // API-13
   it("returns full detail, including nested attachments, for an owned Ticket", async () => {
-    const res = await request(app)
-      .get(`/api/tickets/${ownedTicketId}`)
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const res = await agentA.get(`/api/tickets/${ownedTicketId}`);
 
     expect(res.status).toBe(200);
     expect(res.body.id).toBe(ownedTicketId);
@@ -60,31 +67,33 @@ describe("GET /api/tickets/:id", () => {
 
   // API-12
   it("returns 404 for another Requester's Ticket, identical to a nonexistent id", async () => {
-    const forOther = await request(app)
-      .get(`/api/tickets/${ownedTicketId}`)
-      .set("X-Dev-Requester-Id", String(requesterB));
+    const forOther = await agentB.get(`/api/tickets/${ownedTicketId}`);
     expect(forOther.status).toBe(404);
     expect(forOther.body).toEqual({ error: "TICKET_NOT_FOUND", message: "Ticket not found." });
 
-    const nonexistent = await request(app)
-      .get("/api/tickets/999999999")
-      .set("X-Dev-Requester-Id", String(requesterB));
+    const nonexistent = await agentB.get("/api/tickets/999999999");
     expect(nonexistent.status).toBe(404);
     expect(nonexistent.body).toEqual(forOther.body);
   });
 
   it("returns 404 for a non-numeric id rather than throwing", async () => {
-    const res = await request(app)
-      .get("/api/tickets/not-a-number")
-      .set("X-Dev-Requester-Id", String(requesterA));
+    const res = await agentA.get("/api/tickets/not-a-number");
     expect(res.status).toBe(404);
   });
 
-  it("rejects an inactive Requester with 403", async () => {
-    const inactive = await getPrisma().requesterUser.findFirstOrThrow({ where: { isActive: false } });
+  // Adapted from Lab 2's "inactive Requester -> 403" (see create-ticket
+  // test's equivalent case for the full rationale).
+  it("rejects a request whose session belongs to a since-deactivated user (401)", async () => {
+    const { agent: staleAgent, user } = await createAndLoginUser({ role: "REQUESTER" });
+    await getPrisma().user.update({ where: { id: user.id }, data: { isActive: false } });
+    const res = await staleAgent.get(`/api/tickets/${ownedTicketId}`);
+    expect(res.status).toBe(401);
+  });
+
+  it("rejects a request with no session cookie, even with a legacy X-Dev-Requester-Id header, with 401", async () => {
     const res = await request(app)
       .get(`/api/tickets/${ownedTicketId}`)
-      .set("X-Dev-Requester-Id", String(inactive.id));
-    expect(res.status).toBe(403);
+      .set("X-Dev-Requester-Id", String(requesterA));
+    expect(res.status).toBe(401);
   });
 });

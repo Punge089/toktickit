@@ -1,24 +1,38 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, Page } from "@playwright/test";
 
 // Issue 32 — full-stack E2E against the real dev servers + PostgreSQL
 // (specification.md Test Strategy). Covers E2E-01, E2E-02, E2E-03 as one
 // continuous flow since each step depends on state the previous step
 // created (the Ticket Number, its Detail URL).
+//
+// Issue 64 (REG-06) — logs in via the real Login screen instead of the
+// removed Development Requester selector; "switching Requester" is now
+// logout + log back in as a different account, since identity is fixed
+// for a session (BR-39).
+const SEED_PASSWORD = process.env.SEED_PASSWORD ?? "TokTick-Dev#2026";
+
+async function login(page: Page, email: string) {
+  await page.goto("/login");
+  await page.getByLabel("Email address").fill(email);
+  await page.getByLabel("Password").fill(SEED_PASSWORD);
+  await page.getByRole("button", { name: "Sign In" }).click();
+  await expect(page.getByRole("heading", { name: "My Tickets" })).toBeVisible();
+}
+
+async function logout(page: Page) {
+  await page.getByRole("button", { name: /aran suksawat|buppha ratanakorn/i }).click();
+  await page.getByRole("menuitem", { name: "Log Out" }).click();
+  await expect(page.getByRole("heading", { name: "TokTickIT" })).toBeVisible();
+}
+
 test("a Requester creates a ticket, manages its attachment, and cannot be seen by another Requester", async ({
   page,
 }) => {
   let ticketNumber = "";
   let ticketDetailUrl = "";
 
-  await test.step("E2E-01a: select Development Requester A", async () => {
-    await page.goto("/");
-    await expect(page.getByRole("heading", { name: "TokTickIT" })).toBeVisible();
-
-    const select = page.getByLabel("Development Requester");
-    await select.selectOption({ label: "Aran Suksawat (aran.suksawat@example.dev)" });
-    await page.getByRole("button", { name: "Continue" }).click();
-
-    await expect(page.getByRole("heading", { name: "My Tickets" })).toBeVisible();
+  await test.step("E2E-01a: log in as Requester A", async () => {
+    await login(page, "aran.suksawat@example.dev");
   });
 
   await test.step("E2E-01b: create a ticket with one attachment", async () => {
@@ -69,13 +83,9 @@ test("a Requester creates a ticket, manages its attachment, and cannot be seen b
     await expect(page.getByRole("button", { name: "Download" })).toHaveCount(0);
   });
 
-  await test.step("E2E-03: switching to Requester B hides Requester A's ticket", async () => {
-    await page.getByRole("button", { name: "Change Requester" }).click();
-    await expect(page.getByRole("heading", { name: "TokTickIT" })).toBeVisible();
-
-    const select = page.getByLabel("Development Requester");
-    await select.selectOption({ label: "Buppha Ratanakorn (buppha.ratanakorn@example.dev)" });
-    await page.getByRole("button", { name: "Continue" }).click();
+  await test.step("E2E-03: logging out and back in as Requester B hides Requester A's ticket", async () => {
+    await logout(page);
+    await login(page, "buppha.ratanakorn@example.dev");
 
     await page.getByLabel("Search").fill(ticketNumber);
     await expect(page.getByText(/no tickets match your search/i)).toBeVisible();

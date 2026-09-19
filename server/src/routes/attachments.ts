@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import { getPrisma } from "../prisma.js";
-import { requesterAuth } from "../middleware/requesterAuth.js";
+import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 import {
   checkAttachmentFile,
   generateStoredFilename,
@@ -30,6 +30,19 @@ function parseSingleFile(req: Request, res: Response, next: NextFunction) {
       return;
     }
     next();
+  });
+}
+
+// Requesters only ever see attachments on their own Tickets (404 otherwise);
+// IT Staff and Administrator read attachments on any Ticket (Issue 66,
+// docs/lab-03/ui-spec.md section 8 - attachment continuity).
+async function findReadableAttachment(attachmentId: number, user: { id: number; role: string }) {
+  return getPrisma().attachment.findFirst({
+    where: { id: attachmentId, ...(user.role === "REQUESTER" ? { ticket: { requesterId: user.id } } : {}) },
+    include: {
+      uploadedBy: { select: { fullName: true } },
+      removedBy: { select: { fullName: true } },
+    },
   });
 }
 
@@ -73,7 +86,9 @@ function attachmentMetadata(a: {
 // §7 — POST /api/tickets/:id/attachments
 attachmentsRouter.post(
   "/api/tickets/:id/attachments",
-  requesterAuth,
+  requireAuth,
+  requirePasswordCurrent,
+  requireRole("REQUESTER"),
   parseSingleFile,
   async (req: Request, res: Response) => {
     const ticketId = Number(req.params.id);
@@ -91,7 +106,7 @@ attachmentsRouter.post(
     try {
       const prisma = getPrisma();
       const ticket = await prisma.ticket.findFirst({
-        where: { id: ticketId, requesterId: req.requester!.id },
+        where: { id: ticketId, requesterId: req.user!.id },
       });
       if (!ticket) {
         res.status(404).json(TICKET_NOT_FOUND);
@@ -126,7 +141,7 @@ attachmentsRouter.post(
           storedFilename,
           mimeType: file.mimetype,
           sizeBytes: file.size,
-          uploadedById: req.requester!.id,
+          uploadedById: req.user!.id,
         },
       });
 
@@ -145,14 +160,19 @@ attachmentsRouter.post(
 );
 
 // §8 — GET /api/attachments/:id (metadata; active or removed — BR-23)
-attachmentsRouter.get("/api/attachments/:id", requesterAuth, async (req: Request, res: Response) => {
+attachmentsRouter.get(
+  "/api/attachments/:id",
+  requireAuth,
+  requirePasswordCurrent,
+  requireRole("REQUESTER", "IT_STAFF", "ADMINISTRATOR"),
+  async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     res.status(404).json(ATTACHMENT_NOT_FOUND);
     return;
   }
   try {
-    const attachment = await findOwnedAttachment(id, req.requester!.id);
+    const attachment = await findReadableAttachment(id, req.user!);
     if (!attachment) {
       res.status(404).json(ATTACHMENT_NOT_FOUND);
       return;
@@ -161,12 +181,16 @@ attachmentsRouter.get("/api/attachments/:id", requesterAuth, async (req: Request
   } catch {
     res.status(500).json({ error: "INTERNAL_ERROR", message: "Something went wrong. Please try again." });
   }
-});
+  },
+);
 
-// §9 — GET /api/attachments/:id/download (active only — 410 if removed)
+// §9 — GET /api/attachments/:id/download (active only — 410 if removed).
+// Requesters (owner only), IT Staff, and Administrator (Issue 66).
 attachmentsRouter.get(
   "/api/attachments/:id/download",
-  requesterAuth,
+  requireAuth,
+  requirePasswordCurrent,
+  requireRole("REQUESTER", "IT_STAFF", "ADMINISTRATOR"),
   async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     if (!Number.isInteger(id) || id <= 0) {
@@ -174,7 +198,7 @@ attachmentsRouter.get(
       return;
     }
     try {
-      const attachment = await findOwnedAttachment(id, req.requester!.id);
+      const attachment = await findReadableAttachment(id, req.user!);
       if (!attachment) {
         res.status(404).json(ATTACHMENT_NOT_FOUND);
         return;
@@ -202,7 +226,12 @@ attachmentsRouter.get(
 );
 
 // §10 — DELETE /api/attachments/:id (soft removal)
-attachmentsRouter.delete("/api/attachments/:id", requesterAuth, async (req: Request, res: Response) => {
+attachmentsRouter.delete(
+  "/api/attachments/:id",
+  requireAuth,
+  requirePasswordCurrent,
+  requireRole("REQUESTER"),
+  async (req: Request, res: Response) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) {
     res.status(404).json(ATTACHMENT_NOT_FOUND);
@@ -221,7 +250,7 @@ attachmentsRouter.delete("/api/attachments/:id", requesterAuth, async (req: Requ
   }
 
   try {
-    const attachment = await findOwnedAttachment(id, req.requester!.id);
+    const attachment = await findOwnedAttachment(id, req.user!.id);
     if (!attachment) {
       res.status(404).json(ATTACHMENT_NOT_FOUND);
       return;
@@ -233,7 +262,7 @@ attachmentsRouter.delete("/api/attachments/:id", requesterAuth, async (req: Requ
 
     const updated = await getPrisma().attachment.update({
       where: { id: attachment.id },
-      data: { removedAt: new Date(), removedById: req.requester!.id, removalReason },
+      data: { removedAt: new Date(), removedById: req.user!.id, removalReason },
     });
 
     res.status(200).json({
@@ -244,4 +273,5 @@ attachmentsRouter.delete("/api/attachments/:id", requesterAuth, async (req: Requ
   } catch {
     res.status(500).json({ error: "INTERNAL_ERROR", message: "Something went wrong. Please try again." });
   }
-});
+  },
+);

@@ -1,24 +1,23 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { http, HttpResponse, delay } from "msw";
 import { server } from "../msw/server.js";
-import { RequesterProvider } from "../../src/context/RequesterContext.js";
+import { AuthProvider } from "../../src/context/AuthContext.js";
 import { CreateTicketPage } from "../../src/pages/CreateTicketPage.js";
 
 const API_URL = "http://localhost:3000";
 
+// Issue 64 (REG) — session-authenticated instead of a sessionStorage-based
+// Requester selection; the mocked /api/auth/me handler in msw/handlers.ts
+// supplies the identity.
 function renderPage() {
-  sessionStorage.setItem(
-    "toktickit:lab2:selectedRequester",
-    JSON.stringify({ id: 1, fullName: "Aran Suksawat" }),
-  );
   return render(
     <MemoryRouter>
-      <RequesterProvider>
+      <AuthProvider>
         <CreateTicketPage />
-      </RequesterProvider>
+      </AuthProvider>
     </MemoryRouter>,
   );
 }
@@ -36,10 +35,6 @@ async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("Create Ticket screen", () => {
-  afterEach(() => {
-    sessionStorage.clear();
-  });
-
   // UI-04
   it("shows a field-level message and sends no request when Summary is empty", async () => {
     const user = userEvent.setup();

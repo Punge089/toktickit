@@ -1,56 +1,100 @@
-import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/shell/AppShell.js";
-import { RequireRequester } from "./components/shell/RequireRequester.js";
-import { useRequester } from "./context/RequesterContext.js";
-import { RequesterSelectPage } from "./pages/RequesterSelectPage.js";
+import { RequireAuth } from "./components/shell/RequireAuth.js";
+import { useAuth } from "./context/AuthContext.js";
+import { homeRouteForRole } from "./lib/roleRoutes.js";
+import { LoginPage } from "./pages/LoginPage.js";
+import { ChangePasswordPage } from "./pages/ChangePasswordPage.js";
+import { ForbiddenPage } from "./pages/ForbiddenPage.js";
+import { NotFoundPage } from "./pages/NotFoundPage.js";
+import { UserManagementPage } from "./pages/UserManagementPage.js";
+import { StaffTicketQueuePage } from "./pages/StaffTicketQueuePage.js";
+import { StaffTicketDetailPage } from "./pages/StaffTicketDetailPage.js";
 import { CreateTicketPage } from "./pages/CreateTicketPage.js";
 import { MyTicketsPage } from "./pages/MyTicketsPage.js";
 import { TicketDetailPage } from "./pages/TicketDetailPage.js";
 
-// Issue 23/25 — router + app shell. Every route except /select-requester is
-// guarded by RequireRequester (AC-02). The shell's Requester display and
-// Change Requester action are wired to the real RequesterContext here.
+// Issue 64 — replaces the Development Requester router. Every route
+// except /login is guarded by RequireAuth (AC-09); "/" redirects to the
+// current role's home route once the session is known (AC-01/AC-10).
 export function AppRouter() {
-  const { requester, clearRequester } = useRequester();
-  const navigate = useNavigate();
-
-  function handleChangeRequester() {
-    clearRequester();
-    navigate("/select-requester");
-  }
+  const { status, user } = useAuth();
 
   return (
-    <AppShell requesterName={requester?.fullName ?? null} onChangeRequester={handleChangeRequester}>
+    <AppShell>
       <Routes>
         <Route
           path="/"
-          element={<Navigate to={requester ? "/tickets" : "/select-requester"} replace />}
+          element={
+            status === "loading" ? null : <Navigate to={homeRouteForRole(user?.role)} replace />
+          }
         />
-        <Route path="/select-requester" element={<RequesterSelectPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/change-password"
+          element={
+            <RequireAuth>
+              <ChangePasswordPage />
+            </RequireAuth>
+          }
+        />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
+
         <Route
           path="/tickets/new"
           element={
-            <RequireRequester>
+            <RequireAuth roles={["REQUESTER"]}>
               <CreateTicketPage />
-            </RequireRequester>
+            </RequireAuth>
           }
         />
         <Route
           path="/tickets"
           element={
-            <RequireRequester>
+            <RequireAuth roles={["REQUESTER"]}>
               <MyTicketsPage />
-            </RequireRequester>
+            </RequireAuth>
           }
         />
         <Route
           path="/tickets/:id"
           element={
-            <RequireRequester>
+            <RequireAuth roles={["REQUESTER"]}>
               <TicketDetailPage />
-            </RequireRequester>
+            </RequireAuth>
           }
         />
+
+        {/* IT Staff Ticket Queue (Issue 65). Administrator may read it too
+            (BR-36) but has no nav link: their home is User Management. */}
+        <Route
+          path="/staff/queue"
+          element={
+            <RequireAuth roles={["IT_STAFF", "ADMINISTRATOR"]}>
+              <StaffTicketQueuePage />
+            </RequireAuth>
+          }
+        />
+        {/* IT Staff Ticket Detail (Issue 66); Administrator sees it read-only. */}
+        <Route
+          path="/staff/tickets/:id"
+          element={
+            <RequireAuth roles={["IT_STAFF", "ADMINISTRATOR"]}>
+              <StaffTicketDetailPage />
+            </RequireAuth>
+          }
+        />
+        {/* Administrator User Management (Issue 67). */}
+        <Route
+          path="/admin/users"
+          element={
+            <RequireAuth roles={["ADMINISTRATOR"]}>
+              <UserManagementPage />
+            </RequireAuth>
+          }
+        />
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AppShell>
   );
