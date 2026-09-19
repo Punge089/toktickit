@@ -154,7 +154,7 @@ export function StaffTicketQueuePage() {
                 id="queue-search"
                 className="zen-field-control"
                 type="search"
-                placeholder="Ticket number, summary, or requester"
+                placeholder="Number, summary, requester"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);

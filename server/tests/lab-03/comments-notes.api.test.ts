@@ -228,4 +228,31 @@ describe("Public Comments, Internal Notes, and Problem Appears Resolved", () => 
     ];
     for (const res of await Promise.all(calls)) expect(res.status).toBe(401);
   });
+
+  // CMT-10, BR-24: Public Comments and Internal Notes are append-only in Lab 3.
+  it("offers no way to edit or delete a Comment or a Note", async () => {
+    const t = await makeTicket();
+    const comment = await requester.agent.post(`/api/tickets/${t.id}/comments`).send({ body: "Original comment" });
+    const note = await staff.agent.post(`/api/staff/tickets/${t.id}/notes`).send({ body: "Original note" });
+    expect(comment.status).toBe(201);
+    expect(note.status).toBe(201);
+
+    const commentUrl = `/api/tickets/${t.id}/comments/${comment.body.id}`;
+    const noteUrl = `/api/staff/tickets/${t.id}/notes/${note.body.id}`;
+    for (const res of [
+      await requester.agent.patch(commentUrl).send({ body: "Changed" }),
+      await requester.agent.put(commentUrl).send({ body: "Changed" }),
+      await requester.agent.delete(commentUrl),
+      await staff.agent.patch(noteUrl).send({ body: "Changed" }),
+      await staff.agent.put(noteUrl).send({ body: "Changed" }),
+      await staff.agent.delete(noteUrl),
+    ]) {
+      expect(res.status).toBe(404); // there is no such route
+    }
+
+    const comments = await staff.agent.get(`/api/tickets/${t.id}/comments`);
+    expect(comments.body.map((c: { body: string }) => c.body)).toEqual(["Original comment"]);
+    const notes = await staff.agent.get(`/api/staff/tickets/${t.id}/notes`);
+    expect(notes.body.map((n: { body: string }) => n.body)).toEqual(["Original note"]);
+  });
 });

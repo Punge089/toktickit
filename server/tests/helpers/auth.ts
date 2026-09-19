@@ -6,7 +6,7 @@ import { hashPassword } from "../../src/lib/password.js";
 // Issue 63 — shared test helpers for Lab 3 auth (docs/lab-03/tests.md §7).
 // `request.agent(app)` keeps a cookie jar across requests, which is what
 // every session-based test needs instead of the old
-// `X-Dev-Requester-Id` header.
+// Lab 2 development-requester header.
 
 export const DEFAULT_TEST_PASSWORD = "Test-Fixture#Pass1";
 

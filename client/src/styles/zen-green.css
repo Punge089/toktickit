@@ -334,6 +334,16 @@ textarea.zen-field-control {
 
 .zen-shell-hamburger {
   display: none;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: var(--zen-fs-h2);
+}
+
+/* The header is Zen Green, so the global green focus ring would vanish on it. */
+.zen-shell-header a:focus-visible,
+.zen-shell-header button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .zen-shell-main {
@@ -653,21 +663,14 @@ textarea.zen-field-control {
 }
 
 .zen-queue-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    "number status"
-    "summary summary"
-    "req it"
-    "category category"
-    "owner updated"
-    "open open";
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--zen-space-2);
   padding: var(--zen-space-3) var(--zen-space-4);
   border-bottom: 1px solid var(--zen-border);
   color: var(--zen-text);
   text-decoration: none;
-  align-items: center;
 }
 
 .zen-queue-row:last-child {
@@ -682,50 +685,64 @@ textarea.zen-field-control {
   min-width: 0;
 }
 
+/* Below 992px the row is a card. `order` puts the status right after the ticket
+   number; the status cell may wrap its badges, but the number never shrinks. */
 .zen-queue-cell-number {
-  grid-area: number;
+  order: 1;
+  flex: 0 0 auto;
   font-weight: 600;
   white-space: nowrap;
 }
-.zen-queue-cell-created {
-  display: none;
-}
-.zen-queue-cell-summary {
-  grid-area: summary;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.zen-queue-cell-category {
-  grid-area: category;
-  color: var(--zen-text-muted);
-  font-size: var(--zen-fs-caption);
-}
-.zen-queue-cell-req {
-  grid-area: req;
-}
-.zen-queue-cell-it {
-  grid-area: it;
-}
 .zen-queue-cell-status {
-  grid-area: status;
+  order: 2;
+  flex: 1 1 0;
+  min-width: 140px;
   display: flex;
   flex-wrap: wrap;
   gap: var(--zen-space-1);
   justify-content: flex-end;
 }
+.zen-queue-cell-created {
+  display: none;
+}
+.zen-queue-cell-summary {
+  order: 3;
+  flex: 0 0 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.zen-queue-cell-req {
+  order: 4;
+  flex: 1 1 40%;
+  white-space: nowrap;
+}
+.zen-queue-cell-it {
+  order: 5;
+  flex: 1 1 40%;
+  white-space: nowrap;
+}
+.zen-queue-cell-category {
+  order: 6;
+  flex: 0 0 100%;
+  color: var(--zen-text-muted);
+  font-size: var(--zen-fs-caption);
+}
 .zen-queue-cell-owner {
-  grid-area: owner;
+  order: 7;
+  flex: 1 1 40%;
   font-size: var(--zen-fs-caption);
 }
 .zen-queue-cell-updated {
-  grid-area: updated;
+  order: 8;
+  flex: 1 1 40%;
   font-size: var(--zen-fs-caption);
   color: var(--zen-text-muted);
   text-align: right;
 }
 .zen-queue-cell-open {
-  grid-area: open;
+  order: 9;
+  flex: 0 0 100%;
   font-weight: 600;
   color: var(--zen-secondary);
   text-decoration: underline;
@@ -760,6 +777,7 @@ textarea.zen-field-control {
 
   .zen-queue-header,
   .zen-queue-row {
+    display: grid;
     grid-template-columns: 1.35fr 1.1fr 1.7fr 1fr 0.9fr 0.9fr 1.3fr 1.1fr 1.1fr 0.5fr;
     grid-template-areas: none;
     gap: var(--zen-space-2);
@@ -787,6 +805,9 @@ textarea.zen-field-control {
   .zen-queue-cell-updated,
   .zen-queue-cell-open {
     grid-area: auto;
+    order: 0;
+    flex: none;
+    min-width: 0;
   }
 
   .zen-queue-cell-created {
@@ -1147,7 +1168,11 @@ textarea.zen-field-control {
   }
 
   .zen-users-cell-name,
-  .zen-users-cell-email,
+  .zen-users-cell-email {
+    grid-area: auto;
+    justify-self: stretch;
+  }
+
   .zen-users-cell-role,
   .zen-users-cell-status,
   .zen-users-cell-edit {

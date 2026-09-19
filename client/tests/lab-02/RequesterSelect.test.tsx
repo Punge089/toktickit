@@ -25,7 +25,7 @@ function renderApp(initialPath = "/tickets") {
 // selector's own behavior (UI-01..03 below no longer apply to anything
 // that exists).
 describe("Development Requester Selection (removed in Issue 64)", () => {
-  it("/select-requester no longer exists — direct navigation lands on Login instead", async () => {
+  it("/select-requester no longer exists — direct navigation lands on Not Found", async () => {
     server.use(http.get(`${API_URL}/api/auth/me`, () => HttpResponse.json(null, { status: 401 })));
     renderApp("/select-requester");
     // The old selector heading/copy is gone; the catch-all route renders

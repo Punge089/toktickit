@@ -230,10 +230,25 @@ describe("Administrator User Management screen", () => {
     expect(within(panel).getByLabelText(/^role/i)).toBeDisabled();
     expect(within(panel).getByRole("switch", { name: /active/i })).toBeDisabled();
     expect(within(panel).getByText("You cannot change your own role or active state.")).toBeInTheDocument();
+    // Another active Administrator exists, so only the self rule applies.
+    expect(within(panel).queryByText(/at least one active administrator/i)).not.toBeInTheDocument();
 
     // Name and email stay editable.
     expect(within(panel).getByLabelText(/full name/i)).toBeEnabled();
     expect(within(panel).getByLabelText(/email address/i)).toBeEnabled();
+  });
+
+  // UI-14, AC-27 + AC-28: the sole active Administrator editing their own account
+  it("shows both explanations when the Administrator is also the only active Administrator", async () => {
+    server.use(http.get(`${API_URL}/api/admin/users`, () => list(USERS, 1)));
+    const user = userEvent.setup();
+    renderUsers();
+    const panel = await openEditPanel(user, "John Smith");
+
+    expect(within(panel).getByLabelText(/^role/i)).toBeDisabled();
+    expect(within(panel).getByRole("switch", { name: /active/i })).toBeDisabled();
+    expect(within(panel).getByText("You cannot change your own role or active state.")).toBeInTheDocument();
+    expect(within(panel).getByText("At least one active Administrator must remain.")).toBeInTheDocument();
   });
 
   // UI-14, AC-28 (another Administrator that the list reports as the only active one)

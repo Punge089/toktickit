@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import express from "express";
 import request from "supertest";
 import { app } from "../../src/app.js";
+import { getPrisma } from "../../src/prisma.js";
 import { createUser, loginAgent } from "../helpers/auth.js";
 import { resetAllThrottles } from "../../src/lib/loginThrottle.js";
 import { requireAuth, requirePasswordCurrent } from "../../src/middleware/auth.js";
@@ -207,5 +208,32 @@ describe("Authentication API", () => {
     const res = await request(app).post("/api/auth/login").send({ email: "" });
     expect(res.status).toBe(400);
     expect(res.body.fieldErrors).toHaveProperty("password");
+  });
+
+  // API-11, BR-11: the cookie lives for the 8-hour session, and a session past its
+  // expiry is treated exactly like no session at all.
+  it("gives the session cookie an 8-hour lifetime and rejects a session once it has expired", async () => {
+    const { user, password } = await createUser({ role: "REQUESTER" });
+    const login = await request(app).post("/api/auth/login").send({ email: user.email, password });
+    const cookie = login.headers["set-cookie"]![0];
+    const maxAge = Number(/Max-Age=(\d+)/.exec(cookie)?.[1]);
+    expect(maxAge).toBeLessThanOrEqual(8 * 60 * 60);
+    expect(maxAge).toBeGreaterThan(8 * 60 * 60 - 60);
+    expect(cookie).toMatch(/HttpOnly/);
+    expect(cookie).toMatch(/SameSite=Lax/);
+    expect(cookie).toMatch(/Path=\//);
+
+    const agent = await loginAgent(user.email, password);
+    expect((await agent.get("/api/auth/me")).status).toBe(200);
+
+    // Push every session of this user past its absolute expiry.
+    await getPrisma().session.updateMany({ where: { userId: user.id }, data: { expiresAt: new Date(Date.now() - 1000) } });
+    const expired = await agent.get("/api/auth/me");
+    expect(expired.status).toBe(401);
+    expect(expired.body.error).toBe("UNAUTHENTICATED");
+
+    // Signing in again starts a fresh session.
+    const again = await loginAgent(user.email, password);
+    expect((await again.get("/api/auth/me")).status).toBe(200);
   });
 });
