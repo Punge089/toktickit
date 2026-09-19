@@ -23,7 +23,7 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | UNIT-01 | BR-08 | Password policy validator: length, upper/lower/digit/special | Accepts a compliant password; rejects one missing each rule individually | `server/tests/lab-03/password.unit.test.ts` | **Pass** |
 | UNIT-02 | BR-07, BR-09 | `hashPassword`/`verifyPassword` round trip; wrong password; same password fails "must differ" check | Correct password verifies true, wrong verifies false, hash is never the plaintext | `server/tests/lab-03/password.unit.test.ts` | **Pass** |
 | UNIT-03 | BR-19–BR-23 | Transition-matrix function for every (from, to) pair in specification.md §5a | Listed pairs return allowed; every other pair, including same-status, returns rejected | `server/tests/lab-03/transitions.unit.test.ts` | Planned |
-| UNIT-04 | §6.3, AC-24 | Queue query parser: valid and invalid `sort`/`status`/`itPriority`/`owner`/`page`/`pageSize` | Valid values parse to the expected filter object; each invalid value returns the specific field name that failed | `server/tests/lab-03/staff-queue.api.test.ts` (parser exercised directly) | Planned |
+| UNIT-04 | §6.3, AC-24 | Queue query parser: valid and invalid `sort`/`status`/`itPriority`/`categoryId`/`owner`/`page`/`pageSize`/`search`, and repeated parameters | Valid values parse to the expected filter object; each invalid value returns the specific field name that failed | `server/tests/lab-03/staff-queue.api.test.ts` (`parseQueueQuery` exercised directly) | **Pass** |
 
 ### API — Authentication
 
@@ -72,11 +72,12 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| QUE-01 | AC-23 | Combine `search` + `status` + `itPriority` + `owner=me` + `sort=itPriority:desc` on a seeded set of Tickets | Only Tickets matching every condition, in the requested order | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |
-| QUE-02 | AC-24 | Invalid `sort`, invalid `status`, invalid `pageSize` values, one at a time | Each `400 INVALID_QUERY` naming that parameter | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |
-| QUE-03 | §6.3 | `owner=unassigned` and `owner=<id>` | Returns exactly the unassigned Tickets, then exactly that owner's Tickets | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |
-| QUE-04 | §6.3 | `page` beyond `totalPages` | `200` with empty `items` and correct `totalItems`/`totalPages`, not a `400` | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |
-| QUE-05 | AC-12 | A Ticket created via the Requester API | Its `itPriority` in the Queue response equals its `requestedPriority` | `server/tests/lab-03/staff-queue.api.test.ts` | Planned |
+| QUE-01 | AC-23 | Combine `search` + `status` + `itPriority` + `owner=me` + `sort=itPriority:desc` on a seeded set of Tickets | Only Tickets matching every condition, in the requested order | `server/tests/lab-03/staff-queue.api.test.ts` | **Pass** |
+| QUE-02 | AC-24 | Invalid `sort`, invalid `status`, invalid `pageSize` values, one at a time | Each `400 INVALID_QUERY` naming that parameter | `server/tests/lab-03/staff-queue.api.test.ts` | **Pass** |
+| QUE-03 | §6.3 | `owner=unassigned` and `owner=<id>` | Returns exactly the unassigned Tickets, then exactly that owner's Tickets | `server/tests/lab-03/staff-queue.api.test.ts` | **Pass** |
+| QUE-04 | §6.3 | `page` beyond `totalPages` | `200` with empty `items` and correct `totalItems`/`totalPages`, not a `400` | `server/tests/lab-03/staff-queue.api.test.ts` | **Pass** |
+| QUE-05 | AC-12 | A Ticket created via the Requester API | Its `itPriority` in the Queue response equals its `requestedPriority` | `server/tests/lab-03/staff-queue.api.test.ts` | **Pass** |
+| QUE-06 | BR-36, FR-10, FR-16 | IT Staff and Administrator read the Queue; Requester and an unauthenticated caller do not; `GET /api/staff/assignable-users` lists only active IT Staff | `200` for both staff roles; Requester `403 FORBIDDEN` with no ticket data; no session `401`; inactive staff and Requesters absent from assignable users | `server/tests/lab-03/staff-queue.api.test.ts` | **Pass** |
 
 ### Staff Ticket Detail
 
@@ -130,8 +131,10 @@ Every Acceptance Criterion in `specification.md` §9 maps to at least one row be
 | UI-05 | BR-09 | Change Password form, confirm field not matching new password | Save/Continue disabled; mismatch message shown | `client/tests/lab-03/ChangePassword.test.tsx` | **Pass** |
 | UI-06 | AC-10 | Shell rendered with a mocked Requester `/me`, then a mocked IT Staff `/me`, then a mocked Administrator `/me` | Nav links and role badge differ correctly for each | `client/tests/lab-03/AppShellRoles.test.tsx` | **Pass** |
 | UI-07 | AC-11 | Requester-role shell attempts to render the Queue route | Forbidden screen shown; no queue fetch made (asserted via the mock network call count) | `client/tests/lab-03/AppShellRoles.test.tsx` | **Pass** |
-| UI-08 | AC-23 | Ticket Queue table, mocked multi-page result set, change a filter and the sort control | Refetch fires with the new query params; page resets to 1 | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Planned |
-| UI-09 | §7 (empty/no-results) | Queue mocked with 0 tickets ever, and separately 0 matches with a filter active | Distinct empty vs. no-results copy | `client/tests/lab-03/StaffTicketQueue.test.tsx` | Planned |
+| UI-08 | AC-23 | Ticket Queue table, mocked multi-page result set, change a filter and the sort control | Refetch fires with the new query params; page resets to 1 | `client/tests/lab-03/StaffTicketQueue.test.tsx` | **Pass** |
+| UI-09 | §7 (empty/no-results) | Queue mocked with 0 tickets ever, and separately 0 matches with a filter active | Distinct empty vs. no-results copy | `client/tests/lab-03/StaffTicketQueue.test.tsx` | **Pass** |
+| UI-08b | §7 | Queue rows with an assigned owner, an unassigned Ticket, an inactive owner, and `requesterResolvedAt` set | Owner name / "Unassigned" / "(inactive)" render; both priority badges, status badge, an Open link to `/staff/tickets/:id`; the "Requester reports resolved" tag appears beside, not instead of, the status | `client/tests/lab-03/StaffTicketQueue.test.tsx` | **Pass** |
+| UI-09b | §7 | Queue API failure then Retry; 403 from the API | Failure callout with Retry that recovers; forbidden message | `client/tests/lab-03/StaffTicketQueue.test.tsx` | **Pass** |
 | UI-10 | AC-16 | Staff Ticket Detail's Status `<select>`, Ticket currently `RESOLVED` | Options list contains only `Closed` and `Reopened` | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
 | UI-11 | AC-17 | Submit Status change to Resolved with an empty Resolution Summary | Client-side validation blocks submission; no PATCH fired | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
 | UI-12 | BR-04 | Staff Ticket Detail with mocked comments and notes | Notes render inside the visually distinct panel (§8 of ui-spec.md); comments do not | `client/tests/lab-03/StaffTicketDetail.test.tsx` | Planned |
