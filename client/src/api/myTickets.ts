@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+import { apiFetch } from "./http.js";
+import { TicketStatus } from "../components/ui/Badge.js";
 
 export interface TicketListItem {
   id: number;
@@ -7,7 +8,7 @@ export interface TicketListItem {
   categoryId: number;
   categoryName: string;
   requestedPriority: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
-  currentStatus: "NEW";
+  currentStatus: TicketStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,8 +43,9 @@ export interface MyTicketsQuery {
   pageSize?: number;
 }
 
-// Issue 29 — GET /api/tickets (api-spec.md §5), owned + paginated.
-export async function fetchMyTickets(requesterId: number, query: MyTicketsQuery): Promise<MyTicketsResult> {
+// Issue 29/64 — GET /api/tickets (api-spec.md §5), owned + paginated.
+// Ownership now comes from the session (BR-03); no requesterId is sent.
+export async function fetchMyTickets(query: MyTicketsQuery): Promise<MyTicketsResult> {
   const params = new URLSearchParams();
   if (query.search) params.set("search", query.search);
   if (query.categoryId) params.set("categoryId", query.categoryId);
@@ -53,9 +55,7 @@ export async function fetchMyTickets(requesterId: number, query: MyTicketsQuery)
   if (query.page) params.set("page", String(query.page));
   if (query.pageSize) params.set("pageSize", String(query.pageSize));
 
-  const res = await fetch(`${API_URL}/api/tickets?${params.toString()}`, {
-    headers: { "X-Dev-Requester-Id": String(requesterId) },
-  });
+  const res = await apiFetch(`/api/tickets?${params.toString()}`);
   if (!res.ok) throw new Error("Unable to load your tickets. Please try again.");
   return res.json();
 }

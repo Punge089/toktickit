@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useRequester } from "../context/RequesterContext.js";
 import { fetchCategories, fetchRelatedSystems, Category, RelatedSystem } from "../api/reference.js";
 import { fetchMyTickets, MyTicketsResult } from "../api/myTickets.js";
 import { Select } from "../components/ui/Select.js";
@@ -40,8 +39,6 @@ function formatDate(iso: string): string {
 // pagination, Create Ticket action, and loading/empty/no-results/failure
 // states, scoped to the currently selected Requester (BR-09).
 export function MyTicketsPage() {
-  const { requester } = useRequester();
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [relatedSystems, setRelatedSystems] = useState<RelatedSystem[]>([]);
 
@@ -69,10 +66,9 @@ export function MyTicketsPage() {
   }, [search]);
 
   useEffect(() => {
-    if (!requester) return;
     let cancelled = false;
     setListState("loading");
-    fetchMyTickets(requester.id, {
+    fetchMyTickets({
       search: debouncedSearch || undefined,
       categoryId: categoryId || undefined,
       relatedSystemId: relatedSystemId || undefined,
@@ -92,9 +88,7 @@ export function MyTicketsPage() {
     return () => {
       cancelled = true;
     };
-    // Re-fetches whenever the selected Requester changes (BR-07), not just
-    // on mount.
-  }, [requester?.id, debouncedSearch, categoryId, relatedSystemId, requestedPriority, sort, page, pageSize]);
+  }, [debouncedSearch, categoryId, relatedSystemId, requestedPriority, sort, page, pageSize]);
 
   function resetToFirstPage() {
     setPage(1);

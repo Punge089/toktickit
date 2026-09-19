@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useRequester } from "../context/RequesterContext.js";
 import { fetchTicketDetail, TicketDetail, TicketNotFoundError } from "../api/ticketDetail.js";
 import { formatDateTime } from "../lib/format.js";
 import { Spinner } from "../components/ui/Spinner.js";
@@ -16,14 +15,13 @@ type PageState = "loading" | "loaded" | "not-found" | "error";
 // always-visible metadata Issue 30 established (BR-23).
 export function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { requester } = useRequester();
   const [state, setState] = useState<PageState>("loading");
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
 
   const load = useCallback(() => {
-    if (!requester || !id) return;
+    if (!id) return;
     setState("loading");
-    fetchTicketDetail(requester.id, id)
+    fetchTicketDetail(id)
       .then((detail) => {
         setTicket(detail);
         setState("loaded");
@@ -31,7 +29,7 @@ export function TicketDetailPage() {
       .catch((err) => {
         setState(err instanceof TicketNotFoundError ? "not-found" : "error");
       });
-  }, [requester?.id, id]);
+  }, [id]);
 
   useEffect(() => {
     load();

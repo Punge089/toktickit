@@ -1,6 +1,6 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { useRequester } from "../context/RequesterContext.js";
+import { useAuth } from "../context/AuthContext.js";
 import { fetchCategories, fetchRelatedSystems, Category, RelatedSystem } from "../api/reference.js";
 import { createTicket, CreateTicketResult, ValidationError } from "../api/tickets.js";
 import { checkAttachmentFile, MAX_ACTIVE_ATTACHMENTS } from "../lib/attachmentRules.js";
@@ -25,7 +25,7 @@ type ReferenceState = "loading" | "loaded" | "error";
 // Description given room, Attachments below, primary/secondary actions at
 // the bottom.
 export function CreateTicketPage() {
-  const { requester } = useRequester();
+  const { user } = useAuth();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [relatedSystems, setRelatedSystems] = useState<RelatedSystem[]>([]);
@@ -101,7 +101,7 @@ export function CreateTicketPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!requester) return;
+    if (!user) return;
 
     const errors = validate();
     setFieldErrors(errors);
@@ -111,7 +111,6 @@ export function CreateTicketPage() {
     setSubmitError(null);
     try {
       const created = await createTicket({
-        requesterId: requester.id,
         summary,
         description,
         categoryId,
@@ -202,8 +201,8 @@ export function CreateTicketPage() {
         <TextField
           label="Requester"
           readOnly
-          value={requester?.fullName ?? ""}
-          readOnlyReason="From your Development Requester selection."
+          value={user?.fullName ?? ""}
+          readOnlyReason="From your signed-in account."
         />
       </div>
 

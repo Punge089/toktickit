@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { TextField } from "../../src/components/ui/TextField.js";
 import { Button } from "../../src/components/ui/Button.js";
 import { AppShell } from "../../src/components/shell/AppShell.js";
+import { AuthProvider } from "../../src/context/AuthContext.js";
 
 // Covers STYLE-01 through STYLE-05 in docs/lab-02/tests.md: asserts on the
 // required classes/tokens/attributes of the reusable Zen Green components,
@@ -51,15 +52,18 @@ describe("Zen Green component states", () => {
   });
 
   // STYLE-04
-  it("an icon-only control has both an accessible label and a tooltip", () => {
+  it("an icon-only control has both an accessible label and a tooltip", async () => {
     render(
       <MemoryRouter>
-        <AppShell>
-          <div />
-        </AppShell>
+        <AuthProvider>
+          <AppShell>
+            <div />
+          </AppShell>
+        </AuthProvider>
       </MemoryRouter>,
     );
-    const hamburger = screen.getByRole("button", { name: /open navigation menu/i });
+    // AppShell renders no nav until the (mocked) session resolves.
+    const hamburger = await screen.findByRole("button", { name: /open navigation menu/i });
     expect(hamburger).toHaveAttribute("aria-label");
     expect(hamburger).toHaveAttribute("title");
   });
