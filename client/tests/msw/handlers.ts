@@ -56,6 +56,9 @@ export const handlers = [
     ]),
   ),
 
+  // Issue 66 - Public Comments (api-spec.md section 7). Default: none yet.
+  http.get(`${API_URL}/api/tickets/:id/comments`, () => HttpResponse.json([])),
+
   // Issue 27
   http.get(`${API_URL}/api/categories`, () =>
     HttpResponse.json([
@@ -150,6 +153,8 @@ export const handlers = [
       requestedPriority: "MEDIUM",
       itPriority: "MEDIUM",
       currentStatus: "NEW",
+      resolutionSummary: null,
+      requesterResolvedAt: null,
       createdAt: "2026-08-24T10:00:00.000Z",
       updatedAt: "2026-08-24T10:00:00.000Z",
       attachments: [

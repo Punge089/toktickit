@@ -6,7 +6,8 @@ Requester selector (Create Ticket with attachments, a searchable/filterable/pagi
 read-only Ticket Detail screen, and the full attachment lifecycle). **Lab 3** replaces that selector with
 real email/password authentication and three roles — Requester, IT Staff, Administrator — enforced on the
 backend for every endpoint, and is in progress: the auth foundation, Requester regression, and IT Staff
-Ticket Queue are done; IT Staff Ticket Detail and Administrator User Management are not built yet (see
+Ticket Queue, and IT Staff Ticket Detail (ownership, IT Priority, status workflow, Public Comments, Internal
+Notes, Requester "Problem Appears Resolved") are done; Administrator User Management is not built yet (see
 `docs/lab-03/specification.md` for current scope).
 
 ## Tech stack
@@ -122,7 +123,7 @@ toktickit/
 6. Open `http://localhost:5173`. You'll land on the **Login** screen. Sign in with any seeded account's
    email and `SEED_PASSWORD` (e.g. `aran.suksawat@example.dev`) to reach My Tickets and Create Ticket.
    IT Staff accounts (e.g. `jennifer.anderson@example.dev`) land on the Ticket Queue; Administrator
-   User Management and IT Staff Ticket Detail are not built yet (see `docs/lab-03/specification.md` §3 Scope).
+   User Management is not built yet (see `docs/lab-03/specification.md` §3 Scope).
 
 ## Testing
 
@@ -183,6 +184,10 @@ All endpoints are documented in full (request/response shapes, validation, statu
 | POST   | `/api/auth/change-password`       | Change password (also the mandatory first-login flow)            |
 | GET    | `/api/staff/tickets`              | IT Staff / Administrator Ticket Queue — search/filter/sort/pagination |
 | GET    | `/api/staff/assignable-users`     | Active IT Staff (Queue Owner filter; claim/reassign later)       |
+| GET    | `/api/staff/tickets/:id`          | Staff Ticket Detail; `PATCH .../owner`, `.../it-priority`, `.../status` (IT Staff only) |
+| GET/POST | `/api/staff/tickets/:id/notes`  | Internal Notes (IT Staff read+write, Administrator read)         |
+| GET/POST | `/api/tickets/:id/comments`     | Public Comments (Requester owner, IT Staff, Administrator read)   |
+| POST   | `/api/tickets/:id/problem-resolved` | Requester says the problem appears resolved (status unchanged) |
 | GET    | `/api/categories`                 | Active IT request categories                                    |
 | GET    | `/api/related-systems`            | Active related systems                                          |
 | POST   | `/api/tickets`                    | Create a Ticket (multipart, optional attachments)                |
@@ -194,9 +199,8 @@ All endpoints are documented in full (request/response shapes, validation, statu
 | DELETE | `/api/attachments/:id`            | Soft-remove an attachment (reason required)                      |
 
 Every Requester-scoped endpoint requires an authenticated session (an httpOnly cookie set by
-`/api/auth/login`); ownership comes from that session, never a client-supplied id (BR-03). IT Staff
-Ticket Detail and Administrator User Management endpoints are planned but not built yet this
-sprint — see `docs/lab-03/specification.md` §8 and §3 Scope.
+`/api/auth/login`); ownership comes from that session, never a client-supplied id (BR-03). Administrator
+User Management endpoints are planned but not built yet this sprint — see `docs/lab-03/specification.md` §8 and §3 Scope.
 
 ## Documentation
 

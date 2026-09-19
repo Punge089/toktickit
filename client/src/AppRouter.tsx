@@ -9,6 +9,7 @@ import { ForbiddenPage } from "./pages/ForbiddenPage.js";
 import { NotFoundPage } from "./pages/NotFoundPage.js";
 import { ComingSoonPage } from "./pages/ComingSoonPage.js";
 import { StaffTicketQueuePage } from "./pages/StaffTicketQueuePage.js";
+import { StaffTicketDetailPage } from "./pages/StaffTicketDetailPage.js";
 import { CreateTicketPage } from "./pages/CreateTicketPage.js";
 import { MyTicketsPage } from "./pages/MyTicketsPage.js";
 import { TicketDetailPage } from "./pages/TicketDetailPage.js";
@@ -74,12 +75,12 @@ export function AppRouter() {
             </RequireAuth>
           }
         />
-        {/* Placeholder until Issue 66 ships the real Staff Ticket Detail. */}
+        {/* IT Staff Ticket Detail (Issue 66); Administrator sees it read-only. */}
         <Route
           path="/staff/tickets/:id"
           element={
             <RequireAuth roles={["IT_STAFF", "ADMINISTRATOR"]}>
-              <ComingSoonPage title="Ticket Detail" />
+              <StaffTicketDetailPage />
             </RequireAuth>
           }
         />

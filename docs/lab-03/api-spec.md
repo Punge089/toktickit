@@ -153,8 +153,10 @@ period, or the Ticket is `RESOLVED`/`CLOSED`/`CANCELLED`:
 
 ## 7. `GET /api/tickets/:id/comments` and `POST /api/tickets/:id/comments`
 
-Purpose: Public Comments on the Requester's own Ticket (BR-04, BR-24-BR-27, AC-19). Auth: `REQUESTER`
-(owner only).
+Purpose: Public Comments on a Ticket (BR-04, BR-24-BR-27, AC-19). Auth: `REQUESTER` (owner only; another
+Requester's Ticket answers `404` like a missing one), `IT_STAFF` (read and post on any Ticket), `ADMINISTRATOR`
+(read only; `POST` is `403`). This one route serves all three roles so the thread is identical for everyone
+who may see it.
 
 **GET 200 OK**
 ```json
@@ -245,6 +247,10 @@ Purpose: claim or reassign ownership (BR-17, AC-13, AC-14). Auth: `IT_STAFF`.
 an integer/null-but-not-explicit. **404** — Ticket not found. **409** —
 ```json
 { "error": "INVALID_OWNER", "message": "Owner must be an active IT Staff user." }
+```
+or, when unassigning (`ownerId: null`) a Ticket that is In Progress, Waiting for Requester, or Resolved (BR-20):
+```json
+{ "error": "OWNER_REQUIRED", "message": "An owner is required while a ticket is In Progress, Waiting for Requester, or Resolved." }
 ```
 or, if the Ticket is `CLOSED`/`CANCELLED`:
 ```json

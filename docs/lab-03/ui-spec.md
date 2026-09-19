@@ -192,6 +192,8 @@ Detail).
 | Terminal ticket (Closed/Cancelled) | Owner/Priority/Status controls become read-only; Comments/Notes composers hidden with the same one-line note as §6 |
 | API failure (any action) | inline error banner near the control that failed; other controls remain usable |
 
+Implementation notes (Issue 66): Owner and IT Priority save as soon as the select changes (an inline error appears under the control if the backend refuses); Status uses an "Update status" button, shows the current status labelled "(current)" plus only the transitions the API returns in `allowedTransitions`, and asks for confirmation before Closed or Cancelled; "Assign to me" is the claim shortcut; the tabs are `role="tab"` buttons with the counts in their labels.
+
 Administrator viewing the same URL: identical layout, but Owner/IT Priority/Status controls render
 read-only (plain text, not `<select>`), and both composers are replaced by the same "read-only" note used
 for terminal tickets, since an Administrator can read but not write on tickets (specification.md §11).
