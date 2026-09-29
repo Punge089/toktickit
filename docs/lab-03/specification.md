@@ -521,8 +521,9 @@ Lab 2 used) unable to impersonate a user, and it is what BR-03/AC-03 rely on: th
 
 **Course delivery**
 - All Lab 3 work happens on feature branches named `feature/<issue-number>-<slug>`, merged into
-  `lab3-staging` via peer-reviewed, approved Pull Requests, then released to `main` via one release Pull
-  Request from `lab3-staging`.
+  `lab3-staging` via peer-reviewed, approved Pull Requests, then released to `main` via a release Pull
+  Request from `lab3-staging`. The sprint was released once (PR #76); a later docs-only PR completing the
+  peer-review record in `reviewer.md` went through the same two steps, so `main` received two release PRs.
 - This contract (Issue #62, this PR) is merged into `lab3-staging` before any implementation Pull Request
   is opened, so the specification is verifiably in place before the coding agent begins Lab 3 work.
 - Every Issue is linked to its Pull Request through the Development panel and moved through the full
