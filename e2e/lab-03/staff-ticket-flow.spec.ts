@@ -1,5 +1,5 @@
 import { test, expect, request, Browser, Page } from "@playwright/test";
-import { ACCOUNTS, API, apiSession, createTicketViaApi, loginAs, selectedLabel, stamp } from "./helpers";
+import { ACCOUNTS, API, addCompletedAction, apiSession, createTicketViaApi, loginAs, selectedLabel, stamp } from "./helpers";
 
 async function signedInPage(browser: Browser, email: string, role: "REQUESTER" | "IT_STAFF" | "ADMINISTRATOR") {
   const context = await browser.newContext();
@@ -87,6 +87,12 @@ test.describe("E2E-02 staff ticket flow", () => {
     await expect(requester.getByText("✓ You told IT Staff this looks resolved")).toBeVisible();
     await expect(requester.getByRole("button", { name: "Problem Appears Resolved" })).toHaveCount(0);
     expect(await requester.locator("body").innerText()).toContain("In Progress");
+
+    // Lab 4 BR-20: resolving needs a Completed Action, so one is recorded first (through the API;
+    // the Actions Taken screen has its own spec in e2e/lab-04).
+    const staffApi = await apiSession(ACCOUNTS.staff);
+    const staffId = (await (await staffApi.get("/api/auth/me")).json()).id as number;
+    await addCompletedAction(staffApi, ticketId, staffId);
 
     // --- IT Staff see the indicator, in the Queue and on the ticket (AC-21)
     await staff.getByRole("banner").getByRole("link", { name: "My Queue" }).click();

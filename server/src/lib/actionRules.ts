@@ -2,6 +2,8 @@
 // BR-07 to BR-09, BR-12). No database or network here, so the rules are unit
 // tested on their own (tests/lab-04/action-rules.unit.test.ts).
 
+import { isActiveStatus } from "./workflowRules.js";
+
 export const ACTION_STATUSES = ["PLANNED", "IN_PROGRESS", "COMPLETED", "CANCELLED"] as const;
 export type ActionStatusValue = (typeof ACTION_STATUSES)[number];
 
@@ -20,17 +22,10 @@ export const CLIENT_REQUEST_ID_PATTERN = /^[A-Za-z0-9-]{1,64}$/;
 // happens to an existing Action, with a reason.
 export const CREATABLE_STATUSES: readonly ActionStatusValue[] = ["PLANNED", "IN_PROGRESS", "COMPLETED"];
 
-// BR-12: Actions are written only while the Ticket is being worked.
-export const ACTION_WRITABLE_TICKET_STATUSES = [
-  "NEW",
-  "OPEN",
-  "IN_PROGRESS",
-  "WAITING_FOR_REQUESTER",
-  "REOPENED",
-] as const;
-
+// BR-12: Actions are written only while the Ticket is being worked, which is
+// exactly the set of active statuses (BR-28).
 export function ticketAllowsActions(status: string): boolean {
-  return (ACTION_WRITABLE_TICKET_STATUSES as readonly string[]).includes(status);
+  return isActiveStatus(status);
 }
 
 export function isActionStatus(value: unknown): value is ActionStatusValue {

@@ -6,8 +6,10 @@ import {
   VIEWPORTS,
   apiSession,
   createFreshUser,
+  addCompletedAction,
   createTicketViaApi,
   loginAs,
+  patchTicket,
   loginViaUi,
   shot,
   stamp,
@@ -33,9 +35,10 @@ test.beforeAll(async () => {
   // B: in progress, owned, with a public conversation and an internal note
   fx.withComments = await createTicketViaApi(requester, `Shot B in progress ${tag}`);
   await requester.post(`/api/tickets/${fx.withComments}/comments`, { data: { body: "The laptop battery drains within an hour, even when idle." } });
-  expect((await staff.patch(`/api/staff/tickets/${fx.withComments}/owner`, { data: { ownerId: staffId } })).status()).toBe(200);
-  expect((await staff.patch(`/api/staff/tickets/${fx.withComments}/it-priority`, { data: { itPriority: "HIGH" } })).status()).toBe(200);
-  expect((await staff.patch(`/api/staff/tickets/${fx.withComments}/status`, { data: { status: "IN_PROGRESS" } })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.withComments, "owner", { ownerId: staffId })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.withComments, "it-priority", { itPriority: "HIGH" })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.withComments, "status", { status: "IN_PROGRESS" })).status()).toBe(200);
+  await addCompletedAction(staff, fx.withComments, staffId);
   await staff.post(`/api/tickets/${fx.withComments}/comments`, { data: { body: "Thanks for the details. We are checking the battery health report now." } });
   await requester.post(`/api/tickets/${fx.withComments}/comments`, { data: { body: "It also happens with every application closed." } });
   await staff.post(`/api/staff/tickets/${fx.withComments}/notes`, { data: { body: "Battery cycle count is high. Order a replacement if the report confirms it." } });
@@ -50,11 +53,12 @@ test.beforeAll(async () => {
 
   // C: the Requester said it looks resolved, then IT Staff resolved it with a summary
   fx.resolved = await createTicketViaApi(requester, `Shot C resolved ticket ${tag}`);
-  expect((await staff.patch(`/api/staff/tickets/${fx.resolved}/owner`, { data: { ownerId: staffId } })).status()).toBe(200);
-  expect((await staff.patch(`/api/staff/tickets/${fx.resolved}/status`, { data: { status: "IN_PROGRESS" } })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.resolved, "owner", { ownerId: staffId })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.resolved, "status", { status: "IN_PROGRESS" })).status()).toBe(200);
   expect((await requester.post(`/api/tickets/${fx.resolved}/problem-resolved`)).status()).toBe(200);
+  await addCompletedAction(staff, fx.resolved, staffId);
   expect(
-    (await staff.patch(`/api/staff/tickets/${fx.resolved}/status`, { data: { status: "RESOLVED", resolutionSummary: "Replaced the battery under warranty. Runtime is back to normal." } })).status(),
+    (await patchTicket(staff, fx.resolved, "status", { status: "RESOLVED", resolutionSummary: "Replaced the battery under warranty. Runtime is back to normal." })).status(),
   ).toBe(200);
 });
 
