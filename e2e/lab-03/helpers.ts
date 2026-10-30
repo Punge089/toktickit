@@ -128,3 +128,31 @@ export async function createTicketViaApi(requester: APIRequestContext, summary: 
 export async function selectedLabel(page: Page, label: string): Promise<string> {
   return page.getByLabel(label).evaluate((el) => (el as HTMLSelectElement).selectedOptions[0].textContent ?? "");
 }
+
+// Lab 4 BR-17: owner, IT Priority and status changes carry the Ticket `version`.
+// These Lab 3 specs arrange fixtures through the API, so each change sends the
+// version the Ticket has right now.
+export async function patchTicket(
+  api: APIRequestContext,
+  ticketId: number,
+  kind: "owner" | "it-priority" | "status",
+  data: Record<string, unknown>,
+) {
+  const detail = await (await api.get(`/api/staff/tickets/${ticketId}`)).json();
+  return api.patch(`/api/staff/tickets/${ticketId}/${kind}`, { data: { ...data, expectedVersion: detail.version } });
+}
+
+// Lab 4 BR-20: a Ticket can only be resolved once one of its Actions is
+// Completed, so fixtures that reach Resolved record one first.
+export async function addCompletedAction(api: APIRequestContext, ticketId: number, assigneeId: number) {
+  const res = await api.post(`/api/staff/tickets/${ticketId}/actions`, {
+    data: {
+      clientRequestId: `e2e-${stamp()}`,
+      description: "Fixture action recorded by the E2E suite.",
+      result: "Done.",
+      assigneeId,
+      actionStatus: "COMPLETED",
+    },
+  });
+  expect(res.status(), "add completed action").toBe(201);
+}

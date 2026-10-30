@@ -4,6 +4,7 @@ import { app } from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 import { seedAll } from "../../prisma/seed.js";
 import { createAndLoginUser } from "../helpers/auth.js";
+import { insertAction } from "../helpers/lab4.js";
 
 type Fixture = Awaited<ReturnType<typeof createAndLoginUser>>;
 
@@ -31,6 +32,16 @@ describe("IT Staff Ticket Detail and operations", () => {
         ...overrides,
       },
     });
+  }
+
+
+  // Lab 4 BR-17: owner, IT Priority and status changes now carry the Ticket
+  // `version`. These Lab 3 tests are about other rules, so each request sends
+  // the version stored right now; the stale-version behavior itself is tested
+  // in server/tests/lab-04/ticket-workflow.api.test.ts.
+  async function patchTicket(agent: Fixture["agent"], ticketId: number, kind: string, body: Record<string, unknown>) {
+    const { version } = await getPrisma().ticket.findUniqueOrThrow({ where: { id: ticketId }, select: { version: true } });
+    return agent.patch(`/api/staff/tickets/${ticketId}/${kind}`).send({ ...body, expectedVersion: version });
   }
 
   beforeAll(async () => {
@@ -77,7 +88,7 @@ describe("IT Staff Ticket Detail and operations", () => {
   // DET-01, AC-13
   it("lets IT Staff claim an unassigned Ticket", async () => {
     const t = await makeTicket();
-    const res = await staff.agent.patch(`/api/staff/tickets/${t.id}/owner`).send({ ownerId: staff.user.id });
+    const res = await patchTicket(staff.agent, t.id, "owner", { ownerId: staff.user.id });
     expect(res.status).toBe(200);
     expect(res.body.ownerId).toBe(staff.user.id);
 
@@ -88,7 +99,7 @@ describe("IT Staff Ticket Detail and operations", () => {
   // DET-02, AC-14
   it("lets IT Staff reassign a Ticket to another IT Staff member", async () => {
     const t = await makeTicket({ ownerId: staff.user.id });
-    const res = await otherStaff.agent.patch(`/api/staff/tickets/${t.id}/owner`).send({ ownerId: otherStaff.user.id });
+    const res = await patchTicket(otherStaff.agent, t.id, "owner", { ownerId: otherStaff.user.id });
     expect(res.status).toBe(200);
     expect(res.body.ownerId).toBe(otherStaff.user.id);
   });
@@ -100,20 +111,20 @@ describe("IT Staff Ticket Detail and operations", () => {
     await getPrisma().user.update({ where: { id: inactive.user.id }, data: { isActive: false } });
 
     for (const ownerId of [requester.user.id, admin.user.id, inactive.user.id, 999999999]) {
-      const res = await staff.agent.patch(`/api/staff/tickets/${t.id}/owner`).send({ ownerId });
+      const res = await patchTicket(staff.agent, t.id, "owner", { ownerId });
       expect(res.status).toBe(409);
       expect(res.body.error).toBe("INVALID_OWNER");
     }
-    const bad = await staff.agent.patch(`/api/staff/tickets/${t.id}/owner`).send({ ownerId: "abc" });
+    const bad = await patchTicket(staff.agent, t.id, "owner", { ownerId: "abc" });
     expect(bad.status).toBe(400);
   });
 
   it("allows unassigning only while no owner-required status is in effect", async () => {
     const open = await makeTicket({ ownerId: staff.user.id, currentStatus: "OPEN" });
-    expect((await staff.agent.patch(`/api/staff/tickets/${open.id}/owner`).send({ ownerId: null })).status).toBe(200);
+    expect((await patchTicket(staff.agent, open.id, "owner", { ownerId: null })).status).toBe(200);
 
     const working = await makeTicket({ ownerId: staff.user.id, currentStatus: "IN_PROGRESS" });
-    const res = await staff.agent.patch(`/api/staff/tickets/${working.id}/owner`).send({ ownerId: null });
+    const res = await patchTicket(staff.agent, working.id, "owner", { ownerId: null });
     expect(res.status).toBe(409);
     expect(res.body.error).toBe("OWNER_REQUIRED");
   });
@@ -121,7 +132,7 @@ describe("IT Staff Ticket Detail and operations", () => {
   // DET-04, AC-15, BR-20
   it("rejects moving an unassigned Ticket to In Progress with 409 OWNER_REQUIRED and leaves the status alone", async () => {
     const t = await makeTicket({ currentStatus: "OPEN" });
-    const res = await staff.agent.patch(`/api/staff/tickets/${t.id}/status`).send({ status: "IN_PROGRESS" });
+    const res = await patchTicket(staff.agent, t.id, "status", { status: "IN_PROGRESS" });
     expect(res.status).toBe(409);
     expect(res.body.error).toBe("OWNER_REQUIRED");
     expect((await getPrisma().ticket.findUniqueOrThrow({ where: { id: t.id } })).currentStatus).toBe("OPEN");
@@ -131,14 +142,14 @@ describe("IT Staff Ticket Detail and operations", () => {
   it("rejects a transition the matrix does not allow, including staying in the same status, with 409 INVALID_TRANSITION", async () => {
     const t = await makeTicket({ ownerId: staff.user.id, currentStatus: "NEW" });
     for (const status of ["CLOSED", "RESOLVED", "REOPENED", "NEW"]) {
-      const res = await staff.agent.patch(`/api/staff/tickets/${t.id}/status`).send({ status });
+      const res = await patchTicket(staff.agent, t.id, "status", { status });
       expect(res.status, status).toBe(409);
       expect(res.body.error).toBe("INVALID_TRANSITION");
     }
-    expect((await staff.agent.patch(`/api/staff/tickets/${t.id}/status`).send({ status: "DONE" })).status).toBe(400);
+    expect((await patchTicket(staff.agent, t.id, "status", { status: "DONE" })).status).toBe(400);
     expect((await getPrisma().ticket.findUniqueOrThrow({ where: { id: t.id } })).currentStatus).toBe("NEW");
 
-    const ok = await staff.agent.patch(`/api/staff/tickets/${t.id}/status`).send({ status: "OPEN" });
+    const ok = await patchTicket(staff.agent, t.id, "status", { status: "OPEN" });
     expect(ok.status).toBe(200);
     expect(ok.body.currentStatus).toBe("OPEN");
   });
@@ -147,13 +158,13 @@ describe("IT Staff Ticket Detail and operations", () => {
   it("requires a Resolution Summary of 1-2000 characters to resolve, and stores it", async () => {
     const t = await makeTicket({ ownerId: staff.user.id, currentStatus: "IN_PROGRESS" });
     for (const resolutionSummary of [undefined, "   ", "x".repeat(2001)]) {
-      const res = await staff.agent.patch(`/api/staff/tickets/${t.id}/status`).send({ status: "RESOLVED", resolutionSummary });
+      const res = await patchTicket(staff.agent, t.id, "status", { status: "RESOLVED", resolutionSummary });
       expect(res.status).toBe(400);
       expect(res.body.fieldErrors).toHaveProperty("resolutionSummary");
     }
-    const ok = await staff.agent
-      .patch(`/api/staff/tickets/${t.id}/status`)
-      .send({ status: "RESOLVED", resolutionSummary: "  Replaced the battery.  " });
+    // Lab 4 BR-20: a Ticket can only be resolved once one of its Actions is Completed.
+    await insertAction(t.id, staff.user.id, staff.user.id, { actionStatus: "COMPLETED", result: "Replaced the battery." });
+    const ok = await patchTicket(staff.agent, t.id, "status", { status: "RESOLVED", resolutionSummary: "  Replaced the battery.  " });
     expect(ok.status).toBe(200);
     expect(ok.body.currentStatus).toBe("RESOLVED");
     expect(ok.body.resolutionSummary).toBe("Replaced the battery.");
@@ -165,9 +176,9 @@ describe("IT Staff Ticket Detail and operations", () => {
     for (const currentStatus of ["CLOSED", "CANCELLED"]) {
       const t = await makeTicket({ ownerId: staff.user.id, currentStatus });
       const calls = [
-        staff.agent.patch(`/api/staff/tickets/${t.id}/owner`).send({ ownerId: otherStaff.user.id }),
-        staff.agent.patch(`/api/staff/tickets/${t.id}/it-priority`).send({ itPriority: "URGENT" }),
-        staff.agent.patch(`/api/staff/tickets/${t.id}/status`).send({ status: "REOPENED" }),
+        patchTicket(staff.agent, t.id, "owner", { ownerId: otherStaff.user.id }),
+        patchTicket(staff.agent, t.id, "it-priority", { itPriority: "URGENT" }),
+        patchTicket(staff.agent, t.id, "status", { status: "REOPENED" }),
       ];
       for (const res of await Promise.all(calls)) {
         expect(res.status).toBe(409);
@@ -184,7 +195,7 @@ describe("IT Staff Ticket Detail and operations", () => {
       resolutionSummary: "Done",
       requesterResolvedAt: new Date(),
     });
-    const res = await staff.agent.patch(`/api/staff/tickets/${t.id}/status`).send({ status: "REOPENED" });
+    const res = await patchTicket(staff.agent, t.id, "status", { status: "REOPENED" });
     expect(res.status).toBe(200);
     expect(res.body.currentStatus).toBe("REOPENED");
     expect(res.body.requesterResolvedAt).toBeNull();
@@ -194,12 +205,12 @@ describe("IT Staff Ticket Detail and operations", () => {
   it("sets IT Priority independently of Requested Priority", async () => {
     const t = await makeTicket();
     for (const itPriority of ["LOW", "HIGH", "URGENT", "MEDIUM"]) {
-      const res = await staff.agent.patch(`/api/staff/tickets/${t.id}/it-priority`).send({ itPriority });
+      const res = await patchTicket(staff.agent, t.id, "it-priority", { itPriority });
       expect(res.status).toBe(200);
       expect(res.body.itPriority).toBe(itPriority);
       expect(res.body.requestedPriority).toBe("MEDIUM");
     }
-    expect((await staff.agent.patch(`/api/staff/tickets/${t.id}/it-priority`).send({ itPriority: "SEVERE" })).status).toBe(400);
+    expect((await patchTicket(staff.agent, t.id, "it-priority", { itPriority: "SEVERE" })).status).toBe(400);
   });
 
   it("gives an Administrator read access only: every mutation is 403", async () => {

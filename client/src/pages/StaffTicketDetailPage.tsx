@@ -5,7 +5,10 @@ import {
   fetchStaffTicket,
   OperationRejectedError,
   OperationValidationError,
+  ResolutionBlockedError,
+  ResolutionBlocker,
   StaffForbiddenError,
+  StaleVersionError,
   StaffTicketDetail,
   StaffTicketNotFoundError,
   updateItPriority,
@@ -32,6 +35,15 @@ const PRIORITY_OPTIONS = [
   { value: "HIGH", label: "High" },
   { value: "URGENT", label: "Urgent" },
 ];
+
+// Lab 4 BR-20: why Resolved is not available yet. The server's answer is the
+// authority; this only words it (the same words for the up-front hint and the
+// rejection, so the two can never disagree).
+function blockerText(blocker: ResolutionBlocker, openActions?: number): string {
+  if (blocker === "NO_COMPLETED_ACTION") return "Complete at least one action.";
+  if (openActions === undefined) return "Finish or cancel the open actions.";
+  return `Finish or cancel ${openActions} open action${openActions === 1 ? "" : "s"}.`;
+}
 
 function messageOf(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
@@ -62,6 +74,11 @@ export function StaffTicketDetailPage() {
   const [busy, setBusy] = useState<"owner" | "priority" | "status" | null>(null);
   const [opError, setOpError] = useState<{ owner?: string; priority?: string; status?: string; summary?: string }>({});
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  // Lab 4 BR-17: set when the server says somebody else changed the Ticket.
+  const [stale, setStale] = useState(false);
+  // The owner or priority the user just picked, kept on screen while a stale
+  // conflict is unresolved, so the conflict never silently discards the choice.
+  const [pending, setPending] = useState<{ owner?: string; priority?: string }>({});
 
   const loadEntries = useCallback((ticketId: number) => {
     fetchComments(ticketId).then(setComments).catch(() => setComments([]));
@@ -88,6 +105,26 @@ export function StaffTicketDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // "Reload latest" after a STALE_VERSION: replace the Ticket without the full
+  // page spinner, so what the user typed (the Resolution Summary, the chosen
+  // status when it is still allowed) is still on screen.
+  const reloadLatest = useCallback(async (keepMessages = false) => {
+    if (!id) return;
+    try {
+      const detail = await fetchStaffTicket(id);
+      setTicket(detail);
+      setSelectedStatus((chosen) =>
+        chosen && (chosen === detail.currentStatus || detail.allowedTransitions.includes(chosen)) ? chosen : detail.currentStatus,
+      );
+      setStale(false);
+      setPending({});
+      if (!keepMessages) setOpError({});
+      setConfirming(false);
+    } catch {
+      setOpError((e) => ({ ...e, status: "Unable to reload this ticket. Please try again." }));
+    }
+  }, [id]);
 
   useEffect(() => {
     fetchAssignableUsers().then(setStaff).catch(() => setStaff([]));
@@ -137,23 +174,33 @@ export function StaffTicketDetailPage() {
 
   async function run(kind: "owner" | "priority" | "status", action: () => Promise<StaffTicketDetail>) {
     setBusy(kind);
-    setOpError((e) => ({ ...e, [kind === "status" ? "status" : kind]: undefined, summary: undefined }));
+    setOpError((e) => ({ ...e, [kind]: undefined, summary: undefined }));
     try {
       const updated = await action();
       setTicket(updated);
       setSelectedStatus(updated.currentStatus);
       setResolutionSummary("");
       setConfirming(false);
+      setStale(false);
+      setPending({});
     } catch (err) {
-      const text =
-        err instanceof OperationValidationError || err instanceof OperationRejectedError
-          ? err.message
-          : messageOf(err, "Unable to save this change. Please try again.");
-      if (err instanceof OperationValidationError && err.fieldErrors.resolutionSummary) {
+      if (err instanceof StaleVersionError) {
+        // Keep the chosen value and the typed summary; the banner offers Reload latest.
+        setStale(true);
+      } else if (err instanceof ResolutionBlockedError) {
+        const reasons = err.blockers.map((b) => blockerText(b)).join(" ");
+        setOpError((e) => ({ ...e, [kind]: `This ticket cannot be resolved yet. ${reasons}`.trim() }));
+        void reloadLatest(true); // the counts and blockers may have moved on; keep the message just set
+      } else if (err instanceof OperationValidationError && err.fieldErrors.resolutionSummary) {
         setOpError((e) => ({ ...e, summary: err.fieldErrors.resolutionSummary }));
       } else {
+        const text =
+          err instanceof OperationValidationError || err instanceof OperationRejectedError
+            ? err.message
+            : messageOf(err, "Unable to save this change. Please try again.");
         setOpError((e) => ({ ...e, [kind]: text }));
       }
+      if (!(err instanceof StaleVersionError)) setPending((p) => ({ ...p, [kind]: undefined }));
       setConfirming(false);
     } finally {
       setBusy(null);
@@ -161,16 +208,18 @@ export function StaffTicketDetailPage() {
   }
 
   function handleOwner(value: string) {
-    run("owner", () => updateOwner(current.id, value === "" ? null : Number(value)));
+    setPending((p) => ({ ...p, owner: value }));
+    run("owner", () => updateOwner(current.id, value === "" ? null : Number(value), current.version));
   }
 
   function handlePriority(value: string) {
-    run("priority", () => updateItPriority(current.id, value as Priority));
+    setPending((p) => ({ ...p, priority: value }));
+    run("priority", () => updateItPriority(current.id, value as Priority, current.version));
   }
 
   function submitStatus() {
     if (!selectedStatus || selectedStatus === current.currentStatus) return;
-    run("status", () => updateStatus(current.id, selectedStatus, selectedStatus === "RESOLVED" ? resolutionSummary : undefined));
+    run("status", () => updateStatus(current.id, selectedStatus, current.version, selectedStatus === "RESOLVED" ? resolutionSummary : undefined));
   }
 
   function handleUpdateStatusClick() {
@@ -199,6 +248,11 @@ export function StaffTicketDetailPage() {
     value: s,
     label: s === current.currentStatus ? `${STATUS_LABEL[s]} (current)` : STATUS_LABEL[s],
   }));
+
+  // Lab 4 BR-20: while Resolved is chosen and the server reports blockers, say
+  // why and keep Update status off. The backend gate remains the authority.
+  const resolveBlockers =
+    selectedStatus === "RESOLVED" && current.currentStatus !== "RESOLVED" ? current.resolutionBlockers : [];
 
   const readOnlyNote = terminal
     ? "This ticket is closed. Comments and notes can no longer be added."
@@ -263,13 +317,26 @@ export function StaffTicketDetailPage() {
         )}
       </div>
 
+      {stale && (
+        <div style={{ marginTop: "var(--zen-space-4)" }}>
+          <Alert tone="warning">
+            <p style={{ margin: 0 }}>This ticket was changed by someone else. Reload to see the latest version; your input is kept.</p>
+            <div style={{ marginTop: "var(--zen-space-2)" }}>
+              <Button variant="secondary" onClick={() => void reloadLatest()}>
+                Reload latest
+              </Button>
+            </div>
+          </Alert>
+        </div>
+      )}
+
       <h2 style={{ fontSize: "var(--zen-fs-h2)", marginBottom: 0, marginTop: "var(--zen-space-5)" }}>Operations</h2>
       <div className="zen-ops-card">
         {editable ? (
           <div>
             <Select
               label="Ticket Owner"
-              value={current.ownerId === null ? "" : String(current.ownerId)}
+              value={pending.owner ?? (current.ownerId === null ? "" : String(current.ownerId))}
               onChange={(e) => handleOwner(e.target.value)}
               options={ownerOptions}
               disabled={busy !== null}
@@ -293,7 +360,7 @@ export function StaffTicketDetailPage() {
         {editable ? (
           <Select
             label="IT Priority"
-            value={current.itPriority}
+            value={pending.priority ?? current.itPriority}
             onChange={(e) => handlePriority(e.target.value)}
             options={PRIORITY_OPTIONS}
             disabled={busy !== null}
@@ -354,12 +421,22 @@ export function StaffTicketDetailPage() {
           </div>
         )}
 
+        {editable && resolveBlockers.length > 0 && (
+          <div className="zen-ops-wide">
+            <Alert tone="warning">
+              <strong>Resolved is not available yet.</strong>{" "}
+              {resolveBlockers.map((b) => blockerText(b, current.actionCounts.open)).join(" ")}
+            </Alert>
+          </div>
+        )}
+
         {editable && selectedStatus !== current.currentStatus && (
           <div className="zen-ops-wide">
             {confirming ? (
               <div className="zen-confirm" role="alertdialog" aria-label="Confirm status change">
                 <span>
                   Change status to <strong>{STATUS_LABEL[selectedStatus as TicketStatus]}</strong>? This cannot be undone.
+                  {selectedStatus === "CANCELLED" && current.actionCounts.open > 0 && " Open actions on this ticket will be cancelled."}
                 </span>
                 <div style={{ display: "flex", gap: "var(--zen-space-3)" }}>
                   <Button variant="destructive" busy={busy === "status"} busyText="Saving…" onClick={submitStatus}>
@@ -371,7 +448,13 @@ export function StaffTicketDetailPage() {
                 </div>
               </div>
             ) : (
-              <Button variant="primary" busy={busy === "status"} busyText="Saving…" onClick={handleUpdateStatusClick}>
+              <Button
+                variant="primary"
+                busy={busy === "status"}
+                busyText="Saving…"
+                onClick={handleUpdateStatusClick}
+                disabled={resolveBlockers.length > 0}
+              >
                 Update status
               </Button>
             )}

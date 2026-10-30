@@ -1,5 +1,8 @@
 import { Router, Request, Response } from "express";
+import { Prisma } from "@prisma/client";
 import { getPrisma } from "../prisma.js";
+import { lockTicket } from "../lib/ticketLock.js";
+import { AUTO_CANCEL_RESULT, checkResolutionGate } from "../lib/workflowRules.js";
 import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 import { PRIORITIES } from "../lib/ticketValidation.js";
 import { allowedTransitions, canTransition, isTerminal, isTicketStatus, requiresOwner } from "../lib/transitions.js";
@@ -34,9 +37,22 @@ async function loadDetail(id: number) {
         orderBy: { uploadedAt: "asc" },
         include: { uploadedBy: { select: { fullName: true } }, removedBy: { select: { fullName: true } } },
       },
+      actions: { select: { id: true, actionStatus: true } },
     },
   });
   if (!ticket) return null;
+
+  const transitions = allowedTransitions(ticket.currentStatus);
+  const actionCounts = { open: 0, completed: 0, cancelled: 0 };
+  for (const a of ticket.actions) {
+    if (a.actionStatus === "COMPLETED") actionCounts.completed += 1;
+    else if (a.actionStatus === "CANCELLED") actionCounts.cancelled += 1;
+    else actionCounts.open += 1;
+  }
+  // api-spec section 5: only explains a disabled Resolved option, so it is
+  // empty whenever Resolved is not a permitted move from here anyway.
+  const resolutionBlockers = transitions.includes("RESOLVED") ? checkResolutionGate(ticket.actions).blockers : [];
+
   return {
     id: ticket.id,
     ticketNumber: ticket.ticketNumber,
@@ -51,7 +67,10 @@ async function loadDetail(id: number) {
     requestedPriority: ticket.requestedPriority,
     itPriority: ticket.itPriority,
     currentStatus: ticket.currentStatus,
-    allowedTransitions: allowedTransitions(ticket.currentStatus),
+    allowedTransitions: transitions,
+    version: ticket.version,
+    actionCounts,
+    resolutionBlockers,
     ownerId: ticket.ownerId,
     ownerName: ticket.owner?.fullName ?? null,
     ownerIsActive: ticket.owner?.isActive ?? null,
@@ -92,8 +111,232 @@ staffTicketsRouter.get("/api/staff/tickets/:id", ...readers, async (req: Request
   }
 });
 
-// Loads the Ticket for a mutation, answering 404/409 itself. Terminal
-// Tickets accept no owner/priority/status change (BR-22).
+// Lab 4 BR-17: owner, IT Priority and status changes carry the Ticket
+// `version` the user last saw. Each one runs in a transaction that locks the
+// Ticket row, so the version check, the rules and the write see one state.
+interface Outcome {
+  status: number;
+  body: unknown;
+}
+
+type Change = Outcome | { data: Prisma.TicketUpdateManyMutationInput & Prisma.TicketUncheckedUpdateManyInput };
+
+function expectedVersionOf(body: Record<string, unknown>): number | null {
+  return Number.isInteger(body.expectedVersion) ? (body.expectedVersion as number) : null;
+}
+
+function validationFailed(fieldErrors: Record<string, string>, message = "Fix the highlighted fields."): Outcome {
+  return { status: 400, body: { error: "VALIDATION_FAILED", message, fieldErrors } };
+}
+
+function staleBody(currentVersion: number) {
+  return {
+    error: "STALE_VERSION",
+    message: "This ticket was changed by someone else. Reload to see the latest version.",
+    currentVersion,
+  };
+}
+
+class LostRace extends Error {}
+
+const EXPECTED_VERSION_ERROR = "expectedVersion is required and must be an integer.";
+
+// Runs one guarded change. The common checks come first in the order of
+// specification BR-25 (404, stale version, terminal Ticket); `change` then
+// applies the rules specific to the route and returns either an answer or the
+// data to write. A successful write increments `version` in the same
+// conditional UPDATE, so a second writer holding the old version matches no row.
+async function guardedChange(
+  ticketId: number | null,
+  expectedVersion: number,
+  change: (tx: Prisma.TransactionClient, ticket: Prisma.TicketGetPayload<object>) => Promise<Change>,
+): Promise<Outcome> {
+  if (ticketId === null) return { status: 404, body: NOT_FOUND };
+  const result = await getPrisma().$transaction(async (tx): Promise<Outcome | "ok"> => {
+    const ticket = await lockTicket(tx, ticketId);
+    if (!ticket) return { status: 404, body: NOT_FOUND };
+    if (ticket.version !== expectedVersion) return { status: 409, body: staleBody(ticket.version) };
+    if (isTerminal(ticket.currentStatus)) return { status: 409, body: CLOSED };
+
+    const decided = await change(tx, ticket);
+    if ("status" in decided) return decided;
+
+    const updated = await tx.ticket.updateMany({
+      where: { id: ticketId, version: expectedVersion },
+      data: { ...decided.data, version: { increment: 1 } },
+    });
+    // Throwing (not returning) rolls back anything `change` already wrote,
+    // such as the cancel cascade, if the conditional UPDATE lost the race.
+    if (updated.count === 0) throw new LostRace();
+    return "ok";
+  }).catch(async (err) => {
+    if (!(err instanceof LostRace)) throw err;
+    const current = await getPrisma().ticket.findUniqueOrThrow({ where: { id: ticketId }, select: { version: true } });
+    return { status: 409, body: staleBody(current.version) } as Outcome;
+  });
+  if (result !== "ok") return result;
+  return { status: 200, body: await loadDetail(ticketId) };
+}
+
+// section 11 - claim / assign / reassign / unassign
+staffTicketsRouter.patch("/api/staff/tickets/:id/owner", ...actors, async (req: Request, res: Response) => {
+  const body: Record<string, unknown> = req.body && typeof req.body === "object" ? req.body : {};
+  const raw = body.ownerId;
+  const ownerId = raw === null ? null : typeof raw === "number" && Number.isInteger(raw) && raw > 0 ? raw : undefined;
+  const expectedVersion = expectedVersionOf(body);
+  const fieldErrors: Record<string, string> = {};
+  if (ownerId === undefined) fieldErrors.ownerId = "ownerId must be a positive integer, or null to unassign.";
+  if (expectedVersion === null) fieldErrors.expectedVersion = EXPECTED_VERSION_ERROR;
+  if (Object.keys(fieldErrors).length > 0 || ownerId === undefined) {
+    const out = validationFailed(fieldErrors, fieldErrors.ownerId);
+    res.status(out.status).json(out.body);
+    return;
+  }
+  try {
+    const out = await guardedChange(parseId(req.params.id), expectedVersion!, async (tx, ticket) => {
+      if (ownerId !== null) {
+        // BR-17: only an active IT Staff user can own a Ticket.
+        const candidate = await tx.user.findFirst({ where: { id: ownerId, role: "IT_STAFF", isActive: true } });
+        if (!candidate) {
+          return { status: 409, body: { error: "INVALID_OWNER", message: "Owner must be an active IT Staff user." } };
+        }
+      }
+      // Unassigning while the Ticket is in an owner-required state would
+      // strand active work with nobody responsible (BR-20).
+      if (ownerId === null && requiresOwner(ticket.currentStatus)) {
+        return {
+          status: 409,
+          body: {
+            error: "OWNER_REQUIRED",
+            message: "An owner is required while a ticket is In Progress, Waiting for Requester, or Resolved.",
+          },
+        };
+      }
+      return { data: { ownerId } };
+    });
+    res.status(out.status).json(out.body);
+  } catch {
+    res.status(500).json(INTERNAL);
+  }
+});
+
+// section 12
+staffTicketsRouter.patch("/api/staff/tickets/:id/it-priority", ...actors, async (req: Request, res: Response) => {
+  const body: Record<string, unknown> = req.body && typeof req.body === "object" ? req.body : {};
+  const value = body.itPriority;
+  const expectedVersion = expectedVersionOf(body);
+  const fieldErrors: Record<string, string> = {};
+  if (typeof value !== "string" || !(PRIORITIES as readonly string[]).includes(value)) {
+    fieldErrors.itPriority = "itPriority must be one of LOW, MEDIUM, HIGH, URGENT.";
+  }
+  if (expectedVersion === null) fieldErrors.expectedVersion = EXPECTED_VERSION_ERROR;
+  if (Object.keys(fieldErrors).length > 0) {
+    const out = validationFailed(fieldErrors, fieldErrors.itPriority);
+    res.status(out.status).json(out.body);
+    return;
+  }
+  try {
+    const out = await guardedChange(parseId(req.params.id), expectedVersion!, async () => ({
+      data: { itPriority: value as (typeof PRIORITIES)[number] },
+    }));
+    res.status(out.status).json(out.body);
+  } catch {
+    res.status(500).json(INTERNAL);
+  }
+});
+
+// section 13
+staffTicketsRouter.patch("/api/staff/tickets/:id/status", ...actors, async (req: Request, res: Response) => {
+  const body: Record<string, unknown> = req.body && typeof req.body === "object" ? req.body : {};
+  const target = body.status;
+  const expectedVersion = expectedVersionOf(body);
+  const fieldErrors: Record<string, string> = {};
+  if (!isTicketStatus(target)) fieldErrors.status = "status must be a valid ticket status.";
+  if (expectedVersion === null) fieldErrors.expectedVersion = EXPECTED_VERSION_ERROR;
+  if (Object.keys(fieldErrors).length > 0 || !isTicketStatus(target)) {
+    const out = validationFailed(fieldErrors, fieldErrors.status);
+    res.status(out.status).json(out.body);
+    return;
+  }
+  try {
+    const out = await guardedChange(parseId(req.params.id), expectedVersion!, async (tx, ticket) => {
+      if (!canTransition(ticket.currentStatus, target)) {
+        return {
+          status: 409,
+          body: { error: "INVALID_TRANSITION", message: `Cannot move from ${ticket.currentStatus} to ${target}.` },
+        };
+      }
+
+      let resolutionSummary: string | undefined;
+      if (target === "RESOLVED") {
+        const check = validateEntryBody(body.resolutionSummary);
+        if (!check.ok) {
+          return validationFailed(
+            { resolutionSummary: check.message },
+            "A Resolution Summary is required to resolve a ticket.",
+          );
+        }
+        resolutionSummary = check.body;
+      }
+
+      if (requiresOwner(target) && ticket.ownerId === null) {
+        return {
+          status: 409,
+          body: { error: "OWNER_REQUIRED", message: "Assign an owner before starting work on this ticket." },
+        };
+      }
+
+      // BR-20, BR-21: the gate is read under the Ticket row lock, so an Action
+      // written at the same moment waits for this transaction to finish.
+      if (target === "RESOLVED") {
+        const actions = await tx.actionTaken.findMany({
+          where: { ticketId: ticket.id },
+          select: { id: true, actionStatus: true },
+        });
+        const gate = checkResolutionGate(actions);
+        if (gate.blockers.length > 0) {
+          return {
+            status: 409,
+            body: {
+              error: "RESOLUTION_BLOCKED",
+              message: "Finish or cancel the open actions, and complete at least one action, before resolving.",
+              blockers: gate.blockers,
+              openActionIds: gate.openActionIds,
+            },
+          };
+        }
+      }
+
+      // BR-22: cancelling the Ticket cancels its open Actions in the same
+      // transaction. An empty Result gets the system reason first, because a
+      // Cancelled Action must carry one (Lab 4 BR-09).
+      if (target === "CANCELLED") {
+        const open = { ticketId: ticket.id, actionStatus: { in: ["PLANNED", "IN_PROGRESS"] as ("PLANNED" | "IN_PROGRESS")[] } };
+        await tx.actionTaken.updateMany({
+          where: { ...open, OR: [{ result: null }, { result: "" }] },
+          data: { result: AUTO_CANCEL_RESULT },
+        });
+        await tx.actionTaken.updateMany({ where: open, data: { actionStatus: "CANCELLED", version: { increment: 1 } } });
+      }
+
+      return {
+        data: {
+          currentStatus: target,
+          ...(resolutionSummary !== undefined ? { resolutionSummary } : {}),
+          // BR-23: reopening clears the Requester's earlier "appears resolved".
+          ...(target === "REOPENED" ? { requesterResolvedAt: null } : {}),
+        },
+      };
+    });
+    res.status(out.status).json(out.body);
+  } catch {
+    res.status(500).json(INTERNAL);
+  }
+});
+
+// Loads the Ticket for an append (Internal Notes), answering 404/409 itself.
+// Terminal Tickets accept nothing new (BR-22). Notes are not versioned: they
+// are append-only, so two writers cannot overwrite each other.
 async function loadMutable(req: Request, res: Response) {
   const id = parseId(req.params.id);
   const ticket = id === null ? null : await getPrisma().ticket.findUnique({ where: { id } });
@@ -107,130 +350,6 @@ async function loadMutable(req: Request, res: Response) {
   }
   return ticket;
 }
-
-// section 11 - claim / assign / reassign / unassign
-staffTicketsRouter.patch("/api/staff/tickets/:id/owner", ...actors, async (req: Request, res: Response) => {
-  const raw = req.body?.ownerId;
-  const ownerId = raw === null ? null : typeof raw === "number" && Number.isInteger(raw) && raw > 0 ? raw : undefined;
-  if (ownerId === undefined) {
-    res.status(400).json({
-      error: "VALIDATION_FAILED",
-      message: "ownerId must be a positive integer, or null to unassign.",
-      fieldErrors: { ownerId: "ownerId must be a positive integer, or null to unassign." },
-    });
-    return;
-  }
-  try {
-    const ticket = await loadMutable(req, res);
-    if (!ticket) return;
-
-    if (ownerId !== null) {
-      // BR-17: only an active IT Staff user can own a Ticket.
-      const candidate = await getPrisma().user.findFirst({ where: { id: ownerId, role: "IT_STAFF", isActive: true } });
-      if (!candidate) {
-        res.status(409).json({ error: "INVALID_OWNER", message: "Owner must be an active IT Staff user." });
-        return;
-      }
-    }
-    // Unassigning while the Ticket is in an owner-required state would
-    // strand active work with nobody responsible (BR-20).
-    if (ownerId === null && requiresOwner(ticket.currentStatus)) {
-      res.status(409).json({
-        error: "OWNER_REQUIRED",
-        message: "An owner is required while a ticket is In Progress, Waiting for Requester, or Resolved.",
-      });
-      return;
-    }
-    await getPrisma().ticket.update({ where: { id: ticket.id }, data: { ownerId } });
-    res.status(200).json(await loadDetail(ticket.id));
-  } catch {
-    res.status(500).json(INTERNAL);
-  }
-});
-
-// section 12
-staffTicketsRouter.patch("/api/staff/tickets/:id/it-priority", ...actors, async (req: Request, res: Response) => {
-  const value = req.body?.itPriority;
-  if (typeof value !== "string" || !(PRIORITIES as readonly string[]).includes(value)) {
-    res.status(400).json({
-      error: "VALIDATION_FAILED",
-      message: "itPriority must be one of LOW, MEDIUM, HIGH, URGENT.",
-      fieldErrors: { itPriority: "itPriority must be one of LOW, MEDIUM, HIGH, URGENT." },
-    });
-    return;
-  }
-  try {
-    const ticket = await loadMutable(req, res);
-    if (!ticket) return;
-    await getPrisma().ticket.update({
-      where: { id: ticket.id },
-      data: { itPriority: value as (typeof PRIORITIES)[number] },
-    });
-    res.status(200).json(await loadDetail(ticket.id));
-  } catch {
-    res.status(500).json(INTERNAL);
-  }
-});
-
-// section 13
-staffTicketsRouter.patch("/api/staff/tickets/:id/status", ...actors, async (req: Request, res: Response) => {
-  const target = req.body?.status;
-  if (!isTicketStatus(target)) {
-    res.status(400).json({
-      error: "VALIDATION_FAILED",
-      message: "status must be a valid ticket status.",
-      fieldErrors: { status: "status must be a valid ticket status." },
-    });
-    return;
-  }
-  try {
-    const ticket = await loadMutable(req, res);
-    if (!ticket) return;
-
-    if (!canTransition(ticket.currentStatus, target)) {
-      res.status(409).json({
-        error: "INVALID_TRANSITION",
-        message: `Cannot move from ${ticket.currentStatus} to ${target}.`,
-      });
-      return;
-    }
-
-    let resolutionSummary: string | undefined;
-    if (target === "RESOLVED") {
-      const check = validateEntryBody(req.body?.resolutionSummary);
-      if (!check.ok) {
-        res.status(400).json({
-          error: "VALIDATION_FAILED",
-          message: "A Resolution Summary is required to resolve a ticket.",
-          fieldErrors: { resolutionSummary: check.message },
-        });
-        return;
-      }
-      resolutionSummary = check.body;
-    }
-
-    if (requiresOwner(target) && ticket.ownerId === null) {
-      res.status(409).json({
-        error: "OWNER_REQUIRED",
-        message: "Assign an owner before starting work on this ticket.",
-      });
-      return;
-    }
-
-    await getPrisma().ticket.update({
-      where: { id: ticket.id },
-      data: {
-        currentStatus: target,
-        ...(resolutionSummary !== undefined ? { resolutionSummary } : {}),
-        // BR-23: reopening clears the Requester's earlier "appears resolved".
-        ...(target === "REOPENED" ? { requesterResolvedAt: null } : {}),
-      },
-    });
-    res.status(200).json(await loadDetail(ticket.id));
-  } catch {
-    res.status(500).json(INTERNAL);
-  }
-});
 
 // section 14 - Internal Notes. Requesters never reach the handler:
 // requireRole answers 403 before any Ticket is looked up (AC-04, AC-20).

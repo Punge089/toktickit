@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { Prisma } from "@prisma/client";
 import { getPrisma } from "../prisma.js";
+import { lockTicket } from "../lib/ticketLock.js";
 import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 import {
   CLIENT_REQUEST_ID_PATTERN,
@@ -71,16 +72,6 @@ function serializeAction(a: ActionRow) {
     createdAt: a.createdAt,
     updatedAt: a.updatedAt,
   };
-}
-
-// BR-21: Action writes lock the Ticket row, the same lock the resolve path
-// takes, so an Action added at the same moment cannot slip past a resolution
-// that is already being applied. Returns the Ticket status, or null when the
-// Ticket does not exist.
-async function lockTicket(tx: Prisma.TransactionClient, ticketId: number) {
-  const locked = await tx.$queryRaw<{ id: number }[]>`SELECT "id" FROM "Ticket" WHERE "id" = ${ticketId} FOR UPDATE`;
-  if (locked.length === 0) return null;
-  return tx.ticket.findUniqueOrThrow({ where: { id: ticketId }, select: { currentStatus: true } });
 }
 
 // BR-14: an Action changes the Ticket's updatedAt, never its version.

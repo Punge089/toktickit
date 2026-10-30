@@ -27,9 +27,9 @@ once to show its test fails (section 7).
 |---|---|---|---|---|---|
 | UNIT-01 | BR-07, BR-08, AC-04 | Action input validator: description, result, note and attachment-note limits, follow-up rule, `actionAt` more than 5 minutes ahead | Valid input accepted; each rule violation names its own field; a note sent with follow-up off is discarded | `server/tests/lab-04/action-rules.unit.test.ts` | Pass |
 | UNIT-02 | BR-09, AC-10, AC-11 | Action transition function for every (from, to) pair, and the Result requirement | Only Planned to In Progress, Completed, Cancelled and In Progress to Completed, Cancelled pass; Completed and Cancelled without a Result fail | `server/tests/lab-04/action-rules.unit.test.ts` | Pass |
-| UNIT-03 | BR-20, AC-17, AC-18 | Resolution-gate function: open Actions only, no Completed Action, both, and a passing case | Returns `OPEN_ACTIONS`, `NO_COMPLETED_ACTION`, both, or no blockers as specified | `server/tests/lab-04/workflow-rules.unit.test.ts` | Planned |
-| UNIT-04 | BR-19, AC-22 | Final status matrix against an independently written table, and the fixed order of `allowedTransitions` | Every pair matches the table in specification §5; the targets always come back in the documented column order | `server/tests/lab-04/workflow-rules.unit.test.ts` | Planned |
-| UNIT-05 | BR-28 | The active-status set used by the dashboards and the `active` filter | Exactly New, Open, In Progress, Waiting for Requester, Reopened | `server/tests/lab-04/workflow-rules.unit.test.ts` | Planned |
+| UNIT-03 | BR-20, AC-17, AC-18 | Resolution-gate function: open Actions only, no Completed Action, both, and a passing case | Returns `OPEN_ACTIONS`, `NO_COMPLETED_ACTION`, both, or no blockers as specified | `server/tests/lab-04/workflow-rules.unit.test.ts` | Pass |
+| UNIT-04 | BR-19, AC-22 | Final status matrix against an independently written table, and the fixed order of `allowedTransitions` | Every pair matches the table in specification §5; the targets always come back in the documented column order | `server/tests/lab-04/workflow-rules.unit.test.ts` | Pass |
+| UNIT-05 | BR-28 | The active-status set used by the dashboards and the `active` filter | Exactly New, Open, In Progress, Waiting for Requester, Reopened | `server/tests/lab-04/workflow-rules.unit.test.ts` | Pass |
 
 ### API - Actions Taken
 
@@ -56,17 +56,17 @@ once to show its test fails (section 7).
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| WF-01 | AC-17, BR-20, FR-07 | PATCH status to Resolved directly through the API while a Planned and an In Progress Action exist | `409 RESOLUTION_BLOCKED` with `OPEN_ACTIONS` and the open ids; status and `version` unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-02 | AC-18, BR-20 | Resolve a Ticket with no Completed Action, then after one Action is Completed and none are open | First `409` with `NO_COMPLETED_ACTION`; second `200` Resolved | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-03 | AC-19, BR-21 | Run a resolve request and an Action create at the same moment, repeatedly | Never both succeed with the Ticket Resolved and an open Action; each outcome is internally consistent | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-04 | AC-20, BR-22, FR-08 | Cancel a Ticket that has Planned, In Progress and Completed Actions | Open Actions become Cancelled with the system Result and `version` +1; the Completed Action is untouched; all in one transaction | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-05 | AC-21, BR-23 | A Resolved and a Closed Ticket with no Actions (legacy shape): Resolved to Closed, list, and dashboard count | Close succeeds; both appear in status counts; no Action is invented | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-06 | AC-16, BR-17 | PATCH owner, IT Priority and status with a missing, a stale and a current `expectedVersion` | Missing `400`; stale `409 STALE_VERSION`; current `200` with `version` +1; Ticket unchanged on failure | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-07 | AC-23, BR-24 | Requester indicates the problem appears resolved, then staff try Resolved with an open Action | Status unchanged by the indication; the gate still blocks | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-08 | AC-24, BR-12 | Resolve, Reopen, add an Action, complete it, Resolve again | Actions blocked while Resolved, allowed after Reopen; second Resolve passes only when the gate is met | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-09 | BR-25 | Requests that fail several checks at once (stale plus invalid transition, no owner plus open Action) | The first failing check in the documented order answers | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-10 | AC-22, BR-26, FR-11 | Successful status change response | Returns the new status, `version` and `allowedTransitions` in matrix order | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
-| WF-11 | FR-06 | `GET /api/staff/tickets/:id` after Actions change | `version`, `actionCounts` and `resolutionBlockers` match the stored Actions | `server/tests/lab-04/ticket-workflow.api.test.ts` | Planned |
+| WF-01 | AC-17, BR-20, FR-07 | PATCH status to Resolved directly through the API while a Planned and an In Progress Action exist | `409 RESOLUTION_BLOCKED` with `OPEN_ACTIONS` and the open ids; status and `version` unchanged | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-02 | AC-18, BR-20 | Resolve a Ticket with no Completed Action, then after one Action is Completed and none are open | First `409` with `NO_COMPLETED_ACTION`; second `200` Resolved | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-03 | AC-19, BR-21 | Run a resolve request and an Action create at the same moment, repeatedly | Never both succeed with the Ticket Resolved and an open Action; each outcome is internally consistent | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-04 | AC-20, BR-22, FR-08 | Cancel a Ticket that has Planned, In Progress and Completed Actions | Open Actions become Cancelled with the system Result and `version` +1; the Completed Action is untouched; all in one transaction | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-05 | AC-21, BR-23 | A Resolved and a Closed Ticket with no Actions (legacy shape): Resolved to Closed, detail, and the Queue list | Close succeeds; both stay listed with their status and empty Action counts; no Action is invented (the dashboard count of these Tickets is asserted in SDASH-01) | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-06 | AC-16, BR-17 | PATCH owner, IT Priority and status with a missing, a stale and a current `expectedVersion` | Missing `400`; stale `409 STALE_VERSION`; current `200` with `version` +1; Ticket unchanged on failure | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-07 | AC-23, BR-24 | Requester indicates the problem appears resolved, then staff try Resolved with an open Action | Status unchanged by the indication; the gate still blocks | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-08 | AC-24, BR-12 | Resolve, Reopen, add an Action, complete it, Resolve again | Actions blocked while Resolved, allowed after Reopen; second Resolve passes only when the gate is met | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-09 | BR-25 | Requests that fail several checks at once (stale plus invalid transition, no owner plus open Action) | The first failing check in the documented order answers | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-10 | AC-22, BR-26, FR-11 | Successful status change response | Returns the new status, `version` and `allowedTransitions` in matrix order | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
+| WF-11 | FR-06 | `GET /api/staff/tickets/:id` after Actions change | `version`, `actionCounts` and `resolutionBlockers` match the stored Actions | `server/tests/lab-04/ticket-workflow.api.test.ts` | Pass |
 
 ### Security / Authorization
 
@@ -88,7 +88,7 @@ once to show its test fails (section 7).
 | RDASH-03 | AC-28, BR-32 | A Requester with no Tickets | Four metrics `0`; both lists empty | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | RDASH-04 | AC-25, BR-27 | Each requester metric against an independent raw SQL query on seeded data | Equal for every metric | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 | RDASH-05 | AC-27, BR-32 | Each requester card against `GET /api/tickets` with the card's drill-down parameters | Card count equals `totalItems` | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
-| SDASH-01 | AC-25, BR-27, FR-13 | Every staff figure (status counts, unassigned, by priority, my assigned, my open Actions) against independent raw SQL | Equal for every figure | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
+| SDASH-01 | AC-25, BR-27, FR-13 | Every staff figure (status counts, unassigned, by priority, my assigned, my open Actions) against independent raw SQL, on data that includes legacy Resolved and Closed Tickets without Actions | Equal for every figure | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-02 | BR-30, BR-31, FR-14 | The same endpoint as IT Staff and as Administrator | Staff: `personal` and `myActions` present, `accounts` null; Administrator: `personal` and `myActions` null, `accounts` counts correct | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-03 | AC-27, BR-32 | Each staff card against `GET /api/staff/tickets` with its drill-down parameters | Card count equals `totalItems` for every Ticket-list card | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
 | SDASH-04 | BR-30, BR-33 | Urgent, recent and my-Actions lists with ties, more than 5 rows, a long description, and another staff member's Actions present | Documented order; at most 5; description cut to 120; only the caller's open Actions | `server/tests/lab-04/staff-dashboard.api.test.ts` | Planned |
@@ -134,10 +134,10 @@ once to show its test fails (section 7).
 | UI-16 | AC-06 | Staff Ticket Detail as Administrator | Add Action and edit controls present; owner, priority and status shown as plain text | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-17 | AC-08 | Requester Ticket Detail with and without Actions | Read-only section with every field; no write controls; empty message | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
 | UI-18 | AC-09 | Several Actions in different statuses | All listed in API order with the right badges and follow-up marker | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-19 | AC-22, FR-06 | Status select on Ticket Detail for each current status | Only the current value and `allowedTransitions` offered, in matrix order | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-20 | AC-17, FR-07 | Resolved chosen while `resolutionBlockers` has entries; server then answers `RESOLUTION_BLOCKED` | Reason text shown and Update disabled; the server answer shows the same reasons with a link to the Actions tab | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-21 | AC-22, BR-26, FR-11 | A successful status change | The header status badge and version are replaced from the response without reloading | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
-| UI-22 | AC-16 | `STALE_VERSION` on owner, IT Priority and status | Banner with Reload latest; the chosen value stays visible | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-19 | AC-22, FR-06 | Status select on Ticket Detail for each current status | Only the current value and `allowedTransitions` offered, in matrix order | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
+| UI-20 | AC-17, FR-07 | Resolved chosen while `resolutionBlockers` has entries; server then answers `RESOLUTION_BLOCKED` | Reason text shown and Update disabled; the server answer shows the same reasons and keeps the typed Resolution Summary (the link to the Actions tab is added with that tab in Issue 82 and asserted in UI-14) | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
+| UI-21 | AC-22, BR-26, FR-11 | A successful status change | The header status badge and version are replaced from the response without reloading | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
+| UI-22 | AC-16 | `STALE_VERSION` on owner, IT Priority and status | Banner with Reload latest; the chosen value stays visible | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | UI-23 | AC-20 | Choosing Cancelled on a Ticket | Confirmation mentions that open actions will be cancelled | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
 | UI-24 | AC-33, FR-19 | Create Ticket, Public Comment and Internal Note forms after a server failure | Entered data kept; one request per click | `client/tests/lab-04/FormHardening.test.tsx` | Planned |
 
@@ -307,7 +307,10 @@ table starts with the changes the contract already predicts and is completed wit
 
 | Test | Why it changes | Changed in |
 |---|---|---|
-| Lab 3 server tests that call `PATCH` on owner, IT Priority or status | The request now carries `expectedVersion` (BR-17) | Issue #81 |
+| Lab 3 `staff-ticket-detail.api.test.ts`, all 18 owner, IT Priority and status requests by IT Staff | The request now carries `expectedVersion` (BR-17); a `patchTicket` helper sends the version stored at that moment, so each test still checks the rule it was written for | Issue #81 |
+| Lab 3 `staff-ticket-detail.api.test.ts`, "requires a Resolution Summary ... and stores it" | Resolving now needs a Completed Action (BR-20), so the test records one before the successful resolve; the 400 assertions for a missing summary are unchanged | Issue #81 |
+| Lab 3 `client/tests/lab-03/StaffTicketDetail.test.tsx`, fixture and 3 request-body assertions | The Ticket carries `version`, `actionCounts` and `resolutionBlockers`, and every change sends `expectedVersion` | Issue #81 |
+| Lab 3 `e2e/lab-03/helpers.ts`, `responsive.spec.ts`, `staff-ticket-flow.spec.ts` | Fixture and flow requests send the Ticket version (new `patchTicket` helper), and tickets that reach Resolved first get a Completed Action (new `addCompletedAction` helper) | Issue #81 |
 | Lab 2 `my-tickets.api.test.ts` assertion that only `NEW` is a valid `status` | `status` accepts all 8 values (BR-36) | Issue #83 |
 | Lab 3 client and e2e tests that assert the landing page after login | Every role lands on `/dashboard` (BR-35) | Issue #83 |
 | Lab 3 `e2e/lab-03/staff-ticket-flow.spec.ts` E2E-02 | Waits for the select options before reading them (timing-sensitive; test-only change) | Issue #84 |
@@ -321,8 +324,9 @@ the guard is then restored and the tests pass again. The outcome column stays **
 |---|---|---|---|---|
 | MUT-01 | API-10, UI-13 | Remove the `version` condition from the Action update (both the explicit comparison and the `WHERE version = ?` of the UPDATE) | API-10 fails (both parallel updates succeed or a stale update is accepted) | Run in Issue 80: API-10 and API-14 failed (`expected 200 to be 409`); guard restored, all 16 API tests pass. UI-13 is checked in Issue 82. |
 | MUT-02 | API-11 | Remove the replay lookup, and separately the unique `(ticketId, clientRequestId)` index | API-11 fails (two rows exist) | Run in Issue 80: lookup removed with the index kept, API-11 failed (`expected 500 to be 200`, the unique index refused the duplicate); index dropped too, the suite could not even start because the seed upserts on that key. The index itself is also asserted by MIG-01. Both restored. |
-| MUT-03 | WF-03 | Remove the Ticket row lock in the resolve path | WF-03 fails (Resolved with an open Action appears) | Not run |
-| MUT-04 | WF-01, WF-02 | Remove the resolution gate | WF-01 and WF-02 fail | Not run |
+| MUT-03 | WF-03 | Remove the Ticket row lock in the resolve path | WF-03 fails (Resolved with an open Action appears) | Run in Issue 81: WF-03 failed in 3 of 3 runs (`round 1: 200/201`, the resolve and the Action create both succeeded); lock restored, all 11 workflow tests pass. |
+| MUT-04 | WF-01, WF-02 | Remove the resolution gate | WF-01 and WF-02 fail | Run in Issue 81: WF-01, WF-02, WF-07 and WF-08 failed; gate restored. |
+| MUT-06 | WF-06 | Remove the version condition from the Ticket owner, IT Priority and status change (explicit comparison and conditional UPDATE) | WF-06 fails | Run in Issue 81: WF-04, WF-06 and WF-09 failed; guard restored. |
 | MUT-05 | SEC-01 | Remove the role check from the Action write routes | SEC-01 fails | Run in Issue 80: SEC-01 failed (`expected 201 to be 403`); restored. SEC-03 is not expected to fail here because it also proves the Lab 3 owner, priority, status, Comment and Note routes stay 403 for an Administrator, and this mutation does not touch them. |
 
 ## 8. Final Results

@@ -125,7 +125,10 @@ succeeds increments `Ticket.version` by one in the same conditional `UPDATE` and
 detail (§5), whose `version` and `allowedTransitions` are the new ones (BR-26, AC-22).
 
 **Check order** for `/status` follows specification BR-25: `400` validation, `404`, `409 STALE_VERSION`,
-`409 TICKET_CLOSED`, `409 INVALID_TRANSITION`, `409 OWNER_REQUIRED`, `409 RESOLUTION_BLOCKED`. `/owner` and
+`409 TICKET_CLOSED`, `409 INVALID_TRANSITION`, `409 OWNER_REQUIRED`, `409 RESOLUTION_BLOCKED`.
+The Resolution Summary `400` (Lab 3 §13) keeps its Lab 3 place: it is only asked of a move to `RESOLVED` that the
+matrix allows, so it comes after `INVALID_TRANSITION` and before `OWNER_REQUIRED`. Every guarded change runs
+in one transaction under the Ticket row lock and rolls back entirely (cancel cascade included) if any step fails. `/owner` and
 `/it-priority` follow the same order with their own rules from Lab 3 §11 and §12.
 
 **New 409 bodies**
