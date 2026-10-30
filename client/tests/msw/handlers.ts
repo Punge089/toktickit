@@ -62,6 +62,10 @@ export const handlers = [
 
   // Issue 66 - Public Comments (api-spec.md section 7). Default: none yet.
   http.get(`${API_URL}/api/tickets/:id/comments`, () => HttpResponse.json([])),
+  // Lab 4: every Ticket Detail screen now reads the Actions Taken of its Ticket; the default is none.
+  http.get(`${API_URL}/api/tickets/:id/actions`, () =>
+    HttpResponse.json({ items: [], counts: { open: 0, completed: 0, cancelled: 0 } }),
+  ),
 
   // Issue 27
   http.get(`${API_URL}/api/categories`, () =>

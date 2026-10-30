@@ -124,31 +124,31 @@ once to show its test fails (section 7).
 | UI-06 | AC-28 | RequesterDashboard loading, zero data and API failure | Skeletons, `0` values and messages, failure callout with Retry | `client/tests/lab-04/RequesterDashboard.test.tsx` | Planned |
 | UI-07 | AC-31, BR-35, FR-17 | Shell for each role, and the `/` redirect | Dashboard plus the role's own entries only; `aria-current` on the current page; lands on `/dashboard` | `client/tests/lab-04/ShellDrillDown.test.tsx` | Planned |
 | UI-08 | AC-27, FR-15 | My Tickets and the Queue opened with `status`, `active`, `owner` and `itPriority` in the URL | Filters applied to the request and shown; chip removable; Clear filters empties the URL | `client/tests/lab-04/ShellDrillDown.test.tsx` | Planned |
-| UI-09 | AC-01, FR-01 | ActionsTaken create form submits valid data | One POST with a `clientRequestId`; panel closes; list refreshes; polite status shown | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-10 | AC-04, AC-11, FR-19 | Create and edit with invalid fields | Messages directly under each field; entered values kept; first invalid field focused | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-11 | AC-34, BR-38 | Double click and double Enter on Save, then a retry after failure | Exactly one request in flight; the retry reuses the same `clientRequestId` | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-12 | AC-03 | Server answers `INVALID_ASSIGNEE` | Message under Assignee; entered data kept | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-13 | AC-14 | Server answers `STALE_VERSION` on an Action edit, then Reload latest | Banner shown; the user's text kept until Reload; reload shows the new version | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-14 | AC-10, AC-12 | Start, Complete (with and without a Result) and Cancel on an open Action; open a Completed Action | Complete without a Result focuses Result; Cancel asks to confirm; a final Action has no Edit button and shows plain text | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-15 | AC-13 | Staff Ticket Detail on a Resolved, Closed and Cancelled Ticket | Add and edit controls hidden with the explanation; the list still readable | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-16 | AC-06 | Staff Ticket Detail as Administrator | Add Action and edit controls present; owner, priority and status shown as plain text | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-17 | AC-08 | Requester Ticket Detail with and without Actions | Read-only section with every field; no write controls; empty message | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
-| UI-18 | AC-09 | Several Actions in different statuses | All listed in API order with the right badges and follow-up marker | `client/tests/lab-04/ActionsTaken.test.tsx` | Planned |
+| UI-09 | AC-01, FR-01 | ActionsTaken create form submits valid data | One POST with a `clientRequestId`; panel closes; list refreshes; polite status shown | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-10 | AC-04, AC-11, FR-19 | Create and edit with invalid fields | Messages directly under each field; entered values kept; first invalid field focused | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-11 | AC-34, BR-38 | Double click and double Enter on Save, then a retry after failure | Exactly one request in flight; the retry reuses the same `clientRequestId` | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-12 | AC-03 | Server answers `INVALID_ASSIGNEE` | Message under Assignee; entered data kept | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-13 | AC-14 | Server answers `STALE_VERSION` on an Action edit, then Reload latest | Banner shown; the user's text kept until Reload; reload shows the new version | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-14 | AC-10, AC-12 | Start, Complete (with and without a Result) and Cancel on an open Action; open a Completed Action | Complete without a Result focuses Result; Cancel asks to confirm; a final Action has no Edit button and shows plain text | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-15 | AC-13 | Staff Ticket Detail on a Resolved, Closed and Cancelled Ticket | Add and edit controls hidden with the explanation; the list still readable | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-16 | AC-06 | Staff Ticket Detail as Administrator | Add Action and edit controls present; owner, priority and status shown as plain text | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-17 | AC-08 | Requester Ticket Detail with and without Actions | Read-only section with every field; no write controls; empty message | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
+| UI-18 | AC-09 | Several Actions in different statuses | All listed in API order with the right badges and follow-up marker | `client/tests/lab-04/ActionsTaken.test.tsx` | Pass |
 | UI-19 | AC-22, FR-06 | Status select on Ticket Detail for each current status | Only the current value and `allowedTransitions` offered, in matrix order | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | UI-20 | AC-17, FR-07 | Resolved chosen while `resolutionBlockers` has entries; server then answers `RESOLUTION_BLOCKED` | Reason text shown and Update disabled; the server answer shows the same reasons and keeps the typed Resolution Summary (the link to the Actions tab is added with that tab in Issue 82 and asserted in UI-14) | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | UI-21 | AC-22, BR-26, FR-11 | A successful status change | The header status badge and version are replaced from the response without reloading | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | UI-22 | AC-16 | `STALE_VERSION` on owner, IT Priority and status | Banner with Reload latest; the chosen value stays visible | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
-| UI-23 | AC-20 | Choosing Cancelled on a Ticket | Confirmation mentions that open actions will be cancelled | `client/tests/lab-04/TicketWorkflow.test.tsx` | Planned |
+| UI-23 | AC-20 | Choosing Cancelled on a Ticket | Confirmation mentions that open actions will be cancelled | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | UI-24 | AC-33, FR-19 | Create Ticket, Public Comment and Internal Note forms after a server failure | Entered data kept; one request per click | `client/tests/lab-04/FormHardening.test.tsx` | Planned |
 
 ### UI style
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| STY-01 | BR-40, AC-37 | Action status badges and the follow-up marker | Four distinct classes, each with visible text, never colour alone | `client/tests/lab-04/lab4.style.test.tsx` | Planned |
-| STY-02 | AC-37 | Stylesheet colour literals | Only `--zen-*` tokens used outside `:root` | `client/tests/lab-04/lab4.style.test.tsx` | Planned |
-| STY-03 | BR-10, AC-08 | Shared label on the Action form and the Internal Notes lock label | Both present, each with its own text and `aria-label` | `client/tests/lab-04/lab4.style.test.tsx` | Planned |
-| STY-04 | AC-37, FR-22 | Accessibility attributes on the new screens | `aria-current` on nav, `aria-invalid` and `aria-describedby` on invalid fields, `role=status` on saved messages, the Action form is not a dialog | `client/tests/lab-04/lab4.style.test.tsx` | Planned |
+| STY-01 | BR-40, AC-37 | Action status badges and the follow-up marker | Four distinct classes, each with visible text, never colour alone | `client/tests/lab-04/lab4.style.test.tsx` | Pass |
+| STY-02 | AC-37 | Stylesheet colour literals in the Lab 4 sections of `zen-green.css` (Lab 3 and earlier rules are untouched) | Only `--zen-*` tokens, no hex, `rgb` or `hsl` literal | `client/tests/lab-04/lab4.style.test.tsx` | Pass |
+| STY-03 | BR-10, AC-08 | Shared label on the Action form and the Internal Notes lock label | Both present, each with its own text and `aria-label` | `client/tests/lab-04/lab4.style.test.tsx` | Pass |
+| STY-04 | AC-37, FR-22 | Accessibility attributes on the new screens | `aria-current` on nav, `aria-invalid` and `aria-describedby` on invalid fields, `role=status` on saved messages, the Action form is not a dialog | `client/tests/lab-04/lab4.style.test.tsx` | Partial: Action form attributes pass (Issue 82); nav aria-current added in Issue 83 |
 
 ### Responsive and end-to-end (Playwright)
 
@@ -156,10 +156,10 @@ once to show its test fails (section 7).
 |---|---|---|---|---|---|
 | RESP-01 | AC-37, FR-22 | IT Staff Dashboard (including loaded, zero, failure and Administrator states) at 1280, 850 and 375 px | No horizontal page scroll; screenshots saved under `artifacts/lab-04/screenshots/staff-dashboard/` | `e2e/lab-04/responsive.spec.ts` | Planned |
 | RESP-02 | AC-37, FR-22 | Requester Dashboard at three widths | No horizontal scroll; screenshots saved under `requester-dashboard/` | `e2e/lab-04/responsive.spec.ts` | Planned |
-| RESP-03 | AC-37, FR-22 | Actions Taken on staff and Requester Ticket Detail at three widths, including create, validation, edit, final, stale and locked states | No horizontal scroll; table becomes cards below 992 px; screenshots under `actions-taken/` | `e2e/lab-04/responsive.spec.ts` | Planned |
+| RESP-03 | AC-37, FR-22 | Actions Taken on staff and Requester Ticket Detail at three widths, including create, validation, edit, final, stale and locked states | No horizontal scroll; table becomes cards below 992 px; screenshots under `actions-taken/` | `e2e/lab-04/responsive.spec.ts` | Partial: no horizontal scroll at 1280, 850 and 375 px and the table-to-cards switch pass (Issue 82); screenshots of every state come in Issue 85 |
 | RESP-04 | AC-37, FR-22 | Ticket workflow controls at three widths | No horizontal scroll; screenshots under `ticket-workflow/` | `e2e/lab-04/responsive.spec.ts` | Planned |
 | RESP-05 | AC-37, FR-22 | Keyboard-only walk through the dashboard cards, the Action form and the status control | A visible outline on every control reached, measured from computed style; screenshots under `focus/` | `e2e/lab-04/responsive.spec.ts` | Planned |
-| E2E-01 | AC-01, AC-03, AC-06, AC-08, AC-10, AC-11, AC-12 | Staff creates, assigns, edits, starts, completes and cancels Actions; an inactive assignee is refused; the Requester then sees the Actions read-only; Administrator creates one | Every step shows the expected result in the real UI; the Requester view has no write controls | `e2e/lab-04/actions-taken-flow.spec.ts` | Planned |
+| E2E-01 | AC-01, AC-03, AC-06, AC-08, AC-10, AC-11, AC-12 | Staff creates, assigns, edits, starts, completes and cancels Actions; an inactive assignee is refused; the Requester then sees the Actions read-only; Administrator creates one | Every step shows the expected result in the real UI; the Requester view has no write controls | `e2e/lab-04/actions-taken-flow.spec.ts` | Pass |
 | E2E-02 | AC-16, AC-17, AC-18, AC-20, AC-22, AC-24 | Resolve is blocked with an open Action; complete it and resolve; two browser sessions cause a stale conflict; cancel cascades; reopen and resolve again | Each outcome as specified; the summary status updates without a reload | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
 | E2E-03 | AC-27, AC-28, AC-29, AC-31 | Each role logs in, sees its dashboard and navigation, follows every card, and the count matches the list; zero-data and Administrator views | Landing on Dashboard; list totals equal card counts; zero states and the Administrator variant correct | `e2e/lab-04/dashboards.spec.ts` | Planned |
 
@@ -311,6 +311,8 @@ table starts with the changes the contract already predicts and is completed wit
 | Lab 3 `staff-ticket-detail.api.test.ts`, "requires a Resolution Summary ... and stores it" | Resolving now needs a Completed Action (BR-20), so the test records one before the successful resolve; the 400 assertions for a missing summary are unchanged | Issue #81 |
 | Lab 3 `client/tests/lab-03/StaffTicketDetail.test.tsx`, fixture and 3 request-body assertions | The Ticket carries `version`, `actionCounts` and `resolutionBlockers`, and every change sends `expectedVersion` | Issue #81 |
 | Lab 3 `e2e/lab-03/helpers.ts`, `responsive.spec.ts`, `staff-ticket-flow.spec.ts` | Fixture and flow requests send the Ticket version (new `patchTicket` helper), and tickets that reach Resolved first get a Completed Action (new `addCompletedAction` helper) | Issue #81 |
+| `client/tests/msw/handlers.ts` (shared mock server) | Both Ticket Detail screens now read the Actions of their Ticket, so the default handler for `GET /api/tickets/:id/actions` answers an empty list; no assertion changed | Issue #82 |
+| `server/prisma/cleanup-e2e-users.ts` (e2e set-up) | The Lab 4 e2e spec assigns Actions to a throwaway `e2e.*` staff user, and an Action restricts deleting its users, so the clean-up removes those Actions first | Issue #82 |
 | Lab 2 `my-tickets.api.test.ts` assertion that only `NEW` is a valid `status` | `status` accepts all 8 values (BR-36) | Issue #83 |
 | Lab 3 client and e2e tests that assert the landing page after login | Every role lands on `/dashboard` (BR-35) | Issue #83 |
 | Lab 3 `e2e/lab-03/staff-ticket-flow.spec.ts` E2E-02 | Waits for the select options before reading them (timing-sensitive; test-only change) | Issue #84 |

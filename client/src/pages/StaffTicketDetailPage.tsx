@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.js";
 import {
   fetchStaffTicket,
@@ -25,9 +25,12 @@ import { Select } from "../components/ui/Select.js";
 import { Spinner } from "../components/ui/Spinner.js";
 import { AttachmentStateBadge, Badge, PriorityBadge, STATUS_LABEL, StatusBadge, TicketStatus } from "../components/ui/Badge.js";
 import { EntryThread } from "../components/tickets/EntryThread.js";
+import { ActionsTaken } from "../components/actions/ActionsTaken.js";
+import { useActions } from "../components/actions/useActions.js";
 
 type PageState = "loading" | "loaded" | "not-found" | "forbidden" | "error";
-type Tab = "comments" | "notes" | "attachments";
+type Tab = "comments" | "notes" | "actions" | "attachments";
+const TAB_PARAMS: Tab[] = ["comments", "notes", "actions", "attachments"];
 
 const PRIORITY_OPTIONS = [
   { value: "LOW", label: "Low" },
@@ -66,7 +69,10 @@ export function StaffTicketDetailPage() {
   const [staff, setStaff] = useState<{ id: number; fullName: string }[]>([]);
   const [comments, setComments] = useState<Entry[]>([]);
   const [notes, setNotes] = useState<Entry[]>([]);
-  const [tab, setTab] = useState<Tab>("comments");
+  // `?tab=actions` opens that tab (the dashboard's My Open Actions rows use it, ui-spec §4).
+  const [params] = useSearchParams();
+  const requested = params.get("tab");
+  const [tab, setTab] = useState<Tab>(TAB_PARAMS.includes(requested as Tab) ? (requested as Tab) : "comments");
 
   const [selectedStatus, setSelectedStatus] = useState<TicketStatus | "">("");
   const [resolutionSummary, setResolutionSummary] = useState("");
@@ -129,6 +135,21 @@ export function StaffTicketDetailPage() {
   useEffect(() => {
     fetchAssignableUsers().then(setStaff).catch(() => setStaff([]));
   }, []);
+
+  const numericId = ticket?.id ?? null;
+  const actions = useActions(numericId);
+
+  // Only the Ticket's own figures (action counts, resolution blockers) are
+  // refreshed after an Action changes; nothing the user is typing is touched.
+  const refreshTicket = useCallback(async () => {
+    if (!id) return;
+    try {
+      const detail = await fetchStaffTicket(id);
+      setTicket(detail);
+    } catch {
+      /* the next full load shows the error */
+    }
+  }, [id]);
 
   if (state === "loading") return <Spinner label="Loading ticket…" />;
 
@@ -425,7 +446,10 @@ export function StaffTicketDetailPage() {
           <div className="zen-ops-wide">
             <Alert tone="warning">
               <strong>Resolved is not available yet.</strong>{" "}
-              {resolveBlockers.map((b) => blockerText(b, current.actionCounts.open)).join(" ")}
+              {resolveBlockers.map((b) => blockerText(b, current.actionCounts.open)).join(" ")}{" "}
+              <button type="button" className="zen-link-button" onClick={() => setTab("actions")}>
+                Open Actions Taken
+              </button>
             </Alert>
           </div>
         )}
@@ -473,6 +497,7 @@ export function StaffTicketDetailPage() {
           [
             ["comments", `Public Comments (${comments.length})`],
             ["notes", `Internal Notes (${notes.length})`],
+            ["actions", actions.state === "ready" ? `Actions Taken (${actions.items.length})` : "Actions Taken"],
             ["attachments", `Attachments (${current.attachments.length})`],
           ] as [Tab, string][]
         ).map(([key, label]) => (
@@ -517,6 +542,22 @@ export function StaffTicketDetailPage() {
               await postNote(current.id, body);
               setNotes(await fetchNotes(current.id));
             }}
+          />
+        </div>
+      )}
+
+      {tab === "actions" && user && (
+        <div role="tabpanel" id="panel-actions" aria-labelledby="tab-actions">
+          <ActionsTaken
+            ticketId={current.id}
+            ticketStatus={current.currentStatus}
+            canWrite={user.role === "IT_STAFF" || user.role === "ADMINISTRATOR"}
+            user={{ id: user.id, role: user.role }}
+            state={actions.state}
+            items={actions.items}
+            retry={actions.retry}
+            reload={actions.reload}
+            onChanged={() => void refreshTicket()}
           />
         </div>
       )}

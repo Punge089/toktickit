@@ -119,6 +119,11 @@ describe("IT Staff Ticket workflow controls", () => {
     expect(screen.getByText(/complete at least one action/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /update status/i })).toBeDisabled();
 
+    // The message links to the Actions Taken tab, where the open Actions are dealt with.
+    await user.click(screen.getByRole("button", { name: "Open Actions Taken" }));
+    expect(screen.getByRole("tab", { name: /^Actions Taken/ })).toHaveAttribute("aria-selected", "true");
+    expect(await screen.findByRole("button", { name: "Add Action" })).toBeInTheDocument();
+
     // Other targets are unaffected.
     await user.selectOptions(screen.getByLabelText("Current Status"), "WAITING_FOR_REQUESTER");
     expect(screen.queryByText(/resolved is not available yet/i)).not.toBeInTheDocument();
@@ -219,7 +224,7 @@ describe("IT Staff Ticket workflow controls", () => {
     expect(screen.getByLabelText(/resolution summary/i)).toHaveValue("Replaced the battery.");
   });
 
-  it("UI-22: cancelling a Ticket with open Actions says they will be cancelled too, and sends nothing until confirmed", async () => {
+  it("UI-23: cancelling a Ticket with open Actions says they will be cancelled too, and sends nothing until confirmed", async () => {
     let patched = 0;
     server.use(
       http.patch(`${API_URL}/api/staff/tickets/:id/status`, () => {
