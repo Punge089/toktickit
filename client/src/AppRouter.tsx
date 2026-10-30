@@ -13,6 +13,7 @@ import { StaffTicketDetailPage } from "./pages/StaffTicketDetailPage.js";
 import { CreateTicketPage } from "./pages/CreateTicketPage.js";
 import { MyTicketsPage } from "./pages/MyTicketsPage.js";
 import { TicketDetailPage } from "./pages/TicketDetailPage.js";
+import { DashboardPage } from "./pages/DashboardPage.js";
 
 // Issue 64 — replaces the Development Requester router. Every route
 // except /login is guarded by RequireAuth (AC-09); "/" redirects to the
@@ -39,6 +40,16 @@ export function AppRouter() {
           }
         />
         <Route path="/forbidden" element={<ForbiddenPage />} />
+
+        {/* Lab 4 (Issue 83): every role lands here; the page picks the Requester or IT Staff view by role. */}
+        <Route
+          path="/dashboard"
+          element={
+            <RequireAuth>
+              <DashboardPage />
+            </RequireAuth>
+          }
+        />
 
         <Route
           path="/tickets/new"

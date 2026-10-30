@@ -5,8 +5,7 @@ import { getPrisma } from "../../src/prisma.js";
 import { createAndLoginUser } from "../helpers/auth.js";
 import { Lab4Fixtures, actionBody, insertAction, makeTicket, setUpLab4Fixtures } from "../helpers/lab4.js";
 
-// docs/lab-04/tests.md SEC-01, SEC-02, SEC-03 and the Actions part of SEC-05
-// (the dashboard endpoints join SEC-04 and SEC-05 in Issue 83) - specification.md
+// docs/lab-04/tests.md SEC-01 to SEC-05 - specification.md
 // BR-05, BR-06, BR-10, BR-37, AC-06 to AC-08, authorization matrix.
 describe("Actions Taken authorization", () => {
   let f: Lab4Fixtures;
@@ -121,13 +120,36 @@ describe("Actions Taken authorization", () => {
     expect(toAdmin.body.error).toBe("INVALID_ASSIGNEE");
   });
 
-  it("SEC-05 (Actions endpoints): every Actions endpoint answers 401 without a session", async () => {
+  it("SEC-04: each role reaches only its own dashboard endpoint; an unauthenticated caller and a first-login user are stopped", async () => {
+    const asks = async (agent: Lab4Fixtures["staff"]["agent"]) => ({
+      requester: (await agent.get("/api/dashboard/requester")).status,
+      staff: (await agent.get("/api/dashboard/staff")).status,
+    });
+    expect(await asks(f.requester.agent)).toEqual({ requester: 200, staff: 403 });
+    expect(await asks(f.staff.agent)).toEqual({ requester: 403, staff: 200 });
+    expect(await asks(f.admin.agent)).toEqual({ requester: 403, staff: 200 });
+    expect((await f.requester.agent.get("/api/dashboard/staff")).body.error).toBe("FORBIDDEN");
+
+    const anonymous = { requester: (await request(app).get("/api/dashboard/requester")).status, staff: (await request(app).get("/api/dashboard/staff")).status };
+    expect(anonymous).toEqual({ requester: 401, staff: 401 });
+
+    for (const role of ["REQUESTER", "IT_STAFF"] as const) {
+      const firstLogin = await createAndLoginUser({ role, mustChangePassword: true });
+      const res = await firstLogin.agent.get(role === "REQUESTER" ? "/api/dashboard/requester" : "/api/dashboard/staff");
+      expect(res.status).toBe(403);
+      expect(res.body.error).toBe("PASSWORD_CHANGE_REQUIRED");
+    }
+  });
+
+  it("SEC-05: every Lab 4 endpoint (Actions and dashboards) answers 401 without a session", async () => {
     const t = await makeTicket(f);
     const a = await insertAction(t.id, f.staff.user.id, f.staff.user.id);
     const calls = [
       request(app).get(`/api/tickets/${t.id}/actions`),
       request(app).post(`/api/staff/tickets/${t.id}/actions`).send(actionBody(f.staff.user.id)),
       request(app).patch(`/api/staff/tickets/${t.id}/actions/${a.id}`).send({ expectedVersion: 1, description: "x" }),
+      request(app).get("/api/dashboard/requester"),
+      request(app).get("/api/dashboard/staff"),
     ];
     for (const res of await Promise.all(calls)) {
       expect(res.status).toBe(401);

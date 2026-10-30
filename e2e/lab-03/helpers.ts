@@ -55,16 +55,24 @@ export async function loginViaUi(page: Page, email: string, password = SEED_PASS
   await page.getByRole("button", { name: "Sign In" }).click();
 }
 
-// The heading each role lands on after a normal login.
+// The heading each role lands on after a normal login. Lab 4 (FR-17) sends every role to
+// /dashboard, whose title is "Welcome back, <first name>"; the role only decides which view it shows.
 export const HOME_HEADING = {
-  REQUESTER: "My Tickets",
-  IT_STAFF: "Ticket Queue",
-  ADMINISTRATOR: "Users",
+  REQUESTER: /^Welcome back,/,
+  IT_STAFF: /^Welcome back,/,
+  ADMINISTRATOR: /^Welcome back,/,
 } as const;
 
-export async function loginAs(page: Page, email: string, role: keyof typeof HOME_HEADING) {
+// The screen each Lab 3 spec was written against. The Lab 3 specs test those screens, so loginAs
+// opens them after the login lands on the Dashboard; a spec about the landing page itself passes
+// { landing: true } and stays where the login put it.
+const LAB3_SCREEN = { REQUESTER: "/tickets", IT_STAFF: "/staff/queue", ADMINISTRATOR: "/admin/users" } as const;
+
+export async function loginAs(page: Page, email: string, role: keyof typeof HOME_HEADING, opts: { landing?: boolean } = {}) {
   await loginViaUi(page, email);
-  await expect(page.getByRole("heading", { name: HOME_HEADING[role], exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: HOME_HEADING[role] })).toBeVisible();
+  if (opts.landing) return;
+  await page.goto(LAB3_SCREEN[role]);
 }
 
 export async function logoutViaUi(page: Page, fullName: string) {

@@ -31,6 +31,8 @@ export interface QueueResult {
     itPriority: string | null;
     categoryId: number | null;
     owner: string | null;
+    /** Lab 4: true when the queue was limited to active Tickets. */
+    active?: boolean | null;
   };
 }
 
@@ -40,6 +42,7 @@ export interface QueueQuery {
   itPriority?: string;
   categoryId?: string;
   owner?: string;
+  active?: boolean;
   sort?: string;
   page?: number;
   pageSize?: number;
@@ -57,6 +60,7 @@ export async function fetchQueue(query: QueueQuery): Promise<QueueResult> {
   if (query.itPriority) params.set("itPriority", query.itPriority);
   if (query.categoryId) params.set("categoryId", query.categoryId);
   if (query.owner) params.set("owner", query.owner);
+  if (query.active) params.set("active", "true");
   if (query.sort) params.set("sort", query.sort);
   if (query.page) params.set("page", String(query.page));
   if (query.pageSize) params.set("pageSize", String(query.pageSize));

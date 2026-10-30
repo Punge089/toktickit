@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { getPrisma } from "../prisma.js";
 import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 import { PRIORITIES } from "../lib/ticketValidation.js";
+import { QUEUE_STATUSES } from "../lib/staffQueueQuery.js";
+import { ACTIVE_TICKET_STATUSES } from "../lib/workflowRules.js";
 
 // Issue 28 — GET /api/tickets (api-spec.md §5). Every result is scoped to
 // the requesting Requester (BR-09); search/filter/sort/pagination are all
@@ -13,7 +15,8 @@ export const myTicketsRouter = Router();
 const SORT_FIELDS = ["createdAt", "updatedAt", "ticketNumber", "requestedPriority"] as const;
 type SortField = (typeof SORT_FIELDS)[number];
 const PAGE_SIZES = [10, 20, 50] as const;
-const STATUSES = ["NEW"] as const; // only status reachable in Lab 2
+// Lab 4 BR-36: every status, so a dashboard card can open the matching list (Lab 2 accepted only NEW).
+const STATUSES = QUEUE_STATUSES;
 
 function invalidQuery(res: Response, field: string, message: string) {
   res.status(400).json({ error: "INVALID_QUERY", message, fieldErrors: { [field]: message } });
@@ -63,12 +66,13 @@ myTicketsRouter.get(
 
   // filters — always scoped to the requesting Requester (BR-09)
   const where: Prisma.TicketWhereInput = { requesterId: req.user!.id };
-  const appliedFilters: Record<string, string | number | null> = {
+  const appliedFilters: Record<string, string | number | boolean | null> = {
     search: null,
     categoryId: null,
     relatedSystemId: null,
     requestedPriority: null,
     status: null,
+    active: null,
   };
 
   if (q.search !== undefined) {
@@ -113,11 +117,22 @@ myTicketsRouter.get(
   if (q.status !== undefined) {
     const status = String(q.status);
     if (!(STATUSES as readonly string[]).includes(status)) {
-      invalidQuery(res, "status", "status must be NEW.");
+      invalidQuery(res, "status", `status must be one of ${STATUSES.join(", ")}.`);
       return;
     }
     where.currentStatus = status as Prisma.TicketWhereInput["currentStatus"];
     appliedFilters.status = status;
+  }
+
+  // Lab 4: active=true keeps Tickets still being worked (BR-28). Sent together
+  // with `status`, both must match, so the two never widen each other.
+  if (q.active !== undefined) {
+    if (q.active !== "true") {
+      invalidQuery(res, "active", "active must be true.");
+      return;
+    }
+    where.AND = [{ currentStatus: { in: [...ACTIVE_TICKET_STATUSES] } }];
+    appliedFilters.active = true;
   }
 
   try {
