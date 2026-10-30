@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useSingleFlight } from "../lib/useSingleFlight.js";
 import { Location, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.js";
 import { TextField } from "../components/ui/TextField.js";
@@ -16,6 +17,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guard = useSingleFlight(); // before the early return below, so hooks run in the same order every render
 
   if (status === "authenticated") {
     const from = (location.state as { from?: Location } | null)?.from;
@@ -24,6 +26,7 @@ export function LoginPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!guard.begin()) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -32,6 +35,7 @@ export function LoginPage() {
       setError(err instanceof Error ? err.message : "Unable to sign in. Please try again.");
       setPassword(""); // AC-05/AC-06 — never leave a rejected password in the DOM
     } finally {
+      guard.end();
       setSubmitting(false);
     }
   }

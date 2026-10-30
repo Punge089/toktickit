@@ -4,6 +4,7 @@ import { formatDateTime } from "../../lib/format.js";
 import { Alert } from "../ui/Alert.js";
 import { Button } from "../ui/Button.js";
 import { RoleBadge } from "../ui/Badge.js";
+import { useSingleFlight } from "../../lib/useSingleFlight.js";
 
 interface EntryThreadProps {
   kind: "public" | "internal";
@@ -26,6 +27,7 @@ export function EntryThread({ kind, entries, canPost, readOnlyNote, onPost }: En
   const [text, setText] = useState("");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const guard = useSingleFlight();
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -38,6 +40,7 @@ export function EntryThread({ kind, entries, canPost, readOnlyNote, onPost }: En
       setError(`Text must be at most ${MAX_LENGTH} characters.`);
       return;
     }
+    if (!guard.begin()) return; // one post at a time, even for two submits in the same tick
     setPosting(true);
     setError(null);
     try {
@@ -47,6 +50,7 @@ export function EntryThread({ kind, entries, canPost, readOnlyNote, onPost }: En
       // The text is kept so nothing typed is lost after a failed post.
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
+      guard.end();
       setPosting(false);
     }
   }

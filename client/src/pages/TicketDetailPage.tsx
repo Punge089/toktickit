@@ -63,7 +63,16 @@ export function TicketDetailPage() {
   }
 
   if (state === "error" || !ticket) {
-    return <Alert tone="error">Unable to load this ticket. Please try again.</Alert>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--zen-space-3)" }}>
+        <Alert tone="error">Unable to load this ticket. Please try again.</Alert>
+        <div>
+          <Button variant="secondary" onClick={load}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // Closed and Cancelled Tickets accept no more comments or resolved signals (BR-22).

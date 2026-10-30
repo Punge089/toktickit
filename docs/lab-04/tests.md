@@ -107,10 +107,10 @@ once to show its test fails (section 7).
 | MIG-02 | AC-32 | Apply the rollback SQL after MIG-01 | The Lab 3 shape returns and every Lab 3 row is still present | `server/tests/lab-04/migration.test.ts` | Pass |
 | MIG-03 | AC-32 | Run `seedAll()` twice against the test database | No row count changes on the second run | `server/tests/lab-04/seed.lab4.test.ts` | Pass |
 | MIG-04 | AC-21, AC-28, AC-09 | Seeded data after `seedAll()` | All 8 statuses; Tickets with zero, one and three or more Actions; a legacy Resolved Ticket without Actions; open Actions for at least two staff users; a staff user and a Requester with zero figures | `server/tests/lab-04/seed.lab4.test.ts` | Pass |
-| REG-01 | AC-35, BR-39 | Every Lab 1, Lab 2 and Lab 3 server test file, with the changes listed in section 6 applied | All pass; none skipped or deleted | `server/tests/lab-01`, `server/tests/lab-02`, `server/tests/lab-03` | Planned |
-| REG-02 | AC-35, BR-39 | Every Lab 1, Lab 2 and Lab 3 client test file, with the changes listed in section 6 applied | All pass; none skipped or deleted | `client/tests/lab-01`, `client/tests/lab-02`, `client/tests/lab-03` | Planned |
-| REG-03 | AC-35, BR-39 | Every Lab 2 and Lab 3 end-to-end spec, with the changes listed in section 6 applied | All pass; none skipped or deleted | `e2e/lab-02`, `e2e/lab-03` | Planned |
-| REG-04 | AC-35, FR-20 | Representative flows through the real UI: login, My Tickets, Ticket Detail, Attachments, Public Comments, Queue, Staff Detail, Internal Notes, User Management | Each works for its role after Lab 4 | `e2e/lab-04/regression.spec.ts` | Planned |
+| REG-01 | AC-35, BR-39 | Every Lab 1, Lab 2 and Lab 3 server test file, with the changes listed in section 6 applied | All pass; none skipped or deleted | `server/tests/lab-01`, `server/tests/lab-02`, `server/tests/lab-03` | Pass |
+| REG-02 | AC-35, BR-39 | Every Lab 1, Lab 2 and Lab 3 client test file, with the changes listed in section 6 applied | All pass; none skipped or deleted | `client/tests/lab-01`, `client/tests/lab-02`, `client/tests/lab-03` | Pass |
+| REG-03 | AC-35, BR-39 | Every Lab 2 and Lab 3 end-to-end spec, with the changes listed in section 6 applied | All pass; none skipped or deleted | `e2e/lab-02`, `e2e/lab-03` | Pass |
+| REG-04 | AC-35, FR-20 | Representative flows through the real UI: login, My Tickets, Ticket Detail, Attachments, Public Comments, Queue, Staff Detail, Internal Notes, User Management | Each works for its role after Lab 4 | `e2e/lab-04/regression.spec.ts` | Pass |
 
 ### UI component (Vitest + React Testing Library)
 
@@ -139,7 +139,8 @@ once to show its test fails (section 7).
 | UI-21 | AC-22, BR-26, FR-11 | A successful status change | The header status badge and version are replaced from the response without reloading | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | UI-22 | AC-16 | `STALE_VERSION` on owner, IT Priority and status | Banner with Reload latest; the chosen value stays visible | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
 | UI-23 | AC-20 | Choosing Cancelled on a Ticket | Confirmation mentions that open actions will be cancelled | `client/tests/lab-04/TicketWorkflow.test.tsx` | Pass |
-| UI-24 | AC-33, FR-19 | Create Ticket, Public Comment and Internal Note forms after a server failure | Entered data kept; one request per click | `client/tests/lab-04/FormHardening.test.tsx` | Planned |
+| UI-24 | AC-33, FR-19 | Create Ticket, Public Comment and Internal Note forms after a server failure | Entered data kept; one request per click | `client/tests/lab-04/FormHardening.test.tsx` | Pass |
+| UI-25 | FR-18, AC-33 | My Tickets and the Requester Ticket Detail when the API fails | A safe message (nothing internal), a Retry button, and Retry loads the screen | `client/tests/lab-04/ErrorFeedback.test.tsx` | Pass |
 
 ### UI style
 
@@ -160,7 +161,7 @@ once to show its test fails (section 7).
 | RESP-04 | AC-37, FR-22 | Ticket workflow controls at three widths | No horizontal scroll; screenshots under `ticket-workflow/` | `e2e/lab-04/responsive.spec.ts` | Planned |
 | RESP-05 | AC-37, FR-22 | Keyboard-only walk through the dashboard cards, the Action form and the status control | A visible outline on every control reached, measured from computed style; screenshots under `focus/` | `e2e/lab-04/responsive.spec.ts` | Planned |
 | E2E-01 | AC-01, AC-03, AC-06, AC-08, AC-10, AC-11, AC-12 | Staff creates, assigns, edits, starts, completes and cancels Actions; an inactive assignee is refused; the Requester then sees the Actions read-only; Administrator creates one | Every step shows the expected result in the real UI; the Requester view has no write controls | `e2e/lab-04/actions-taken-flow.spec.ts` | Pass |
-| E2E-02 | AC-16, AC-17, AC-18, AC-20, AC-22, AC-24 | Resolve is blocked with an open Action; complete it and resolve; two browser sessions cause a stale conflict; cancel cascades; reopen and resolve again | Each outcome as specified; the summary status updates without a reload | `e2e/lab-04/ticket-resolution.spec.ts` | Planned |
+| E2E-02 | AC-16, AC-17, AC-18, AC-20, AC-22, AC-24 | Resolve is blocked with an open Action; complete it and resolve; two browser sessions cause a stale conflict; cancel cascades; reopen and resolve again | Each outcome as specified; the summary status updates without a reload | `e2e/lab-04/ticket-resolution.spec.ts` | Pass |
 | E2E-03 | AC-27, AC-28, AC-29, AC-31 | Each role logs in, sees its dashboard and navigation, follows every card, and the count matches the list; zero-data and Administrator views | Landing on Dashboard; list totals equal card counts; zero states and the Administrator variant correct | `e2e/lab-04/dashboards.spec.ts` | Pass |
 
 ## 3. Acceptance-Criterion Traceability
@@ -199,7 +200,7 @@ once to show its test fails (section 7).
 | AC-30 | SDASH-06 |
 | AC-31 | UI-07, E2E-03 |
 | AC-32 | MIG-01, MIG-02, MIG-03 |
-| AC-33 | UI-24 |
+| AC-33 | UI-24, UI-25 |
 | AC-34 | UI-11 |
 | AC-35 | REG-01, REG-02, REG-03, REG-04 |
 | AC-36 | FLT-01, FLT-02 |
@@ -226,7 +227,7 @@ once to show its test fails (section 7).
 | FR-15 | FLT-01, FLT-02, UI-08, RDASH-05, SDASH-03, E2E-03 |
 | FR-16 | SDASH-06, RDASH-04, SDASH-01 |
 | FR-17 | UI-07, E2E-03 |
-| FR-18 | RDASH-03, SDASH-05, MIG-04, UI-01, UI-02, UI-03, UI-06, E2E-03 |
+| FR-18 | RDASH-03, SDASH-05, MIG-04, UI-01, UI-02, UI-03, UI-06, UI-25, E2E-03 |
 | FR-19 | UI-10, UI-24, UI-11 |
 | FR-20 | SEC-05, MIG-01, REG-04, REG-01, REG-02, REG-03 |
 | FR-21 | REG-01, REG-02, REG-03, REG-04 |
@@ -318,7 +319,7 @@ table starts with the changes the contract already predicts and is completed wit
 | Lab 3 e2e `helpers.ts` (`HOME_HEADING`, `loginAs`), `authentication.spec.ts` (2 landing assertions and the landing and navigation test) and `responsive.spec.ts` (3 mobile menu lists, 2 Queue state specs) | Every role lands on the Dashboard and the navigation starts with Dashboard (BR-35). `loginAs` now opens the screen each Lab 3 spec was written against after the login, so those specs still test the same screens; the landing test stays on the Dashboard on purpose | Issue #83 |
 | Lab 2 e2e `requester-ticket-flow.spec.ts` and `responsive.spec.ts` (their `login` helper) | The helper waited for the My Tickets title right after login; it now waits for the Dashboard, then opens My Tickets | Issue #83 |
 | `client/tests/msw/handlers.ts` (shared mock server) | Default answers for `GET /api/dashboard/requester` and `/staff` (all zeros), because every role now lands on a dashboard; no assertion changed | Issue #83 |
-| Lab 3 `e2e/lab-03/staff-ticket-flow.spec.ts` E2E-02 | Waits for the select options before reading them (timing-sensitive; test-only change) | Issue #84 |
+| Lab 3 `e2e/lab-03/staff-ticket-flow.spec.ts`, "the Status control offers only the transitions the matrix allows" | It read the options once, right after the page opened, and could catch the select before the Ticket had loaded; it now waits (`toHaveText` retries) for the same four options, so the check is the same and no longer timing-sensitive. Run three times in a row after the change | Issue #84 |
 
 ## 7. Mutation checks (evidence procedures, recorded when run)
 
@@ -333,6 +334,7 @@ the guard is then restored and the tests pass again. The outcome column stays **
 | MUT-04 | WF-01, WF-02 | Remove the resolution gate | WF-01 and WF-02 fail | Run in Issue 81: WF-01, WF-02, WF-07 and WF-08 failed; gate restored. |
 | MUT-06 | WF-06 | Remove the version condition from the Ticket owner, IT Priority and status change (explicit comparison and conditional UPDATE) | WF-06 fails | Run in Issue 81: WF-04, WF-06 and WF-09 failed; guard restored. |
 | MUT-07 | RDASH-05, SDASH-03 | Drop Reopened from the active-status set the dashboards count with | The card counts stop matching the lists they open, so the parity and raw SQL tests fail | Run in Issue 83: RDASH-01, RDASH-05, SDASH-01 and SDASH-03 failed; set restored. |
+| MUT-08 | UI-24 | Make the single-flight guard always let a second submit through | UI-24 fails for the Comment, Note and Create Ticket forms (two requests for one double submit) | Run in Issue 84: both UI-24 tests failed; guard restored. |
 | MUT-05 | SEC-01 | Remove the role check from the Action write routes | SEC-01 fails | Run in Issue 80: SEC-01 failed (`expected 201 to be 403`); restored. SEC-03 is not expected to fail here because it also proves the Lab 3 owner, priority, status, Comment and Note routes stay 403 for an Administrator, and this mutation does not touch them. |
 
 ## 8. Final Results
@@ -351,4 +353,7 @@ implementation PR.
 - The performance-smoke limit (1000 ms) detects a missing index or a per-row query, not small regressions.
 - No automated axe-style accessibility scan is added; accessibility is covered by STY-04, RESP-05 and the
   manual checklist in `ui-spec.md` §11.
-- Lab 3's timing-sensitive E2E-02 is fixed in Issue #84; until then it can fail on a busy machine.
+- Lab 3's timing-sensitive E2E-02 was fixed in Issue #84 (section 6).
+- Found by an end-to-end spec in Issue 84, not by a component test: after a Ticket was cancelled from the screen,
+  the Actions Taken tab still showed the Actions the server had just cancelled, because the list was not read
+  again. Fixed (the list reloads after every status change) and covered by UI-23 and by E2E-02.

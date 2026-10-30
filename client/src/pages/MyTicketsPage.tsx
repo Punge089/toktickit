@@ -59,6 +59,7 @@ export function MyTicketsPage() {
 
   const [listState, setListState] = useState<ListState>("loading");
   const [result, setResult] = useState<MyTicketsResult | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
@@ -103,7 +104,7 @@ export function MyTicketsPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, categoryId, relatedSystemId, requestedPriority, status, activeOnly, sort, page, pageSize]);
+  }, [debouncedSearch, categoryId, relatedSystemId, requestedPriority, status, activeOnly, sort, page, pageSize, reloadKey]);
 
   function resetToFirstPage() {
     setPage(1);
@@ -242,7 +243,14 @@ export function MyTicketsPage() {
       {listState === "loading" && <Spinner label="Loading your tickets…" />}
 
       {listState === "error" && (
-        <Alert tone="error">Unable to load your tickets. Please try again.</Alert>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--zen-space-3)" }}>
+          <Alert tone="error">Unable to load your tickets. Please try again.</Alert>
+          <div>
+            <Button variant="secondary" onClick={() => setReloadKey((k) => k + 1)}>
+              Retry
+            </Button>
+          </div>
+        </div>
       )}
 
       {isEmptyAccount && (
