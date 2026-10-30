@@ -9,6 +9,7 @@ import { authRouter } from "./routes/auth.js";
 import { staffQueueRouter } from "./routes/staffQueue.js";
 import { staffTicketsRouter } from "./routes/staffTickets.js";
 import { commentsRouter } from "./routes/comments.js";
+import { actionsRouter } from "./routes/actions.js";
 import { adminUsersRouter } from "./routes/adminUsers.js";
 import { originCheck } from "./middleware/auth.js";
 
@@ -42,6 +43,9 @@ app.use(staffQueueRouter);
 // and the Requester's problem-resolved action.
 app.use(staffTicketsRouter);
 app.use(commentsRouter);
+
+// Lab 4 Issue 80 - Actions Taken. See routes/actions.ts.
+app.use(actionsRouter);
 
 // Issue 67 - Administrator user management. See routes/adminUsers.ts.
 app.use(adminUsersRouter);

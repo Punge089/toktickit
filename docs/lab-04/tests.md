@@ -25,8 +25,8 @@ once to show its test fails (section 7).
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| UNIT-01 | BR-07, BR-08, AC-04 | Action input validator: description, result, note and attachment-note limits, follow-up rule, `actionAt` more than 5 minutes ahead | Valid input accepted; each rule violation names its own field; a note sent with follow-up off is discarded | `server/tests/lab-04/action-rules.unit.test.ts` | Planned |
-| UNIT-02 | BR-09, AC-10, AC-11 | Action transition function for every (from, to) pair, and the Result requirement | Only Planned to In Progress, Completed, Cancelled and In Progress to Completed, Cancelled pass; Completed and Cancelled without a Result fail | `server/tests/lab-04/action-rules.unit.test.ts` | Planned |
+| UNIT-01 | BR-07, BR-08, AC-04 | Action input validator: description, result, note and attachment-note limits, follow-up rule, `actionAt` more than 5 minutes ahead | Valid input accepted; each rule violation names its own field; a note sent with follow-up off is discarded | `server/tests/lab-04/action-rules.unit.test.ts` | Pass |
+| UNIT-02 | BR-09, AC-10, AC-11 | Action transition function for every (from, to) pair, and the Result requirement | Only Planned to In Progress, Completed, Cancelled and In Progress to Completed, Cancelled pass; Completed and Cancelled without a Result fail | `server/tests/lab-04/action-rules.unit.test.ts` | Pass |
 | UNIT-03 | BR-20, AC-17, AC-18 | Resolution-gate function: open Actions only, no Completed Action, both, and a passing case | Returns `OPEN_ACTIONS`, `NO_COMPLETED_ACTION`, both, or no blockers as specified | `server/tests/lab-04/workflow-rules.unit.test.ts` | Planned |
 | UNIT-04 | BR-19, AC-22 | Final status matrix against an independently written table, and the fixed order of `allowedTransitions` | Every pair matches the table in specification §5; the targets always come back in the documented column order | `server/tests/lab-04/workflow-rules.unit.test.ts` | Planned |
 | UNIT-05 | BR-28 | The active-status set used by the dashboards and the `active` filter | Exactly New, Open, In Progress, Waiting for Requester, Reopened | `server/tests/lab-04/workflow-rules.unit.test.ts` | Planned |
@@ -35,22 +35,22 @@ once to show its test fails (section 7).
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| API-01 | AC-01, BR-01, BR-03 | `POST /api/staff/tickets/:id/actions` with valid data as IT Staff | `201`; saved under that Ticket with `performedBy` the signed-in user, the chosen assignee, `version` 1 | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-02 | AC-05, BR-03 | Create with `performedById`, `createdAt`, `version` and `ticketId` in the body | Values ignored; Performed by is the session user; Action is on the URL's Ticket | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-03 | AC-03, BR-04, FR-05 | Create and reassign with an inactive IT Staff user, a Requester, an Administrator and a missing user as assignee | Each `409 INVALID_ASSIGNEE`, including an id that does not exist; a missing or non-integer id is `400`; nothing saved | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-04 | AC-04, BR-08 | Follow-Up Required with an empty or blank note; follow-up off with a note | `400` naming `followUpNote`; with follow-up off the stored note is null | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-05 | AC-11, BR-09 | Create or update to Completed or Cancelled without a Result | `400` naming `result`; the Action is unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-06 | AC-10, BR-09, FR-03 | PATCH an Action through Planned, In Progress, Completed, and through Cancelled; then an invalid pair | Valid steps `200` with `version` +1 each; invalid pair `409 INVALID_ACTION_TRANSITION` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-07 | AC-12, BR-11 | PATCH a Completed and a Cancelled Action | `409 ACTION_LOCKED`; fields and `version` unchanged; no delete route exists (`404`) | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-08 | AC-13, BR-12 | Create and PATCH an Action on a Resolved, a Closed and a Cancelled Ticket | `409 ACTIONS_LOCKED` each time; allowed again on a Reopened Ticket | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-09 | AC-09, BR-13, FR-04 | List a Ticket with several Actions created out of order, then one with none | Ordered by `actionAt` then `id`; stable across two calls; empty Ticket returns empty items and zero counts | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-10 | AC-14, BR-16, FR-09 | PATCH with a stale `expectedVersion`; two simultaneous PATCHes with the same version | Stale `409 STALE_VERSION` with `currentVersion`, unchanged; of the two, exactly one `200` and one `409` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-11 | AC-15, BR-18, FR-10 | POST the same `clientRequestId` twice in sequence, twice in parallel, and once from a different user | One row; repeat `200` with the same `id`; different user `409 DUPLICATE_REQUEST_KEY` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-12 | BR-14 | Create and update an Action, then read the Ticket | Ticket `updatedAt` moved; Ticket `status`, `ownerId`, `itPriority` and `version` unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-13 | BR-04 | PATCH an Action whose assignee was deactivated later, leaving the assignee unchanged, then changing it to another inactive user | Unchanged accepted; changed to inactive `409 INVALID_ASSIGNEE` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-14 | BR-25, BR-16 | Missing `expectedVersion`; an Action id from another Ticket; an unknown Ticket id | `400` with `fieldErrors.expectedVersion`; `404 ACTION_NOT_FOUND`; `404` | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-15 | BR-15, AC-12 | PATCH and DELETE on a Public Comment and on an Internal Note, next to an editable open Action | Comments and Notes have no edit or delete route (`404`); the open Action is still editable (append-only stays Lab 3 behavior) | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
-| API-16 | BR-02 | Create an Action on a Ticket with no owner, and one assigned to a staff member who is not the owner | Both `201`; Ticket owner unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Planned |
+| API-01 | AC-01, BR-01, BR-03 | `POST /api/staff/tickets/:id/actions` with valid data as IT Staff | `201`; saved under that Ticket with `performedBy` the signed-in user, the chosen assignee, `version` 1 | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-02 | AC-05, BR-03 | Create with `performedById`, `createdAt`, `version` and `ticketId` in the body | Values ignored; Performed by is the session user; Action is on the URL's Ticket | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-03 | AC-03, BR-04, FR-05 | Create and reassign with an inactive IT Staff user, a Requester, an Administrator and a missing user as assignee | Each `409 INVALID_ASSIGNEE`, including an id that does not exist; a missing or non-integer id is `400`; nothing saved | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-04 | AC-04, BR-08 | Follow-Up Required with an empty or blank note; follow-up off with a note | `400` naming `followUpNote`; with follow-up off the stored note is null | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-05 | AC-11, BR-09 | Create or update to Completed or Cancelled without a Result | `400` naming `result`; the Action is unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-06 | AC-10, BR-09, FR-03 | PATCH an Action through Planned, In Progress, Completed, and through Cancelled; then an invalid pair | Valid steps `200` with `version` +1 each; invalid pair `409 INVALID_ACTION_TRANSITION` | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-07 | AC-12, BR-11 | PATCH a Completed and a Cancelled Action | `409 ACTION_LOCKED`; fields and `version` unchanged; no delete route exists (`404`) | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-08 | AC-13, BR-12 | Create and PATCH an Action on a Resolved, a Closed and a Cancelled Ticket | `409 ACTIONS_LOCKED` each time; allowed again on a Reopened Ticket | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-09 | AC-09, BR-13, FR-04 | List a Ticket with several Actions created out of order, then one with none | Ordered by `actionAt` then `id`; stable across two calls; empty Ticket returns empty items and zero counts | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-10 | AC-14, BR-16, FR-09 | PATCH with a stale `expectedVersion`; two simultaneous PATCHes with the same version | Stale `409 STALE_VERSION` with `currentVersion`, unchanged; of the two, exactly one `200` and one `409` | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-11 | AC-15, BR-18, FR-10 | POST the same `clientRequestId` twice in sequence, twice in parallel, and once from a different user | One row; repeat `200` with the same `id`; different user `409 DUPLICATE_REQUEST_KEY` | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-12 | BR-14 | Create and update an Action, then read the Ticket | Ticket `updatedAt` moved; Ticket `status`, `ownerId`, `itPriority` and `version` unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-13 | BR-04 | PATCH an Action whose assignee was deactivated later, leaving the assignee unchanged, then changing it to another inactive user | Unchanged accepted; changed to inactive `409 INVALID_ASSIGNEE` | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-14 | BR-25, BR-16 | Missing `expectedVersion`; an Action id from another Ticket; an unknown Ticket id | `400` with `fieldErrors.expectedVersion`; `404 ACTION_NOT_FOUND`; `404` | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-15 | BR-15, AC-12 | PATCH and DELETE on a Public Comment and on an Internal Note, next to an editable open Action | Comments and Notes have no edit or delete route (`404`); the open Action is still editable (append-only stays Lab 3 behavior) | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
+| API-16 | BR-02 | Create an Action on a Ticket with no owner, and one assigned to a staff member who is not the owner | Both `201`; Ticket owner unchanged | `server/tests/lab-04/actions-taken.api.test.ts` | Pass |
 
 ### API - Ticket workflow
 
@@ -72,11 +72,11 @@ once to show its test fails (section 7).
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| SEC-01 | AC-07, BR-05 | Requester and an unauthenticated caller POST and PATCH Actions; a first-login user does the same | `403 FORBIDDEN`; `401`; `403 PASSWORD_CHANGE_REQUIRED`; nothing created or changed | `server/tests/lab-04/authorization.api.test.ts` | Planned |
-| SEC-02 | AC-08, BR-10 | Requester lists Actions on their own Ticket and on another Requester's; Internal Notes exist on both | Own: `200`, every field, no Internal Note text; another's: `404` identical to a missing Ticket | `server/tests/lab-04/authorization.api.test.ts` | Planned |
-| SEC-03 | AC-06, BR-06 | Administrator creates and updates an Action, then tries owner, IT Priority, status, a Comment and a Note, and assigns an Action to an Administrator | Action writes `200` and `201`; every other write `403`; Administrator as assignee `409 INVALID_ASSIGNEE` | `server/tests/lab-04/authorization.api.test.ts` | Planned |
+| SEC-01 | AC-07, BR-05 | Requester and an unauthenticated caller POST and PATCH Actions; a first-login user does the same | `403 FORBIDDEN`; `401`; `403 PASSWORD_CHANGE_REQUIRED`; nothing created or changed | `server/tests/lab-04/authorization.api.test.ts` | Pass |
+| SEC-02 | AC-08, BR-10 | Requester lists Actions on their own Ticket and on another Requester's; Internal Notes exist on both | Own: `200`, every field, no Internal Note text; another's: `404` identical to a missing Ticket | `server/tests/lab-04/authorization.api.test.ts` | Pass |
+| SEC-03 | AC-06, BR-06 | Administrator creates and updates an Action, then tries owner, IT Priority, status, a Comment and a Note, and assigns an Action to an Administrator | Action writes `200` and `201`; every other write `403`; Administrator as assignee `409 INVALID_ASSIGNEE` | `server/tests/lab-04/authorization.api.test.ts` | Pass |
 | SEC-04 | AC-26 | Each role calls both dashboard endpoints; an unauthenticated caller does too | Requester only on requester, staff roles only on staff; others `403`; no session `401` | `server/tests/lab-04/authorization.api.test.ts` | Planned |
-| SEC-05 | BR-37, FR-20 | Every Lab 4 endpoint called once with no session | All `401` | `server/tests/lab-04/authorization.api.test.ts` | Planned |
+| SEC-05 | BR-37, FR-20 | Every Lab 4 endpoint called once with no session | All `401` | `server/tests/lab-04/authorization.api.test.ts` | Partial: Actions endpoints pass (Issue 80); dashboards added in Issue 83 |
 | SEC-06 | AC-02, BR-29 | Requester dashboard called with another user's id as `requesterId` in the query | Ignored; only the caller's figures | `server/tests/lab-04/requester-dashboard.api.test.ts` | Planned |
 
 ### API - Dashboards and drill-down filters
@@ -103,10 +103,10 @@ once to show its test fails (section 7).
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| MIG-01 | AC-32, FR-20 | Apply the Lab 4 migration SQL to a temporary schema holding Lab 3 shaped data (Users, Tickets, Attachments, Comments, Notes) | Every row still reachable and unchanged; Ticket `version` is 1 | `server/tests/lab-04/migration.test.ts` | Planned |
-| MIG-02 | AC-32 | Apply the rollback SQL after MIG-01 | The Lab 3 shape returns and every Lab 3 row is still present | `server/tests/lab-04/migration.test.ts` | Planned |
-| MIG-03 | AC-32 | Run `seedAll()` twice against the test database | No row count changes on the second run | `server/tests/lab-04/seed.lab4.test.ts` | Planned |
-| MIG-04 | AC-21, AC-28, AC-09 | Seeded data after `seedAll()` | All 8 statuses; Tickets with zero, one and three or more Actions; a legacy Resolved Ticket without Actions; open Actions for at least two staff users; a staff user and a Requester with zero figures | `server/tests/lab-04/seed.lab4.test.ts` | Planned |
+| MIG-01 | AC-32, FR-20 | Apply the Lab 4 migration SQL to a temporary schema holding Lab 3 shaped data (Users, Tickets, Attachments, Comments, Notes) | Every row still reachable and unchanged; Ticket `version` is 1 | `server/tests/lab-04/migration.test.ts` | Pass |
+| MIG-02 | AC-32 | Apply the rollback SQL after MIG-01 | The Lab 3 shape returns and every Lab 3 row is still present | `server/tests/lab-04/migration.test.ts` | Pass |
+| MIG-03 | AC-32 | Run `seedAll()` twice against the test database | No row count changes on the second run | `server/tests/lab-04/seed.lab4.test.ts` | Pass |
+| MIG-04 | AC-21, AC-28, AC-09 | Seeded data after `seedAll()` | All 8 statuses; Tickets with zero, one and three or more Actions; a legacy Resolved Ticket without Actions; open Actions for at least two staff users; a staff user and a Requester with zero figures | `server/tests/lab-04/seed.lab4.test.ts` | Pass |
 | REG-01 | AC-35, BR-39 | Every Lab 1, Lab 2 and Lab 3 server test file, with the changes listed in section 6 applied | All pass; none skipped or deleted | `server/tests/lab-01`, `server/tests/lab-02`, `server/tests/lab-03` | Planned |
 | REG-02 | AC-35, BR-39 | Every Lab 1, Lab 2 and Lab 3 client test file, with the changes listed in section 6 applied | All pass; none skipped or deleted | `client/tests/lab-01`, `client/tests/lab-02`, `client/tests/lab-03` | Planned |
 | REG-03 | AC-35, BR-39 | Every Lab 2 and Lab 3 end-to-end spec, with the changes listed in section 6 applied | All pass; none skipped or deleted | `e2e/lab-02`, `e2e/lab-03` | Planned |
@@ -319,11 +319,11 @@ the guard is then restored and the tests pass again. The outcome column stays **
 
 | ID | Tests that must fail | Guard removed | Expected failure | Outcome |
 |---|---|---|---|---|
-| MUT-01 | API-10, UI-13 | Remove the `version` condition from the Action update | API-10 fails (both parallel updates succeed or a stale update is accepted) | Not run |
-| MUT-02 | API-11 | Remove the unique `(ticketId, clientRequestId)` constraint and the lookup | API-11 fails (two rows exist) | Not run |
+| MUT-01 | API-10, UI-13 | Remove the `version` condition from the Action update (both the explicit comparison and the `WHERE version = ?` of the UPDATE) | API-10 fails (both parallel updates succeed or a stale update is accepted) | Run in Issue 80: API-10 and API-14 failed (`expected 200 to be 409`); guard restored, all 16 API tests pass. UI-13 is checked in Issue 82. |
+| MUT-02 | API-11 | Remove the replay lookup, and separately the unique `(ticketId, clientRequestId)` index | API-11 fails (two rows exist) | Run in Issue 80: lookup removed with the index kept, API-11 failed (`expected 500 to be 200`, the unique index refused the duplicate); index dropped too, the suite could not even start because the seed upserts on that key. The index itself is also asserted by MIG-01. Both restored. |
 | MUT-03 | WF-03 | Remove the Ticket row lock in the resolve path | WF-03 fails (Resolved with an open Action appears) | Not run |
 | MUT-04 | WF-01, WF-02 | Remove the resolution gate | WF-01 and WF-02 fail | Not run |
-| MUT-05 | SEC-01, SEC-03 | Remove the role check from the Action routes | SEC-01 and SEC-03 fail | Not run |
+| MUT-05 | SEC-01 | Remove the role check from the Action write routes | SEC-01 fails | Run in Issue 80: SEC-01 failed (`expected 201 to be 403`); restored. SEC-03 is not expected to fail here because it also proves the Lab 3 owner, priority, status, Comment and Note routes stay 403 for an Administrator, and this mutation does not touch them. |
 
 ## 8. Final Results
 
