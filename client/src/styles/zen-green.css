@@ -1184,3 +1184,347 @@ textarea.zen-field-control {
     color: var(--zen-text);
   }
 }
+
+/* ------------------------------------------ Actions Taken (Lab 4, Issue 82) */
+/* docs/lab-04/ui-spec.md sections 1, 4.1 and 5. Only --zen-* tokens. Below 992px each Action is a
+   card whose cells carry their own label; from 992px the same rows line up as a table with a header.
+   Long text wraps (overflow-wrap) so nothing scrolls sideways at 375px. */
+
+.zen-badge-action-planned {
+  background: var(--zen-field-readonly-bg);
+  color: var(--zen-text);
+}
+.zen-badge-action-progress {
+  background: var(--zen-warning-bg);
+  color: var(--zen-warning);
+}
+.zen-badge-action-completed {
+  background: var(--zen-success-bg);
+  color: var(--zen-success);
+}
+.zen-badge-action-cancelled {
+  background: var(--zen-field-readonly-bg);
+  color: var(--zen-text-muted);
+  text-decoration: line-through;
+}
+
+.zen-followup-marker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px var(--zen-space-2);
+  border: 1px solid var(--zen-warning);
+  border-radius: 4px;
+  font-size: var(--zen-fs-caption);
+  font-weight: 600;
+  color: var(--zen-warning);
+}
+
+.zen-link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--zen-secondary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.zen-link-button:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+
+.zen-action-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-3);
+  min-width: 0;
+}
+
+.zen-action-notice,
+.zen-action-shared-label {
+  margin: 0;
+  padding: var(--zen-space-2) var(--zen-space-3);
+  background: var(--zen-pale);
+  border: 1px solid var(--zen-border);
+  border-radius: 6px;
+  color: var(--zen-secondary);
+  font-size: var(--zen-fs-label);
+  font-weight: 600;
+}
+
+.zen-action-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--zen-space-3);
+}
+
+.zen-action-locked {
+  margin: 0;
+  color: var(--zen-text-muted);
+}
+
+.zen-action-saved {
+  margin: 0;
+  color: var(--zen-success);
+  font-weight: 600;
+}
+.zen-action-saved:empty {
+  display: none;
+}
+
+.zen-action-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  min-width: 0;
+}
+
+.zen-action-header {
+  display: none;
+}
+
+.zen-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--zen-space-1) var(--zen-space-3);
+  padding: var(--zen-space-3) var(--zen-space-4);
+  border-top: 1px solid var(--zen-border);
+  min-width: 0;
+}
+.zen-action-row:first-of-type {
+  border-top: none;
+}
+.zen-action-row[aria-current="true"] {
+  background: var(--zen-pale);
+}
+
+.zen-action-cell {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.zen-action-label {
+  display: block;
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-action-cell-desc {
+  order: 1;
+  flex: 1 1 100%;
+  font-weight: 600;
+  white-space: pre-wrap;
+}
+.zen-action-cell-status {
+  order: 2;
+  flex: 0 0 auto;
+}
+.zen-action-cell-followup {
+  order: 3;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-1);
+  align-items: flex-start;
+}
+.zen-action-cell-result {
+  order: 4;
+  flex: 1 1 100%;
+  white-space: pre-wrap;
+}
+.zen-action-cell-notes {
+  order: 5;
+  flex: 1 1 100%;
+}
+.zen-action-cell-assignee {
+  order: 6;
+  flex: 1 1 40%;
+}
+.zen-action-cell-by {
+  order: 7;
+  flex: 1 1 40%;
+}
+.zen-action-cell-date {
+  order: 8;
+  flex: 1 1 100%;
+  color: var(--zen-text-muted);
+  font-size: var(--zen-fs-caption);
+}
+.zen-action-cell-open {
+  order: 9;
+  flex: 0 0 100%;
+}
+.zen-action-none {
+  color: var(--zen-text-muted);
+}
+.zen-action-followup-note {
+  white-space: pre-wrap;
+  font-size: var(--zen-fs-label);
+}
+
+.zen-action-panel {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-secondary);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+  min-width: 0;
+}
+.zen-action-panel-title {
+  margin: 0 0 var(--zen-space-3);
+  font-size: var(--zen-fs-h2);
+}
+
+.zen-action-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-3);
+  min-width: 0;
+}
+.zen-action-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--zen-space-3);
+}
+.zen-action-form-grid .zen-field {
+  margin-bottom: 0;
+}
+.zen-action-datetime {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--zen-space-3);
+}
+.zen-action-datetime legend {
+  grid-column: 1 / -1;
+  padding: 0;
+}
+.zen-action-check {
+  display: flex;
+  align-items: center;
+  gap: var(--zen-space-2);
+  font-weight: 600;
+}
+.zen-action-check input:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+.zen-action-form-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-3);
+}
+
+.zen-action-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--zen-space-1) var(--zen-space-4);
+  margin: 0 0 var(--zen-space-3);
+}
+.zen-action-detail dt {
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+  font-weight: 600;
+  margin-top: var(--zen-space-2);
+}
+.zen-action-detail dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-2);
+  align-items: center;
+  overflow-wrap: anywhere;
+}
+.zen-action-pre {
+  white-space: pre-wrap;
+}
+.zen-action-final {
+  margin: 0 0 var(--zen-space-3);
+  color: var(--zen-text-muted);
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .zen-action-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .zen-action-form-grid .zen-action-wide {
+    grid-column: 1 / -1;
+  }
+  .zen-action-detail {
+    grid-template-columns: 11rem minmax(0, 1fr);
+  }
+  .zen-action-detail dt {
+    margin-top: 0;
+  }
+}
+
+@media (min-width: 992px) {
+  .zen-action-header,
+  .zen-action-row {
+    display: grid;
+    gap: var(--zen-space-2);
+    align-items: start;
+  }
+  .zen-action-list-staff .zen-action-header,
+  .zen-action-list-staff .zen-action-row {
+    grid-template-columns: 1.3fr 2.6fr 1.1fr 1.2fr 1.2fr 1.2fr 0.7fr;
+  }
+  .zen-action-list-requester .zen-action-header,
+  .zen-action-list-requester .zen-action-row {
+    grid-template-columns: 1.1fr 2fr 1.8fr 1fr 1.3fr 1.2fr 1.1fr 1.1fr;
+  }
+  .zen-action-header {
+    padding: var(--zen-space-3) var(--zen-space-4);
+    border-bottom: 1px solid var(--zen-border);
+    font-size: var(--zen-fs-caption);
+    font-weight: 600;
+    color: var(--zen-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .zen-action-cell,
+  .zen-action-cell-desc,
+  .zen-action-cell-status,
+  .zen-action-cell-followup,
+  .zen-action-cell-result,
+  .zen-action-cell-notes,
+  .zen-action-cell-assignee,
+  .zen-action-cell-by,
+  .zen-action-cell-date,
+  .zen-action-cell-open {
+    order: 0;
+    flex: none;
+  }
+  .zen-action-cell-date {
+    color: var(--zen-text);
+    font-size: var(--zen-fs-label);
+  }
+  .zen-action-cell-desc {
+    font-weight: 400;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .zen-action-list-requester .zen-action-cell-desc {
+    display: block;
+    overflow: visible;
+  }
+  .zen-action-label {
+    display: none;
+  }
+  /* Panels read better as one wide block, and the grid dates sit before the description. */
+  .zen-action-row {
+    grid-template-areas: none;
+  }
+}
