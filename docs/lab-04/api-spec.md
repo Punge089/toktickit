@@ -59,6 +59,10 @@ including one that does not exist, is `409 INVALID_ASSIGNEE`. `followUpRequired`
 
 **201 Created** - the Action shape of §1, `version` 1, `performedBy` the signed-in user.
 
+A replay (same `clientRequestId`) is recognised before the Ticket-state and assignee checks, so retrying a request
+that already succeeded still gets its `200` after the Ticket has moved on; the same key from another user is
+`409 DUPLICATE_REQUEST_KEY` at that same point. Create and update both run under the Ticket row lock (§4).
+
 **200 OK** - the `clientRequestId` was already used on this Ticket by the same user: nothing is created and
 the existing Action is returned in the same shape (BR-18, AC-15).
 
@@ -101,7 +105,10 @@ Ticket (`ACTION_NOT_FOUND`). **409** - one of, in this order:
 { "error": "INVALID_ASSIGNEE", "message": "The assignee must be an active IT Staff user." }
 ```
 The update is one statement of the form `UPDATE ... WHERE id = ? AND version = ?`; zero rows affected is
-reported as `STALE_VERSION` (BR-16, AC-14). **401/403** - per Lab 3 §0. **500** - standard shape.
+reported as `STALE_VERSION` (BR-16, AC-14).
+The field rules of §2 on the merged Action (for example a missing Result for `COMPLETED`) are answered as `400`
+after the transition check and before the assignee lookup, because they need the stored Action; the shape
+checks (`expectedVersion`, `assigneeId` type, at least one field) are answered before the Action is loaded. **401/403** - per Lab 3 §0. **500** - standard shape.
 
 ## 4. Changed: `PATCH /api/staff/tickets/:id/owner`, `/it-priority` and `/status`
 

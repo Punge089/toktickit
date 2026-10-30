@@ -61,6 +61,9 @@ const SEED_USERS: SeedUser[] = [
   { fullName: "Michael Brown", email: "michael.brown@example.dev", role: "IT_STAFF", isActive: true, mustChangePassword: false },
   { fullName: "Sarah Johnson", email: "sarah.johnson@example.dev", role: "IT_STAFF", isActive: true, mustChangePassword: false },
   { fullName: "David Lee", email: "david.lee@example.dev", role: "IT_STAFF", isActive: true, mustChangePassword: false },
+  // Lab 4: owns no Ticket and has no Action, so the zero state of the IT Staff
+  // Dashboard can be shown with real data (specification.md §7 Seed).
+  { fullName: "Nattaya Chuenjit", email: "nattaya.chuenjit@example.dev", role: "IT_STAFF", isActive: true, mustChangePassword: false },
   { fullName: "Robert Wilson", email: "robert.wilson@example.dev", role: "IT_STAFF", isActive: false, mustChangePassword: false },
 
   // Administrator (labsheet §5.3: at least 1 active). Exactly one is
@@ -286,20 +289,93 @@ export async function seedCommentsAndNotes() {
   return { comments, notes };
 }
 
+
+// Lab 4 — Issue 80: Actions Taken (specification.md §7 Seed). Each Action has a
+// fixed clientRequestId, so the pair (ticket, key) identifies it and re-running
+// the seed converges the row instead of adding another. Tickets 101, 108 and
+// 122 deliberately keep zero Actions: 101 shows the empty state, 108 and 122
+// are legacy Resolved/Closed Tickets that predate the resolution gate (BR-23).
+interface SeedAction {
+  ticketNumber: string;
+  key: string;
+  actionAt: string;
+  description: string;
+  result?: string;
+  performedByEmail: string;
+  assigneeEmail: string;
+  followUpNote?: string;
+  attachmentNotes?: string;
+  actionStatus: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+}
+
+const SEED_ACTIONS: SeedAction[] = [
+  // Exactly one Action.
+  { ticketNumber: "TKT-2024-000102", key: "seed-TKT-2024-000102-1", actionAt: "2026-10-20T09:00:00.000Z", description: "Checked the VPN gateway logs for failed handshakes from this user.", result: "No blocked handshakes found; the gateway is healthy.", performedByEmail: "jennifer.anderson@example.dev", assigneeEmail: "jennifer.anderson@example.dev", actionStatus: "COMPLETED" },
+  // Three Actions in three different statuses, assigned to two staff members.
+  { ticketNumber: "TKT-2024-000103", key: "seed-TKT-2024-000103-1", actionAt: "2026-10-19T10:00:00.000Z", description: "Reproduced the sync delay on a test phone.", result: "Delay reproduced; it clears after the mail app cache is reset.", performedByEmail: "michael.brown@example.dev", assigneeEmail: "michael.brown@example.dev", actionStatus: "COMPLETED" },
+  { ticketNumber: "TKT-2024-000103", key: "seed-TKT-2024-000103-2", actionAt: "2026-10-21T13:30:00.000Z", description: "Reset the mail app cache on the requester's phone.", performedByEmail: "michael.brown@example.dev", assigneeEmail: "michael.brown@example.dev", actionStatus: "IN_PROGRESS" },
+  { ticketNumber: "TKT-2024-000103", key: "seed-TKT-2024-000103-3", actionAt: "2026-10-23T09:00:00.000Z", description: "Confirm with the requester that mail still syncs after a day.", performedByEmail: "michael.brown@example.dev", assigneeEmail: "sarah.johnson@example.dev", followUpNote: "Ask again after one working day.", actionStatus: "PLANNED" },
+  // Resolved Ticket with the Completed Action the gate now requires.
+  { ticketNumber: "TKT-2024-000104", key: "seed-TKT-2024-000104-1", actionAt: "2026-10-15T08:30:00.000Z", description: "Provisioned system access for the new library assistant.", result: "Access created and confirmed working by the requester.", performedByEmail: "sarah.johnson@example.dev", assigneeEmail: "sarah.johnson@example.dev", attachmentNotes: "Access request form is in the Ticket attachments.", actionStatus: "COMPLETED" },
+  // Open work for more staff.
+  { ticketNumber: "TKT-2024-000112", key: "seed-TKT-2024-000112-1", actionAt: "2026-10-22T07:45:00.000Z", description: "Unlock the account and force a password reset.", performedByEmail: "jennifer.anderson@example.dev", assigneeEmail: "david.lee@example.dev", actionStatus: "PLANNED" },
+  { ticketNumber: "TKT-2024-000120", key: "seed-TKT-2024-000120-1", actionAt: "2026-10-22T11:00:00.000Z", description: "Capture the crash log from a 12 MB upload.", performedByEmail: "sarah.johnson@example.dev", assigneeEmail: "sarah.johnson@example.dev", actionStatus: "IN_PROGRESS" },
+  { ticketNumber: "TKT-2024-000120", key: "seed-TKT-2024-000120-2", actionAt: "2026-10-18T15:00:00.000Z", description: "Try the upload from a second workstation.", result: "Cancelled: the crash needs the requester's workstation, so a second one proves nothing.", performedByEmail: "sarah.johnson@example.dev", assigneeEmail: "david.lee@example.dev", actionStatus: "CANCELLED" },
+  // Closed Ticket with its Completed Action.
+  { ticketNumber: "TKT-2024-000109", key: "seed-TKT-2024-000109-1", actionAt: "2026-10-10T14:00:00.000Z", description: "Installed and licensed the statistics package.", result: "Installed; the requester confirmed it opens correctly.", performedByEmail: "david.lee@example.dev", assigneeEmail: "david.lee@example.dev", actionStatus: "COMPLETED" },
+];
+
+export async function seedActions() {
+  const prisma = getPrisma();
+  const tickets = await prisma.ticket.findMany({ select: { id: true, ticketNumber: true } });
+  const users = await prisma.user.findMany({ select: { id: true, email: true } });
+  const ticketIdByNumber = new Map(tickets.map((t) => [t.ticketNumber, t.id]));
+  const userIdByEmail = new Map(users.map((u) => [u.email, u.id]));
+
+  for (const a of SEED_ACTIONS) {
+    const ticketId = ticketIdByNumber.get(a.ticketNumber);
+    const performedById = userIdByEmail.get(a.performedByEmail);
+    const assigneeId = userIdByEmail.get(a.assigneeEmail);
+    if (!ticketId || !performedById || !assigneeId) {
+      throw new Error(`Seed action ${a.key} references a missing Ticket or User.`);
+    }
+
+    const data = {
+      actionAt: new Date(a.actionAt),
+      description: a.description,
+      result: a.result ?? null,
+      performedById,
+      assigneeId,
+      followUpRequired: a.followUpNote !== undefined,
+      followUpNote: a.followUpNote ?? null,
+      attachmentNotes: a.attachmentNotes ?? null,
+      actionStatus: a.actionStatus,
+      version: 1,
+    };
+    await prisma.actionTaken.upsert({
+      where: { ticketId_clientRequestId: { ticketId, clientRequestId: a.key } },
+      update: data,
+      create: { ticketId, clientRequestId: a.key, ...data },
+    });
+  }
+  return SEED_ACTIONS.length;
+}
+
 export async function seedAll() {
   const categories = await seedCategories();
   const relatedSystems = await seedRelatedSystems();
   const users = await seedUsers();
   const tickets = await seedTickets();
   const { comments, notes } = await seedCommentsAndNotes();
-  return { categories, relatedSystems, users, tickets, comments, notes };
+  const actions = await seedActions();
+  return { categories, relatedSystems, users, tickets, comments, notes, actions };
 }
 
 async function main() {
-  const { categories, relatedSystems, users, tickets, comments, notes } = await seedAll();
+  const { categories, relatedSystems, users, tickets, comments, notes, actions } = await seedAll();
   console.log(
     `Seeded (idempotent): ${categories} categories, ${relatedSystems} related systems, ` +
-      `${users} users, ${tickets} tickets, ${comments} comments created, ${notes} notes created.`,
+      `${users} users, ${tickets} tickets, ${actions} actions, ${comments} comments created, ${notes} notes created.`,
   );
 }
 

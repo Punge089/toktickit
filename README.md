@@ -108,14 +108,15 @@ toktickit/
    # Windows: check the service is Running
    Get-Service | Where-Object Name -like "*postgres*"
    ```
-   Then:
+   Then (on a database that already holds data, take a `pg_dump` first; the Lab 4 migration only adds
+   objects, and `server/prisma/migrations/20261030142531_lab4_actions_taken/rollback.sql` undoes it):
    ```bash
    npx prisma migrate dev
    npm run prisma:seed
    ```
    The seed is idempotent (re-running it converges rather than duplicating): 4 Categories, 7 Related
-   Systems, 6 Requesters (5 active + 1 inactive), 5 IT Staff (4 active + 1 inactive), 1 Administrator,
-   and ~26 Tickets spanning all 8 statuses. Every seeded account's password is the value of
+   Systems, 6 Requesters (5 active + 1 inactive), 6 IT Staff (5 active + 1 inactive), 1 Administrator,
+   ~26 Tickets spanning all 8 statuses, and 9 Actions Taken on 6 of them. Every seeded account's password is the value of
    `SEED_PASSWORD` in `server/.env` (defaults to `TokTick-Dev#2026` outside `NODE_ENV=production` — never
    a real personal password; see `docs/lab-03/specification.md` §7). One seeded Requester
    (`ekkachai.mai@example.dev`) is left with `mustChangePassword: true` specifically to demonstrate the
