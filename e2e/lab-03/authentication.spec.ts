@@ -57,7 +57,8 @@ test.describe("E2E-01 authentication", () => {
     await expect(busy).toBeVisible();
     await expect(busy).toBeDisabled();
     await expect(page.getByLabel("Email address")).toBeDisabled();
-    await expect(page.getByRole("heading", { name: "My Tickets", exact: true })).toBeVisible();
+    // Lab 4 FR-17: every role now lands on its Dashboard.
+    await expect(page.getByRole("heading", { name: /^Welcome back,/ })).toBeVisible();
   });
 
   // AC-02, BR-02, BR-08, BR-09
@@ -102,7 +103,8 @@ test.describe("E2E-01 authentication", () => {
     await page.getByLabel(/^New password/).fill("Brand#New-Pass9");
     await page.getByLabel("Confirm new password").fill("Brand#New-Pass9");
     await submit.click();
-    await expect(page.getByRole("heading", { name: "My Tickets", exact: true })).toBeVisible();
+    // Lab 4 FR-17: every role now lands on its Dashboard.
+    await expect(page.getByRole("heading", { name: /^Welcome back,/ })).toBeVisible();
 
     // The old password is dead and the new one works.
     const oldLogin = await request.newContext({ baseURL: API });
@@ -146,22 +148,24 @@ test.describe("E2E-01 authentication", () => {
   });
 
   // AC-10: navigation shows only what the role may use, and lands on the role's home.
-  test("each role lands on its own home and sees only its own navigation", async ({ page }) => {
+  test("each role lands on the Dashboard and sees only its own navigation", async ({ page }) => {
     const navLinks = async () => (await page.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents()).map((t) => t.trim());
 
-    await loginAs(page, ACCOUNTS.requester, "REQUESTER");
-    expect(await navLinks()).toEqual(["My Tickets", "Create Ticket"]);
+    // Lab 4 FR-17: every role lands on /dashboard; Dashboard leads each role's navigation.
+    await loginAs(page, ACCOUNTS.requester, "REQUESTER", { landing: true });
+    await expect(page).toHaveURL(/\/dashboard$/);
+    expect(await navLinks()).toEqual(["Dashboard", "My Tickets", "Create Ticket"]);
     await logoutViaUi(page, "Aran Suksawat");
 
-    await loginAs(page, ACCOUNTS.staff, "IT_STAFF");
-    await expect(page).toHaveURL(/\/staff\/queue$/);
-    expect(await navLinks()).toEqual(["My Queue"]);
+    await loginAs(page, ACCOUNTS.staff, "IT_STAFF", { landing: true });
+    await expect(page).toHaveURL(/\/dashboard$/);
+    expect(await navLinks()).toEqual(["Dashboard", "My Queue"]);
     await expect(page.getByRole("banner").getByText("IT Staff", { exact: true })).toBeVisible();
     await logoutViaUi(page, "Jennifer Anderson");
 
-    await loginAs(page, ACCOUNTS.admin, "ADMINISTRATOR");
-    await expect(page).toHaveURL(/\/admin\/users$/);
-    expect(await navLinks()).toEqual(["Users"]);
+    await loginAs(page, ACCOUNTS.admin, "ADMINISTRATOR", { landing: true });
+    await expect(page).toHaveURL(/\/dashboard$/);
+    expect(await navLinks()).toEqual(["Dashboard", "Users"]);
     await expect(page.getByRole("banner").getByText("Administrator", { exact: true })).toBeVisible();
   });
 

@@ -1528,3 +1528,258 @@ textarea.zen-field-control {
     grid-template-areas: none;
   }
 }
+
+/* ------------------------------------------- Dashboards (Lab 4, Issue 83) */
+/* docs/lab-04/ui-spec.md sections 2 and 3. Only --zen-* tokens. Cards are 1 across on phones, 2 across
+   from 768px and 4 (or 3) across from 992px; the two lists sit side by side from 992px. Long summaries
+   wrap, so nothing scrolls sideways at 375px. */
+
+.zen-dash {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-4);
+  min-width: 0;
+}
+.zen-dash-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--zen-space-3);
+}
+.zen-dash-title {
+  margin: 0;
+  font-size: var(--zen-fs-h1);
+}
+.zen-dash-subtitle {
+  margin: var(--zen-space-1) 0 0;
+  color: var(--zen-text-muted);
+}
+.zen-dash-loading {
+  margin: 0 0 var(--zen-space-3);
+  color: var(--zen-text-muted);
+}
+.zen-dash-failure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-3);
+}
+
+.zen-dash-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--zen-space-3);
+}
+.zen-dash-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-1);
+  min-width: 0;
+  padding: var(--zen-space-4);
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  color: var(--zen-text);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.zen-dash-card-link:hover {
+  border-color: var(--zen-secondary);
+  background: var(--zen-pale);
+}
+.zen-dash-card-link:focus-visible,
+.zen-dash-priority-link:focus-visible,
+.zen-dash-row-number:focus-visible,
+.zen-dash-viewall:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+}
+.zen-dash-card-label {
+  font-size: var(--zen-fs-label);
+  font-weight: 600;
+  color: var(--zen-text-muted);
+}
+.zen-dash-card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--zen-primary);
+}
+.zen-dash-zero {
+  color: var(--zen-text-muted);
+}
+.zen-dash-card-hint {
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+.zen-dash-account-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--zen-fs-label);
+}
+.zen-dash-skeleton {
+  min-height: 84px;
+  background: var(--zen-field-readonly-bg);
+  border-color: var(--zen-border);
+}
+.zen-dash-skeleton-panel {
+  min-height: 160px;
+}
+
+.zen-dash-panel {
+  background: var(--zen-surface);
+  border: 1px solid var(--zen-border);
+  border-radius: 8px;
+  padding: var(--zen-space-4);
+  min-width: 0;
+}
+.zen-dash-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--zen-space-3);
+  margin-bottom: var(--zen-space-2);
+}
+.zen-dash-panel-title {
+  margin: 0;
+  font-size: var(--zen-fs-h2);
+}
+.zen-dash-viewall {
+  font-size: var(--zen-fs-label);
+  font-weight: 600;
+  color: var(--zen-secondary);
+}
+.zen-dash-empty {
+  margin: 0;
+  color: var(--zen-text-muted);
+}
+.zen-dash-lists {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--zen-space-4);
+}
+
+.zen-dash-priority {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--zen-space-2);
+  margin-top: var(--zen-space-2);
+}
+.zen-dash-priority-link {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--zen-space-2);
+  padding: var(--zen-space-2) var(--zen-space-3);
+  border: 1px solid var(--zen-border);
+  border-radius: 6px;
+  color: var(--zen-text);
+  text-decoration: none;
+}
+.zen-dash-priority-link:hover {
+  border-color: var(--zen-secondary);
+  background: var(--zen-pale);
+}
+
+.zen-dash-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.zen-dash-row {
+  padding: var(--zen-space-2) 0;
+  border-top: 1px solid var(--zen-border);
+  min-width: 0;
+}
+.zen-dash-row:first-child {
+  border-top: none;
+}
+.zen-dash-row-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--zen-space-2);
+}
+.zen-dash-row-number {
+  font-weight: 600;
+  color: var(--zen-secondary);
+}
+.zen-dash-row-date {
+  margin-left: auto;
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+.zen-dash-row-summary {
+  margin-top: var(--zen-space-1);
+  overflow-wrap: anywhere;
+}
+.zen-dash-row-owner {
+  font-size: var(--zen-fs-caption);
+  color: var(--zen-text-muted);
+}
+
+.zen-dash-quick-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-3);
+  margin-top: var(--zen-space-2);
+}
+
+/* Chips for a filter that arrived from a dashboard card (My Tickets and the Queue). */
+.zen-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--zen-space-2);
+  list-style: none;
+  margin: 0 0 var(--zen-space-3);
+  padding: 0;
+}
+.zen-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--zen-space-1);
+  padding: 2px var(--zen-space-2);
+  background: var(--zen-pale);
+  border: 1px solid var(--zen-border);
+  border-radius: 999px;
+  font-size: var(--zen-fs-label);
+  font-weight: 600;
+  color: var(--zen-secondary);
+}
+.zen-chip-remove {
+  background: none;
+  border: none;
+  padding: 0 var(--zen-space-1);
+  font: inherit;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--zen-text-muted);
+  cursor: pointer;
+}
+.zen-chip-remove:focus-visible {
+  outline: 2px solid var(--zen-secondary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (min-width: 768px) {
+  .zen-dash-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .zen-dash-priority {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 992px) {
+  .zen-dash-cards-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .zen-dash-cards-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .zen-dash-lists {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -83,3 +83,25 @@ export function insertAction(
     },
   });
 }
+
+// Sets the Ticket's updatedAt directly (the column is maintained by Prisma, so a
+// test that needs a known value or a tie writes it with SQL).
+export async function setUpdatedAt(ticketIds: number[], iso: string) {
+  if (ticketIds.length === 0) return;
+  await getPrisma().$executeRawUnsafe(
+    `UPDATE "Ticket" SET "updatedAt" = '${iso}'::timestamp WHERE "id" IN (${ticketIds.join(",")})`,
+  );
+}
+
+// Removes Tickets a test created (and the Actions on them), so a later test file
+// does not see them in a shared figure such as the staff dashboard.
+export async function removeTickets(ticketIds: number[]) {
+  if (ticketIds.length === 0) return;
+  const prisma = getPrisma();
+  await prisma.actionTaken.deleteMany({ where: { ticketId: { in: ticketIds } } });
+  await prisma.internalNote.deleteMany({ where: { ticketId: { in: ticketIds } } });
+  await prisma.publicComment.deleteMany({ where: { ticketId: { in: ticketIds } } });
+  await prisma.ticket.deleteMany({ where: { id: { in: ticketIds } } });
+}
+
+export const ACTIVE_SQL = `('NEW','OPEN','IN_PROGRESS','WAITING_FOR_REQUESTER','REOPENED')`;

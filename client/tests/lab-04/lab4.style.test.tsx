@@ -1,7 +1,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { http, HttpResponse } from "msw";
+import { server } from "../msw/server.js";
+import { AuthProvider } from "../../src/context/AuthContext.js";
+import { AppRouter } from "../../src/AppRouter.js";
 import userEvent from "@testing-library/user-event";
 import { ActionForm } from "../../src/components/actions/ActionForm.js";
 import { EntryThread } from "../../src/components/tickets/EntryThread.js";
@@ -88,5 +93,29 @@ describe("Lab 4 style contract", () => {
 
     expect(container.querySelector('[role="dialog"], [aria-modal="true"], dialog')).toBeNull();
     expect(screen.getByRole("form", { name: "Add action" })).toBeInTheDocument();
+  });
+
+  it("STY-04: the navigation marks exactly one current page and every dashboard card has an accessible name with its figure", async () => {
+    server.use(
+      http.get("http://localhost:3000/api/auth/me", () =>
+        HttpResponse.json({ id: 1, fullName: "Aran Suksawat", email: "a@example.dev", role: "REQUESTER", mustChangePassword: false }),
+      ),
+    );
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+    const nav = await screen.findByRole("navigation", { name: "Primary" });
+    const current = within(nav).getAllByRole("link").filter((l) => l.hasAttribute("aria-current"));
+    expect(current).toHaveLength(1);
+    expect(current[0]).toHaveAttribute("aria-current", "page");
+    expect(current[0]).toHaveTextContent("Dashboard");
+
+    const cards = await screen.findAllByRole("link", { name: /, view tickets$/ });
+    expect(cards.length).toBeGreaterThanOrEqual(4);
+    for (const c of cards) expect(c.getAttribute("aria-label")).toMatch(/^.+: \d+, view tickets$/);
   });
 });

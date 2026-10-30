@@ -10,6 +10,7 @@ import { staffQueueRouter } from "./routes/staffQueue.js";
 import { staffTicketsRouter } from "./routes/staffTickets.js";
 import { commentsRouter } from "./routes/comments.js";
 import { actionsRouter } from "./routes/actions.js";
+import { dashboardRouter } from "./routes/dashboard.js";
 import { adminUsersRouter } from "./routes/adminUsers.js";
 import { originCheck } from "./middleware/auth.js";
 
@@ -46,6 +47,9 @@ app.use(commentsRouter);
 
 // Lab 4 Issue 80 - Actions Taken. See routes/actions.ts.
 app.use(actionsRouter);
+
+// Lab 4 Issue 83 - Requester and IT Staff dashboards. See routes/dashboard.ts.
+app.use(dashboardRouter);
 
 // Issue 67 - Administrator user management. See routes/adminUsers.ts.
 app.use(adminUsersRouter);

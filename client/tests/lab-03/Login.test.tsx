@@ -105,7 +105,7 @@ describe("Login screen", () => {
     await waitFor(() => expect(screen.getByLabelText(/email address/i)).toBeDisabled());
   });
 
-  it("signs in successfully and lands on the Requester's home route", async () => {
+  it("signs in successfully and lands on the Dashboard (Lab 4 changed the landing page from My Tickets)", async () => {
     server.use(
       http.post(`${API_URL}/api/auth/login`, () =>
         HttpResponse.json({ user: { id: 1, fullName: "Aran Suksawat", email: "aran.suksawat@example.dev", role: "REQUESTER", mustChangePassword: false } }),
@@ -121,6 +121,6 @@ describe("Login screen", () => {
     await user.type(screen.getByLabelText(/^password/i), "Correct-Pass1!");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
-    expect(await screen.findByRole("heading", { name: /my tickets/i })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: /welcome back, aran/i })).toBeInTheDocument();
   });
 });

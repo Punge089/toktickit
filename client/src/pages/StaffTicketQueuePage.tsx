@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { fetchCategories, Category } from "../api/reference.js";
 import { fetchQueue, fetchAssignableUsers, ForbiddenError, QueueResult } from "../api/staffQueue.js";
 import { formatDateTime } from "../lib/format.js";
@@ -9,6 +9,7 @@ import { Alert } from "../components/ui/Alert.js";
 import { Spinner } from "../components/ui/Spinner.js";
 import { EmptyState } from "../components/ui/EmptyState.js";
 import { Badge, PriorityBadge, StatusBadge } from "../components/ui/Badge.js";
+import { FilterChips } from "../components/ui/FilterChips.js";
 
 const STATUS_OPTIONS = [
   { value: "NEW", label: "New" },
@@ -56,10 +57,15 @@ export function StaffTicketQueuePage() {
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [itPriority, setItPriority] = useState("");
+  // Lab 4 FR-15: a dashboard card opens this page with status, owner, itPriority and active in the
+  // URL; they are read once when the page opens and written back as the user changes them, so a
+  // filtered view can be bookmarked and "Clear filters" empties the address too.
+  const [params, setParams] = useSearchParams();
+  const [status, setStatus] = useState(params.get("status") ?? "");
+  const [itPriority, setItPriority] = useState(params.get("itPriority") ?? "");
   const [categoryId, setCategoryId] = useState("");
-  const [owner, setOwner] = useState("");
+  const [owner, setOwner] = useState(params.get("owner") ?? "");
+  const [activeOnly, setActiveOnly] = useState(params.get("active") === "true");
   const [sort, setSort] = useState("createdAt:desc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -75,6 +81,15 @@ export function StaffTicketQueuePage() {
   }, []);
 
   useEffect(() => {
+    const next = new URLSearchParams();
+    if (status) next.set("status", status);
+    if (owner) next.set("owner", owner);
+    if (itPriority) next.set("itPriority", itPriority);
+    if (activeOnly) next.set("active", "true");
+    setParams(next, { replace: true });
+  }, [status, owner, itPriority, activeOnly, setParams]);
+
+  useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(timer);
   }, [search]);
@@ -88,6 +103,7 @@ export function StaffTicketQueuePage() {
       itPriority: itPriority || undefined,
       categoryId: categoryId || undefined,
       owner: owner || undefined,
+      active: activeOnly || undefined,
       sort,
       page,
       pageSize,
@@ -104,9 +120,9 @@ export function StaffTicketQueuePage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, status, itPriority, categoryId, owner, sort, page, pageSize, reloadKey]);
+  }, [debouncedSearch, status, itPriority, categoryId, owner, activeOnly, sort, page, pageSize, reloadKey]);
 
-  const hasActiveFilters = Boolean(search || status || itPriority || categoryId || owner || sort !== "createdAt:desc");
+  const hasActiveFilters = Boolean(search || status || itPriority || categoryId || owner || activeOnly || sort !== "createdAt:desc");
 
   function clearFilters() {
     setSearch("");
@@ -115,6 +131,7 @@ export function StaffTicketQueuePage() {
     setItPriority("");
     setCategoryId("");
     setOwner("");
+    setActiveOnly(false);
     setSort("createdAt:desc");
     setPage(1);
   }
@@ -127,7 +144,8 @@ export function StaffTicketQueuePage() {
     !result.appliedFilters.status &&
     !result.appliedFilters.itPriority &&
     !result.appliedFilters.categoryId &&
-    !result.appliedFilters.owner;
+    !result.appliedFilters.owner &&
+    !result.appliedFilters.active;
   const isNoResults = listState === "loaded" && result !== null && result.items.length === 0 && !isEmptyQueue;
 
   function onFilter(setter: (v: string) => void) {
@@ -209,6 +227,14 @@ export function StaffTicketQueuePage() {
               </Button>
             )}
           </div>
+
+          <FilterChips
+            chips={
+              activeOnly
+                ? [{ key: "active", label: "Active tickets", onRemove: () => { setActiveOnly(false); setPage(1); } }]
+                : []
+            }
+          />
 
           {listState === "loading" && <Spinner label="Loading the ticket queue…" />}
 

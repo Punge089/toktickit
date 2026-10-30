@@ -117,6 +117,7 @@ describe("Change Password screen", () => {
     await user.type(screen.getByLabelText(/^confirm new password/i), "Brand-New1!");
     await user.click(screen.getByRole("button", { name: /continue/i }));
 
-    expect(await screen.findByRole("heading", { name: /my tickets/i })).toBeInTheDocument();
+    // Lab 4 changed the landing page from My Tickets to the Dashboard.
+    expect(await screen.findByRole("heading", { name: /welcome back/i })).toBeInTheDocument();
   });
 });
