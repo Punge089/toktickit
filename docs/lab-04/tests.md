@@ -343,10 +343,10 @@ the guard is then restored and the tests pass again. The outcome column stays **
 
 ## 8. Final Results
 
-Run on 2026-10-31 on branch `feature/85-e2e-evidence`, which is `lab4-staging` after Pull Request #92 plus this
-evidence Pull Request. The release Pull Request into `main` repeats these runs on `main` and the counts must match
-(Issue #86). Baseline before any Lab 4 change, on `main` at `421aea1`: server 171 (20 files), client 95
-(15 files), Playwright 128.
+Two runs of the same commands on 2026-10-31. The first, before release, was on `lab4-staging` at `9f2e651` (every
+Lab 4 feature Pull Request merged). The second, after the release Pull Request #94 (Issue #86) was merged, was on
+`main` at `4bc5017`. The counts are identical, which is what the release checklist promised. Baseline before any
+Lab 4 change, on `main` at `421aea1`: server 171 (20 files), client 95 (15 files), Playwright 128.
 
 | Suite | Command | Result | Baseline to now |
 |---|---|---|---|
@@ -355,6 +355,11 @@ evidence Pull Request. The release Pull Request into `main` repeats these runs o
 | End to end, responsive, regression (Playwright, `npx playwright test`) | 28 Lab 2 + 100 Lab 3 + 84 Lab 4 | **212 tests passed** | 128 to 212 (+84) |
 | Typecheck | `npx tsc --noEmit` in `server/` and `client/` | clean | |
 
+The same table, re-run on `main` at `4bc5017` after the release merge: server **31 files, 251 passed**; client
+**23 files, 137 passed**; Playwright **212 passed** (4.0 minutes); `tsc --noEmit` clean in both; traceability
+unchanged (below). After the Playwright run the earlier Lab 2 and Lab 3 screenshots were restored from Git so that
+the run left no tracked file changed.
+
 Lab 4's 84 Playwright tests: `actions-taken-flow` 4 (E2E-01), `ticket-resolution` 4 (E2E-02), `dashboards` 9
 (E2E-03), `regression` 6 (REG-04 and the FR-21 screen sweep), `responsive` 61 (RESP-01 to RESP-05, 66 screenshots).
 
@@ -362,7 +367,7 @@ Real output of `node server/scripts/check-traceability.mjs`:
 
 ```
 Requirements with a passing test: AC 37/37, FR 22/22, BR 40/40
-Tests in the plan: 98 (Pass 95, Partial 3, other 0)
+Tests in the plan: 98 (Pass 98, Partial 0, other 0)
 Every FR, BR and AC has a passing test, and every listed test file exists and names its test.
 ```
 
