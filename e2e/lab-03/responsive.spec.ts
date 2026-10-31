@@ -6,8 +6,10 @@ import {
   VIEWPORTS,
   apiSession,
   createFreshUser,
+  addCompletedAction,
   createTicketViaApi,
   loginAs,
+  patchTicket,
   loginViaUi,
   shot,
   stamp,
@@ -33,9 +35,10 @@ test.beforeAll(async () => {
   // B: in progress, owned, with a public conversation and an internal note
   fx.withComments = await createTicketViaApi(requester, `Shot B in progress ${tag}`);
   await requester.post(`/api/tickets/${fx.withComments}/comments`, { data: { body: "The laptop battery drains within an hour, even when idle." } });
-  expect((await staff.patch(`/api/staff/tickets/${fx.withComments}/owner`, { data: { ownerId: staffId } })).status()).toBe(200);
-  expect((await staff.patch(`/api/staff/tickets/${fx.withComments}/it-priority`, { data: { itPriority: "HIGH" } })).status()).toBe(200);
-  expect((await staff.patch(`/api/staff/tickets/${fx.withComments}/status`, { data: { status: "IN_PROGRESS" } })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.withComments, "owner", { ownerId: staffId })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.withComments, "it-priority", { itPriority: "HIGH" })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.withComments, "status", { status: "IN_PROGRESS" })).status()).toBe(200);
+  await addCompletedAction(staff, fx.withComments, staffId);
   await staff.post(`/api/tickets/${fx.withComments}/comments`, { data: { body: "Thanks for the details. We are checking the battery health report now." } });
   await requester.post(`/api/tickets/${fx.withComments}/comments`, { data: { body: "It also happens with every application closed." } });
   await staff.post(`/api/staff/tickets/${fx.withComments}/notes`, { data: { body: "Battery cycle count is high. Order a replacement if the report confirms it." } });
@@ -50,11 +53,12 @@ test.beforeAll(async () => {
 
   // C: the Requester said it looks resolved, then IT Staff resolved it with a summary
   fx.resolved = await createTicketViaApi(requester, `Shot C resolved ticket ${tag}`);
-  expect((await staff.patch(`/api/staff/tickets/${fx.resolved}/owner`, { data: { ownerId: staffId } })).status()).toBe(200);
-  expect((await staff.patch(`/api/staff/tickets/${fx.resolved}/status`, { data: { status: "IN_PROGRESS" } })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.resolved, "owner", { ownerId: staffId })).status()).toBe(200);
+  expect((await patchTicket(staff, fx.resolved, "status", { status: "IN_PROGRESS" })).status()).toBe(200);
   expect((await requester.post(`/api/tickets/${fx.resolved}/problem-resolved`)).status()).toBe(200);
+  await addCompletedAction(staff, fx.resolved, staffId);
   expect(
-    (await staff.patch(`/api/staff/tickets/${fx.resolved}/status`, { data: { status: "RESOLVED", resolutionSummary: "Replaced the battery under warranty. Runtime is back to normal." } })).status(),
+    (await patchTicket(staff, fx.resolved, "status", { status: "RESOLVED", resolutionSummary: "Replaced the battery under warranty. Runtime is back to normal." })).status(),
   ).toBe(200);
 });
 
@@ -123,7 +127,7 @@ for (const vp of VIEWPORTS) {
         expect(await menu.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(255, 255, 255)");
       }
       await shot(page, "requester", vp, "tickets");
-      if (vp.name === "mobile") await expectMobileMenuLinks(page, ["My Tickets", "Create Ticket"]);
+      if (vp.name === "mobile") await expectMobileMenuLinks(page, ["Dashboard", "My Tickets", "Create Ticket"]);
     });
 
     test("Requester: Ticket Detail of a new ticket with the resolved action", async ({ page }) => {
@@ -156,7 +160,7 @@ for (const vp of VIEWPORTS) {
       await expect(page.getByText(/Showing 1-10 of \d+ tickets/)).toBeVisible();
       await expect(page.locator(".zen-queue-row", { hasText: "Unassigned" }).first()).toBeVisible();
       await shot(page, "staff-queue", vp, "loaded");
-      if (vp.name === "mobile") await expectMobileMenuLinks(page, ["My Queue"]);
+      if (vp.name === "mobile") await expectMobileMenuLinks(page, ["Dashboard", "My Queue"]);
     });
 
     test("Queue: empty (the API returns no tickets at all)", async ({ page }) => {
@@ -171,6 +175,8 @@ for (const vp of VIEWPORTS) {
         }),
       );
       await loginViaUi(page, ACCOUNTS.staff);
+      await expect(page.getByRole("heading", { name: /^Welcome back,/ })).toBeVisible(); // the login has finished
+      await page.goto("/staff/queue"); // Lab 4: the login lands on the Dashboard, these states are the Queue's
       await expect(page.getByText("No tickets yet")).toBeVisible();
       await shot(page, "staff-queue", vp, "empty");
     });
@@ -185,6 +191,8 @@ for (const vp of VIEWPORTS) {
     test("Queue: API failure with Retry", async ({ page }) => {
       await page.route("**/api/staff/tickets?*", (route) => route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "INTERNAL_ERROR" }) }));
       await loginViaUi(page, ACCOUNTS.staff);
+      await expect(page.getByRole("heading", { name: /^Welcome back,/ })).toBeVisible();
+      await page.goto("/staff/queue");
       await expect(page.getByText("Unable to load the ticket queue. Please try again.")).toBeVisible();
       await expect(page.getByRole("button", { name: "Retry" })).toBeVisible();
       await shot(page, "staff-queue", vp, "failure");
@@ -253,7 +261,7 @@ for (const vp of VIEWPORTS) {
       await loginAs(page, ACCOUNTS.admin, "ADMINISTRATOR");
       await expect(page.getByRole("table", { name: "Users" })).toBeVisible();
       await shot(page, "user-management", vp, "list");
-      if (vp.name === "mobile") await expectMobileMenuLinks(page, ["Users"]);
+      if (vp.name === "mobile") await expectMobileMenuLinks(page, ["Dashboard", "Users"]);
     });
 
     test("Users: create panel", async ({ page }) => {

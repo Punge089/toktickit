@@ -1,4 +1,5 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useSingleFlight } from "../lib/useSingleFlight.js";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.js";
 import { fetchCategories, fetchRelatedSystems, Category, RelatedSystem } from "../api/reference.js";
@@ -99,6 +100,8 @@ export function CreateTicketPage() {
     return errors;
   }
 
+  const guard = useSingleFlight();
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!user) return;
@@ -107,6 +110,7 @@ export function CreateTicketPage() {
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return; // AC-04 — no request sent on client-side validation failure
 
+    if (!guard.begin()) return; // one request at a time, even for two submits in the same tick
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -126,6 +130,7 @@ export function CreateTicketPage() {
         setSubmitError(err instanceof Error ? err.message : "Unable to create the ticket. Please try again.");
       }
     } finally {
+      guard.end();
       setSubmitting(false);
     }
   }

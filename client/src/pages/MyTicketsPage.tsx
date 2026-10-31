@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { fetchCategories, fetchRelatedSystems, Category, RelatedSystem } from "../api/reference.js";
 import { fetchMyTickets, MyTicketsResult } from "../api/myTickets.js";
 import { Select } from "../components/ui/Select.js";
@@ -7,7 +7,8 @@ import { Button } from "../components/ui/Button.js";
 import { Alert } from "../components/ui/Alert.js";
 import { Spinner } from "../components/ui/Spinner.js";
 import { EmptyState } from "../components/ui/EmptyState.js";
-import { PriorityBadge, StatusBadge } from "../components/ui/Badge.js";
+import { PriorityBadge, STATUS_LABEL, StatusBadge, TicketStatus } from "../components/ui/Badge.js";
+import { FilterChips, FilterChip } from "../components/ui/FilterChips.js";
 
 const SORT_OPTIONS = [
   { value: "createdAt:desc", label: "Newest first" },
@@ -47,17 +48,30 @@ export function MyTicketsPage() {
   const [categoryId, setCategoryId] = useState("");
   const [relatedSystemId, setRelatedSystemId] = useState("");
   const [requestedPriority, setRequestedPriority] = useState("");
+  // Lab 4 FR-15: a dashboard card opens this page with status or active in the URL. They have no
+  // control of their own here, so they show as removable chips, and clearing them empties the URL.
+  const [params, setParams] = useSearchParams();
+  const [status, setStatus] = useState(params.get("status") ?? "");
+  const [activeOnly, setActiveOnly] = useState(params.get("active") === "true");
   const [sort, setSort] = useState("createdAt:desc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const [listState, setListState] = useState<ListState>("loading");
   const [result, setResult] = useState<MyTicketsResult | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     fetchCategories().then(setCategories).catch(() => setCategories([]));
     fetchRelatedSystems().then(setRelatedSystems).catch(() => setRelatedSystems([]));
   }, []);
+
+  useEffect(() => {
+    const next = new URLSearchParams();
+    if (status) next.set("status", status);
+    if (activeOnly) next.set("active", "true");
+    setParams(next, { replace: true });
+  }, [status, activeOnly, setParams]);
 
   // Search is debounced; every other control refetches immediately.
   useEffect(() => {
@@ -73,6 +87,8 @@ export function MyTicketsPage() {
       categoryId: categoryId || undefined,
       relatedSystemId: relatedSystemId || undefined,
       requestedPriority: requestedPriority || undefined,
+      status: status || undefined,
+      active: activeOnly || undefined,
       sort,
       page,
       pageSize,
@@ -88,14 +104,14 @@ export function MyTicketsPage() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, categoryId, relatedSystemId, requestedPriority, sort, page, pageSize]);
+  }, [debouncedSearch, categoryId, relatedSystemId, requestedPriority, status, activeOnly, sort, page, pageSize, reloadKey]);
 
   function resetToFirstPage() {
     setPage(1);
   }
 
   const hasActiveFilters = Boolean(
-    search || categoryId || relatedSystemId || requestedPriority || sort !== "createdAt:desc",
+    search || categoryId || relatedSystemId || requestedPriority || status || activeOnly || sort !== "createdAt:desc",
   );
 
   function clearFilters() {
@@ -104,6 +120,8 @@ export function MyTicketsPage() {
     setCategoryId("");
     setRelatedSystemId("");
     setRequestedPriority("");
+    setStatus("");
+    setActiveOnly(false);
     setSort("createdAt:desc");
     setPage(1);
   }
@@ -115,7 +133,31 @@ export function MyTicketsPage() {
     !result.meta.appliedFilters.search &&
     !result.meta.appliedFilters.categoryId &&
     !result.meta.appliedFilters.relatedSystemId &&
-    !result.meta.appliedFilters.requestedPriority;
+    !result.meta.appliedFilters.requestedPriority &&
+    !result.meta.appliedFilters.status &&
+    !result.meta.appliedFilters.active;
+
+  const chips: FilterChip[] = [];
+  if (status) {
+    chips.push({
+      key: "status",
+      label: `Status: ${STATUS_LABEL[status as TicketStatus] ?? status}`,
+      onRemove: () => {
+        setStatus("");
+        setPage(1);
+      },
+    });
+  }
+  if (activeOnly) {
+    chips.push({
+      key: "active",
+      label: "Active tickets",
+      onRemove: () => {
+        setActiveOnly(false);
+        setPage(1);
+      },
+    });
+  }
 
   const isNoResults = listState === "loaded" && result !== null && result.data.length === 0 && !isEmptyAccount;
 
@@ -196,10 +238,19 @@ export function MyTicketsPage() {
         )}
       </div>
 
+      <FilterChips chips={chips} />
+
       {listState === "loading" && <Spinner label="Loading your tickets…" />}
 
       {listState === "error" && (
-        <Alert tone="error">Unable to load your tickets. Please try again.</Alert>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--zen-space-3)" }}>
+          <Alert tone="error">Unable to load your tickets. Please try again.</Alert>
+          <div>
+            <Button variant="secondary" onClick={() => setReloadKey((k) => k + 1)}>
+              Retry
+            </Button>
+          </div>
+        </div>
       )}
 
       {isEmptyAccount && (

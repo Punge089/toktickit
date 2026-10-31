@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { getPrisma } from "../prisma.js";
 import { requireAuth, requirePasswordCurrent, requireRole } from "../middleware/auth.js";
 import { parseQueueQuery } from "../lib/staffQueueQuery.js";
+import { ACTIVE_TICKET_STATUSES } from "../lib/workflowRules.js";
 
 // Issue 65 — IT Staff Ticket Queue (docs/lab-03/api-spec.md §8, §10).
 // IT_STAFF and ADMINISTRATOR may read it; only IT_STAFF may act on Tickets
@@ -33,6 +34,8 @@ staffQueueRouter.get("/api/staff/tickets", ...readers, async (req: Request, res:
     ];
   }
   if (q.status) where.currentStatus = q.status;
+  // active=true is a second condition, so `status` and `active` together must both match.
+  if (q.active) where.AND = [{ currentStatus: { in: [...ACTIVE_TICKET_STATUSES] } }];
   if (q.itPriority) where.itPriority = q.itPriority;
   if (q.categoryId) where.categoryId = q.categoryId;
   if (q.owner) {
@@ -86,6 +89,7 @@ staffQueueRouter.get("/api/staff/tickets", ...readers, async (req: Request, res:
         itPriority: q.itPriority,
         categoryId: q.categoryId,
         owner: q.owner === null ? null : q.owner.kind === "user" ? String(q.owner.id) : q.owner.kind,
+        active: q.active ? true : null,
       },
     });
   } catch {

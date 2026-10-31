@@ -27,6 +27,9 @@ async function login(page: Page, email: string) {
   await page.getByLabel("Email address").fill(email);
   await page.getByLabel("Password").fill(SEED_PASSWORD);
   await page.getByRole("button", { name: "Sign In" }).click();
+  // Lab 4 FR-17: every role lands on the Dashboard; these Lab 2 flows start from My Tickets.
+  await expect(page.getByRole("heading", { name: /^Welcome back,/ })).toBeVisible();
+  await page.goto("/tickets");
   await expect(page.getByRole("heading", { name: "My Tickets" })).toBeVisible();
 }
 

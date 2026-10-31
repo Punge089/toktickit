@@ -55,16 +55,24 @@ export async function loginViaUi(page: Page, email: string, password = SEED_PASS
   await page.getByRole("button", { name: "Sign In" }).click();
 }
 
-// The heading each role lands on after a normal login.
+// The heading each role lands on after a normal login. Lab 4 (FR-17) sends every role to
+// /dashboard, whose title is "Welcome back, <first name>"; the role only decides which view it shows.
 export const HOME_HEADING = {
-  REQUESTER: "My Tickets",
-  IT_STAFF: "Ticket Queue",
-  ADMINISTRATOR: "Users",
+  REQUESTER: /^Welcome back,/,
+  IT_STAFF: /^Welcome back,/,
+  ADMINISTRATOR: /^Welcome back,/,
 } as const;
 
-export async function loginAs(page: Page, email: string, role: keyof typeof HOME_HEADING) {
+// The screen each Lab 3 spec was written against. The Lab 3 specs test those screens, so loginAs
+// opens them after the login lands on the Dashboard; a spec about the landing page itself passes
+// { landing: true } and stays where the login put it.
+const LAB3_SCREEN = { REQUESTER: "/tickets", IT_STAFF: "/staff/queue", ADMINISTRATOR: "/admin/users" } as const;
+
+export async function loginAs(page: Page, email: string, role: keyof typeof HOME_HEADING, opts: { landing?: boolean } = {}) {
   await loginViaUi(page, email);
-  await expect(page.getByRole("heading", { name: HOME_HEADING[role], exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: HOME_HEADING[role] })).toBeVisible();
+  if (opts.landing) return;
+  await page.goto(LAB3_SCREEN[role]);
 }
 
 export async function logoutViaUi(page: Page, fullName: string) {
@@ -127,4 +135,32 @@ export async function createTicketViaApi(requester: APIRequestContext, summary: 
 
 export async function selectedLabel(page: Page, label: string): Promise<string> {
   return page.getByLabel(label).evaluate((el) => (el as HTMLSelectElement).selectedOptions[0].textContent ?? "");
+}
+
+// Lab 4 BR-17: owner, IT Priority and status changes carry the Ticket `version`.
+// These Lab 3 specs arrange fixtures through the API, so each change sends the
+// version the Ticket has right now.
+export async function patchTicket(
+  api: APIRequestContext,
+  ticketId: number,
+  kind: "owner" | "it-priority" | "status",
+  data: Record<string, unknown>,
+) {
+  const detail = await (await api.get(`/api/staff/tickets/${ticketId}`)).json();
+  return api.patch(`/api/staff/tickets/${ticketId}/${kind}`, { data: { ...data, expectedVersion: detail.version } });
+}
+
+// Lab 4 BR-20: a Ticket can only be resolved once one of its Actions is
+// Completed, so fixtures that reach Resolved record one first.
+export async function addCompletedAction(api: APIRequestContext, ticketId: number, assigneeId: number) {
+  const res = await api.post(`/api/staff/tickets/${ticketId}/actions`, {
+    data: {
+      clientRequestId: `e2e-${stamp()}`,
+      description: "Fixture action recorded by the E2E suite.",
+      result: "Done.",
+      assigneeId,
+      actionStatus: "COMPLETED",
+    },
+  });
+  expect(res.status(), "add completed action").toBe(201);
 }

@@ -27,6 +27,8 @@ export interface QueueQuery {
   itPriority: QueuePriority | null;
   categoryId: number | null;
   owner: QueueOwnerFilter | null;
+  /** Lab 4: true keeps only Tickets still being worked (BR-28); null means no such filter. */
+  active: boolean | null;
   sortField: QueueSortField;
   sortDir: "asc" | "desc";
   page: number;
@@ -63,6 +65,7 @@ export function parseQueueQuery(q: Record<string, unknown>): QueueQueryResult {
     itPriority: null,
     categoryId: null,
     owner: null,
+    active: null,
     sortField: "createdAt",
     sortDir: "desc",
     page: 1,
@@ -107,6 +110,12 @@ export function parseQueueQuery(q: Record<string, unknown>): QueueQueryResult {
       if (n === null) fieldErrors.owner = "owner must be me, unassigned, or a positive integer user id.";
       else value.owner = { kind: "user", id: n };
     }
+  }
+
+  const active = single("active");
+  if (active !== undefined) {
+    if (active === "true") value.active = true;
+    else fieldErrors.active = "active must be true.";
   }
 
   const sort = single("sort");

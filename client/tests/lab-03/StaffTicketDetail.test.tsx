@@ -33,6 +33,10 @@ function ticket(over: Record<string, unknown> = {}) {
     itPriority: "MEDIUM",
     currentStatus: status,
     allowedTransitions: TRANSITIONS[status] ?? [],
+    // Lab 4 fields: every change now sends the version it last saw (BR-17).
+    version: 4,
+    actionCounts: { open: 0, completed: 1, cancelled: 0 },
+    resolutionBlockers: [],
     ownerId: 8,
     ownerName: "Jennifer Anderson",
     ownerIsActive: true,
@@ -122,7 +126,7 @@ describe("IT Staff Ticket Detail screen", () => {
     await user.click(screen.getByRole("button", { name: /update status/i }));
 
     expect(await screen.findByText("Replaced the battery.")).toBeInTheDocument();
-    expect(sent).toEqual({ status: "RESOLVED", resolutionSummary: "Replaced the battery." });
+    expect(sent).toEqual({ status: "RESOLVED", resolutionSummary: "Replaced the battery.", expectedVersion: 4 });
   });
 
   it("asks for confirmation before Closed and sends nothing until confirmed", async () => {
@@ -179,10 +183,10 @@ describe("IT Staff Ticket Detail screen", () => {
     const user = userEvent.setup();
     renderDetail({ detail: { ownerId: 9, ownerName: "Michael Brown" } });
     await user.click(await screen.findByRole("button", { name: /assign to me/i }));
-    await waitFor(() => expect(calls).toContain('owner:{"ownerId":8}'));
+    await waitFor(() => expect(calls).toContain('owner:{"ownerId":8,"expectedVersion":4}'));
 
     await user.selectOptions(screen.getByLabelText("IT Priority"), "URGENT");
-    await waitFor(() => expect(calls).toContain('priority:{"itPriority":"URGENT"}'));
+    await waitFor(() => expect(calls).toContain('priority:{"itPriority":"URGENT","expectedVersion":4}'));
   });
 
   // UI-12, BR-04
