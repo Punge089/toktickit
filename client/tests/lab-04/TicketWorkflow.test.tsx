@@ -226,10 +226,15 @@ describe("IT Staff Ticket workflow controls", () => {
 
   it("UI-23: cancelling a Ticket with open Actions says they will be cancelled too, and sends nothing until confirmed", async () => {
     let patched = 0;
+    let actionReads = 0;
     server.use(
       http.patch(`${API_URL}/api/staff/tickets/:id/status`, () => {
         patched += 1;
         return HttpResponse.json(ticket({ currentStatus: "CANCELLED", version: 5 }));
+      }),
+      http.get(`${API_URL}/api/tickets/:id/actions`, () => {
+        actionReads += 1;
+        return HttpResponse.json({ items: [], counts: { open: 0, completed: 0, cancelled: 0 } });
       }),
     );
     const user = userEvent.setup();
@@ -239,7 +244,11 @@ describe("IT Staff Ticket workflow controls", () => {
     const dialog = await screen.findByRole("alertdialog", { name: /confirm status change/i });
     expect(dialog).toHaveTextContent(/open actions on this ticket will be cancelled/i);
     expect(patched).toBe(0);
+    await waitFor(() => expect(actionReads).toBeGreaterThanOrEqual(1)); // the list was read when the page opened
+    const before = actionReads;
     await user.click(screen.getByRole("button", { name: /^confirm$/i }));
     await waitFor(() => expect(patched).toBe(1));
+    // The server cancelled the open Actions with the Ticket, so the list is read again.
+    await waitFor(() => expect(actionReads).toBeGreaterThan(before));
   });
 });

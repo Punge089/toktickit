@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { useSingleFlight } from "../lib/useSingleFlight.js";
 import { useAuth } from "../context/AuthContext.js";
 import { Role, ValidationError } from "../api/auth.js";
 import { ForbiddenError } from "../api/staffQueue.js";
@@ -262,6 +263,7 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetDone, setResetDone] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const guard = useSingleFlight();
 
   function validate(): Record<string, string> {
     const errors: Record<string, string> = {};
@@ -283,6 +285,7 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
+    if (!guard.begin()) return; // one save at a time, even for two submits in the same tick
     setSaving(true);
     try {
       if (editing) {
@@ -311,12 +314,14 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
         setBanner({ tone: "error", text: err instanceof Error ? err.message : "Unable to save the user. Please try again." });
       }
     } finally {
+      guard.end();
       setSaving(false);
     }
   }
 
   async function handleSetPassword() {
     if (!editing) return;
+    if (!guard.begin()) return;
     setResetError(null);
     setResetDone(false);
     setResetting(true);
@@ -328,6 +333,7 @@ function UserPanel({ panel, activeAdministratorCount, onClose, onSaved }: UserPa
       if (err instanceof ValidationError) setResetError(err.fieldErrors.initialPassword ?? "Enter a valid password.");
       else setResetError(err instanceof Error ? err.message : "Unable to set the new initial password. Please try again.");
     } finally {
+      guard.end();
       setResetting(false);
     }
   }

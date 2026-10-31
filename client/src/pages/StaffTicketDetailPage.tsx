@@ -199,6 +199,9 @@ export function StaffTicketDetailPage() {
     try {
       const updated = await action();
       setTicket(updated);
+      // Cancelling a Ticket cancels its open Actions on the server (BR-22), so the list the user may open next
+      // has to be read again, or it would still show them as Planned or In Progress.
+      if (kind === "status") void actions.reload();
       setSelectedStatus(updated.currentStatus);
       setResolutionSummary("");
       setConfirming(false);

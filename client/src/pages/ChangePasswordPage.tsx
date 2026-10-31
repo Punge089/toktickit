@@ -1,4 +1,5 @@
 import { FormEvent, useState } from "react";
+import { useSingleFlight } from "../lib/useSingleFlight.js";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.js";
 import { changePassword, ValidationError } from "../api/auth.js";
@@ -28,9 +29,12 @@ export function ChangePasswordPage() {
   const confirmMatches = newPassword.length > 0 && newPassword === confirmPassword;
   const canSubmit = currentPassword.length > 0 && policyMet && confirmMatches;
 
+  const guard = useSingleFlight();
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!canSubmit) return;
+    if (!guard.begin()) return;
 
     setSubmitting(true);
     setError(null);
@@ -54,6 +58,7 @@ export function ChangePasswordPage() {
       }
       setCurrentPassword("");
     } finally {
+      guard.end();
       setSubmitting(false);
     }
   }

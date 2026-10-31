@@ -138,8 +138,9 @@ test.describe("E2E-02 staff ticket flow", () => {
 
     const staff = await signedInPage(browser, ACCOUNTS.staff, "IT_STAFF");
     await staff.goto(`/staff/tickets/${id}`);
-    const options = await staff.getByLabel("Current Status").locator("option").allTextContents();
-    expect(options.map((o) => o.replace(" (current)", "").trim())).toEqual(["New", "Open", "In Progress", "Cancelled"]);
+    // Lab 4 Issue 84: wait for the options to be there (toHaveText retries) instead of reading them once,
+    // which could catch the select before the Ticket had loaded. The check itself is unchanged.
+    await expect(staff.getByLabel("Current Status").locator("option")).toHaveText(["New (current)", "Open", "In Progress", "Cancelled"]);
 
     // In Progress needs an owner first (AC-15, BR-20): the backend refuses and the screen says why.
     await staff.getByLabel("Current Status").selectOption({ label: "In Progress" });
