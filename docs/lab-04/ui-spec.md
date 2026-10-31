@@ -230,23 +230,42 @@ matrix forbids; the current navigation item has `aria-current="page"`.
 - **Administrator**: the mockups show none; the Administrator sees the IT Staff dashboard read-only with
   account counts (§3.1, labsheet §4.6).
 
-## 11. Visual and accessibility checklist
+## 11. Visual and accessibility checklist (completed against the real screenshots, Issue #85)
 
-To be completed against the real screenshots in the evidence PR (Issue #85). Every box stays unticked until the
-statement has been checked on screenshots at all three widths, and the evidence column gets filled in then.
+Method: `e2e/lab-04/responsive.spec.ts` captures every state in section 12 at 1280, 850 and 375 px into
+`artifacts/lab-04/screenshots/` after asserting there is no horizontal page scroll (66 images). Each state was then
+viewed with its three widths side by side and compared with this document. A box is ticked only where the statement
+was true of the screenshots at all three widths; the evidence column names the files and tests.
 
-- [ ] Zen Green tokens only; no new colour value outside `:root`. Evidence: pending.
-- [ ] Dashboard cards, lists, badges and buttons match the Lab 2 and Lab 3 conventions. Evidence: pending.
-- [ ] Role navigation shows only the role's destinations and marks the current page. Evidence: pending.
-- [ ] Actions Taken editable fields (open Action) and read-only text (final Action, Requester view) are visibly
-      different. Evidence: pending.
-- [ ] Validation messages sit directly under their fields on the Action form. Evidence: pending.
-- [ ] Shared (Requester-visible) Action content and private Internal Notes are told apart without reading the
-      heading. Evidence: pending.
-- [ ] Keyboard focus is visible on every new interactive control. Evidence: pending.
-- [ ] No clipped labels, overlapping controls, hidden buttons or horizontal scrolling at 375, 850 and 1280 px on
-      any screen in §12. Evidence: pending.
-- [ ] Zero, empty, failure, conflict and locked states render as specified. Evidence: pending.
+- [x] Zen Green tokens only; no new colour value outside `:root`. Evidence: STY-02 reads the Lab 4 sections of
+      `zen-green.css` and finds no hex, `rgb` or `hsl` literal; every Lab 4 colour is a `var(--zen-*)` token.
+- [x] Dashboard cards, lists, badges and buttons match the Lab 2 and Lab 3 conventions. Evidence:
+      `staff-dashboard/*-loaded.png`, `requester-dashboard/*-loaded.png`; Status, IT Priority and Action badges
+      share the `zen-badge` shape (STY-01). After the audit, links styled as buttons are no longer underlined
+      (finding 3 below).
+- [x] Role navigation shows only the role's destinations and marks the current page. Evidence: UI-07 and STY-04
+      (exactly one `aria-current="page"`, and not on My Tickets while Create Ticket is open); E2E-03 (links per role);
+      the header of every screenshot, where the underlined entry changes with the screen.
+- [x] Actions Taken editable fields (open Action) and read-only text (final Action, Requester view) are visibly
+      different. Evidence: `actions-taken/*-edit.png` (inputs) against `*-final.png` and `*-requester-view.png`
+      (plain text, no controls); UI-14, UI-17.
+- [x] Validation messages sit directly under their fields on the Action form. Evidence:
+      `actions-taken/*-validation.png` (the Description message under its box, red border and focus ring);
+      `*-inactive-assignee.png` (the Assignee message under its select); UI-10, UI-12, STY-04.
+- [x] Shared (Requester-visible) Action content and private Internal Notes are told apart without reading the
+      heading. Evidence: the green "Everything in an Action is visible to the Requester." strip above the list
+      against the amber, locked Internal Notes panel of Lab 3 (`artifacts/lab-03/screenshots/staff-ticket-detail/*-notes.png`);
+      STY-03.
+- [x] Keyboard focus is visible on every new interactive control. Evidence: RESP-05 measures the computed outline of
+      the dashboard cards, priority links, Refresh, navigation, all ten Action form controls, the status control and
+      the Actions Taken tab; `focus/desktop-*.png` were checked by eye.
+- [x] No clipped labels, overlapping controls, hidden buttons or horizontal scrolling at 375, 850 and 1280 px on any
+      screen in section 12, after the fixes below. Evidence: the no-scroll assertion inside `shot()` for all 66
+      images, E2E-01 and E2E-03 (widths), and the images themselves.
+- [x] Zero, empty, failure, conflict and locked states render as specified. Evidence: `staff-dashboard/*-zero.png`,
+      `*-failure.png`, `*-loading.png`; `requester-dashboard/*-zero.png`, `*-failure.png`;
+      `actions-taken/*-stale.png`, `*-inactive-assignee.png`, `*-locked.png`; `ticket-workflow/*-stale.png`,
+      `*-resolution-blocked.png`.
 
 ## 12. Screenshot paths
 
@@ -261,3 +280,48 @@ below the first three are additions to the labsheet's minimum structure.
 | Actions Taken (staff and Requester) | `actions-taken/` | `list`, `create`, `validation`, `edit`, `final`, `stale`, `inactive-assignee`, `requester-view`, `locked` |
 | Ticket workflow controls | `ticket-workflow/` | `allowed-transitions`, `resolution-blocked`, `resolved`, `stale` |
 | Keyboard focus (desktop only) | `focus/` | `dashboard-card`, `action-form`, `status-control` |
+
+## 13. Screenshot index and audit findings (Issue #85)
+
+66 images, every one taken after the no-horizontal-scroll assertion. "Mocked answer" means the page is the real
+screen and exactly one request was answered with the error the server would send (a dashboard failure, a stale
+version, an inactive assignee), because those cannot be made to happen on demand with real data; every other image
+is real data from the seeded database and the specs' own tickets. Each caption below was checked against its image.
+
+| Screen state (`folder/state`) | Caption | Widths | Data |
+|---|---|---|---|
+| `staff-dashboard/loaded` | IT Staff Dashboard with real figures and lists | `desktop`, `tablet`, `mobile` | real data |
+| `staff-dashboard/zero` | IT Staff Dashboard with every figure at zero and every list empty | `desktop`, `tablet`, `mobile` | mocked answer |
+| `staff-dashboard/loading` | IT Staff Dashboard while it loads: title shown, skeleton cards, Refresh disabled | `desktop`, `tablet`, `mobile` | real data, request held 4 s |
+| `staff-dashboard/failure` | IT Staff Dashboard when the API fails: warning with Retry, no figures | `desktop`, `tablet`, `mobile` | mocked answer |
+| `staff-dashboard/admin` | Administrator's read-only view: account counts instead of personal cards | `desktop`, `tablet`, `mobile` | real data |
+| `requester-dashboard/loaded` | Requester Dashboard with the account's own figures | `desktop`, `tablet`, `mobile` | real data |
+| `requester-dashboard/zero` | Requester Dashboard of an account with no Tickets | `desktop`, `tablet`, `mobile` | real data (seeded account) |
+| `requester-dashboard/failure` | Requester Dashboard when the API fails | `desktop`, `tablet`, `mobile` | mocked answer |
+| `actions-taken/list` | Staff Actions list, one Action in each of the four statuses | `desktop`, `tablet`, `mobile` | real data |
+| `actions-taken/create` | Add Action form, empty | `desktop`, `tablet`, `mobile` | real data |
+| `actions-taken/validation` | Add Action form after Save with an empty Description | `desktop`, `tablet`, `mobile` | real data |
+| `actions-taken/edit` | Edit form of an open Action | `desktop`, `tablet`, `mobile` | real data |
+| `actions-taken/final` | A Completed Action: plain text and 'This action is final.' | `desktop`, `tablet`, `mobile` | real data |
+| `actions-taken/stale` | Edit form after a stale-version answer: banner, typed text kept | `desktop`, `tablet`, `mobile` | mocked answer |
+| `actions-taken/inactive-assignee` | Add Action form after INVALID_ASSIGNEE: message under Assignee | `desktop`, `tablet`, `mobile` | mocked answer |
+| `actions-taken/requester-view` | Requester Ticket Detail with every Action, read-only | `desktop`, `tablet`, `mobile` | real data |
+| `actions-taken/locked` | Staff Actions tab of a Resolved Ticket: write controls hidden, reason shown | `desktop`, `tablet`, `mobile` | real data |
+| `ticket-workflow/allowed-transitions` | Status control with a permitted target chosen and Update status enabled | `desktop`, `tablet`, `mobile` | real data |
+| `ticket-workflow/resolution-blocked` | Resolved chosen while Actions are open: reason, link and disabled Update status | `desktop`, `tablet`, `mobile` | real data |
+| `ticket-workflow/resolved` | A Resolved Ticket: current status Resolved | `desktop`, `tablet`, `mobile` | real data |
+| `ticket-workflow/stale` | A stale IT Priority change: banner, chosen value kept | `desktop`, `tablet`, `mobile` | mocked answer |
+| `focus/dashboard-card` | Keyboard focus ring on a dashboard card (desktop) | `desktop` | real data |
+| `focus/action-form` | Keyboard focus ring in the Action form (desktop) | `desktop` | real data |
+| `focus/status-control` | Keyboard focus ring on the status control (desktop) | `desktop` | real data |
+
+**Defects the audit found, all fixed in the same PR** (a green suite had caught none of them):
+
+| # | What the screenshots showed | Fix | Guarded by |
+|---|---|---|---|
+| 1 | In an Action card at 850 and 375 px, Status, Follow-up, Assignee and Performed by wrapped unevenly: "Performed by" was pushed to the far right edge, and a "Follow-up None" label sat on every card | A card is a two-column grid: Status left and Follow-up right, Assignee left and Performed by right, wide cells across both; "None" under Follow-up is shown only in the table. My first fix (a flex trick) squeezed the follow-up marker into a thin vertical strip at 850 and 375 px; the review of the regenerated images caught it and the grid replaced it | `actions-taken/*-list.png`, `*-requester-view.png` |
+| 2 | The Add Action form repeated "Everything in an Action is visible to the Requester." directly under the same strip of the tab | The form leaves its own strip out when the tab already shows one (the form alone still carries it, STY-03) | `actions-taken/*-create.png`, STY-03 |
+| 3 | Links styled as buttons ("Open Ticket Queue", "My Queue", "Create Ticket", "View My Tickets") were underlined like text links | `a.zen-btn` has no underline | `staff-dashboard/*-loaded.png`, `requester-dashboard/*-zero.png` |
+| 4 | In the Requester's table at 1280 px the Date/Time and the "Follow-up needed" marker wrapped in narrow columns | Wider Date/Time and Follow-up columns | `actions-taken/desktop-requester-view.png` |
+| 5 | The dashboard loading state had no gap between the skeleton cards and the two skeleton panels | One column with the same gap as the loaded screen | `staff-dashboard/*-loading.png` |
+| 6 | (Found by an end-to-end spec, not a screenshot.) After cancelling a Ticket, the Actions tab still listed the Actions the server had just cancelled | The Actions list reloads after every status change (Issue 84) | UI-23, E2E-02 |

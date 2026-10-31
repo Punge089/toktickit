@@ -1291,9 +1291,11 @@ textarea.zen-field-control {
 }
 
 .zen-action-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  /* A card below 992px is a two-column grid: wide cells span both columns, and Status / Follow-up and
+     Assignee / Performed by sit side by side. (A wrapping flex row squeezed the follow-up marker.) */
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
   gap: var(--zen-space-1) var(--zen-space-3);
   padding: var(--zen-space-3) var(--zen-space-4);
   border-top: 1px solid var(--zen-border);
@@ -1328,7 +1330,6 @@ textarea.zen-field-control {
 }
 .zen-action-cell-followup {
   order: 3;
-  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: var(--zen-space-1);
@@ -1361,7 +1362,17 @@ textarea.zen-field-control {
   order: 9;
   flex: 0 0 100%;
 }
+/* Wide cells take a whole card row. */
+.zen-action-cell-desc,
+.zen-action-cell-result,
+.zen-action-cell-notes,
+.zen-action-cell-date,
+.zen-action-cell-open {
+  grid-column: 1 / -1;
+}
+/* "None" under Follow-up is only needed as a table cell; in a card it is noise. */
 .zen-action-none {
+  display: none;
   color: var(--zen-text-muted);
 }
 .zen-action-followup-note {
@@ -1481,7 +1492,10 @@ textarea.zen-field-control {
   }
   .zen-action-list-requester .zen-action-header,
   .zen-action-list-requester .zen-action-row {
-    grid-template-columns: 1.1fr 2fr 1.8fr 1fr 1.3fr 1.2fr 1.1fr 1.1fr;
+    grid-template-columns: 1.5fr 2fr 1.8fr 1fr 1.7fr 1.2fr 1.1fr 1.1fr;
+  }
+  .zen-action-none {
+    display: inline;
   }
   .zen-action-header {
     padding: var(--zen-space-3) var(--zen-space-4);
@@ -1504,6 +1518,7 @@ textarea.zen-field-control {
   .zen-action-cell-open {
     order: 0;
     flex: none;
+    grid-column: auto;
   }
   .zen-action-cell-date {
     color: var(--zen-text);
@@ -1782,4 +1797,17 @@ textarea.zen-field-control {
   .zen-dash-lists {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+/* Links styled as buttons (Create Ticket, Open Ticket Queue, View My Tickets) are not underlined like text links. */
+a.zen-btn,
+a.zen-btn:hover {
+  text-decoration: none;
+}
+
+/* The loading state stacks its skeleton cards and panels with the same gap as the loaded screen. */
+.zen-dash-loading-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--zen-space-4);
 }

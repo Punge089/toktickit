@@ -155,11 +155,11 @@ once to show its test fails (section 7).
 
 | Test ID | Requirement/AC | What It Tests | Expected Result | Automated Test File | Result |
 |---|---|---|---|---|---|
-| RESP-01 | AC-37, FR-22 | IT Staff Dashboard (including loaded, zero, failure and Administrator states) at 1280, 850 and 375 px | No horizontal page scroll; screenshots saved under `artifacts/lab-04/screenshots/staff-dashboard/` | `e2e/lab-04/responsive.spec.ts` | Partial: no horizontal scroll at 1280, 850 and 375 px for every role passes (Issue 83); screenshots of every state come in Issue 85 |
-| RESP-02 | AC-37, FR-22 | Requester Dashboard at three widths | No horizontal scroll; screenshots saved under `requester-dashboard/` | `e2e/lab-04/responsive.spec.ts` | Partial: no horizontal scroll at 1280, 850 and 375 px passes (Issue 83); screenshots of every state come in Issue 85 |
-| RESP-03 | AC-37, FR-22 | Actions Taken on staff and Requester Ticket Detail at three widths, including create, validation, edit, final, stale and locked states | No horizontal scroll; table becomes cards below 992 px; screenshots under `actions-taken/` | `e2e/lab-04/responsive.spec.ts` | Partial: no horizontal scroll at 1280, 850 and 375 px and the table-to-cards switch pass (Issue 82); screenshots of every state come in Issue 85 |
-| RESP-04 | AC-37, FR-22 | Ticket workflow controls at three widths | No horizontal scroll; screenshots under `ticket-workflow/` | `e2e/lab-04/responsive.spec.ts` | Planned |
-| RESP-05 | AC-37, FR-22 | Keyboard-only walk through the dashboard cards, the Action form and the status control | A visible outline on every control reached, measured from computed style; screenshots under `focus/` | `e2e/lab-04/responsive.spec.ts` | Planned |
+| RESP-01 | AC-37, FR-22 | IT Staff Dashboard (including loaded, zero, failure and Administrator states) at 1280, 850 and 375 px | No horizontal page scroll; screenshots saved under `artifacts/lab-04/screenshots/staff-dashboard/` | `e2e/lab-04/responsive.spec.ts` | Pass |
+| RESP-02 | AC-37, FR-22 | Requester Dashboard at three widths | No horizontal scroll; screenshots saved under `requester-dashboard/` | `e2e/lab-04/responsive.spec.ts` | Pass |
+| RESP-03 | AC-37, FR-22 | Actions Taken on staff and Requester Ticket Detail at three widths, including create, validation, edit, final, stale and locked states | No horizontal scroll; table becomes cards below 992 px; screenshots under `actions-taken/` | `e2e/lab-04/responsive.spec.ts` | Pass |
+| RESP-04 | AC-37, FR-22 | Ticket workflow controls at three widths | No horizontal scroll; screenshots under `ticket-workflow/` | `e2e/lab-04/responsive.spec.ts` | Pass |
+| RESP-05 | AC-37, FR-22 | Keyboard-only walk through the dashboard cards, the Action form and the status control | A visible outline on every control reached, measured from computed style; screenshots under `focus/` | `e2e/lab-04/responsive.spec.ts` | Pass |
 | E2E-01 | AC-01, AC-03, AC-06, AC-08, AC-10, AC-11, AC-12 | Staff creates, assigns, edits, starts, completes and cancels Actions; an inactive assignee is refused; the Requester then sees the Actions read-only; Administrator creates one | Every step shows the expected result in the real UI; the Requester view has no write controls | `e2e/lab-04/actions-taken-flow.spec.ts` | Pass |
 | E2E-02 | AC-16, AC-17, AC-18, AC-20, AC-22, AC-24 | Resolve is blocked with an open Action; complete it and resolve; two browser sessions cause a stale conflict; cancel cascades; reopen and resolve again | Each outcome as specified; the summary status updates without a reload | `e2e/lab-04/ticket-resolution.spec.ts` | Pass |
 | E2E-03 | AC-27, AC-28, AC-29, AC-31 | Each role logs in, sees its dashboard and navigation, follows every card, and the count matches the list; zero-data and Administrator views | Landing on Dashboard; list totals equal card counts; zero states and the Administrator variant correct | `e2e/lab-04/dashboards.spec.ts` | Pass |
@@ -282,8 +282,9 @@ this plan reported no uncovered item.
 
 ## 4. Responsive and Visual Checklist
 
-Completed in `ui-spec.md` §11, item by item, against the screenshots in `artifacts/lab-04/screenshots/`. Not
-started yet; this section is filled in by the evidence PR (Issue #85).
+Completed in `ui-spec.md` §11, item by item, against the 66 screenshots in `artifacts/lab-04/screenshots/`
+(1280, 850 and 375 px; every image taken after a no-horizontal-scroll assertion). `ui-spec.md` §13 indexes every
+image with its caption and lists the six defects the review found, each fixed and guarded.
 
 ## 5. Test Commands
 
@@ -298,6 +299,9 @@ cd client && npm test
 # runs one worker, removes leftover e2e.* users and re-seeds the dev database first)
 npx playwright test
 npx playwright test e2e/lab-04      # Lab 4 only; writes artifacts/lab-04/screenshots
+
+# traceability: every FR, BR and AC has a passing test, and every listed test file exists and names its test
+node server/scripts/check-traceability.mjs
 ```
 
 ## 6. Changes to earlier tests (BR-39)
@@ -339,11 +343,34 @@ the guard is then restored and the tests pass again. The outcome column stays **
 
 ## 8. Final Results
 
-Not run yet. The real output of the commands in section 5 is pasted here by the evidence PR after the suite is
-run on `lab4-staging`, and again after the release on `main`, and the counts must match. Baseline before any
-Lab 4 change, run on `main` at `421aea1` on 2026-10-30: server 171 passed (20 files), client 95 passed
-(15 files); the Playwright baseline of 128 is taken from the Lab 3 report and is re-run before the first
-implementation PR.
+Run on 2026-10-31 on branch `feature/85-e2e-evidence`, which is `lab4-staging` after Pull Request #92 plus this
+evidence Pull Request. The release Pull Request into `main` repeats these runs on `main` and the counts must match
+(Issue #86). Baseline before any Lab 4 change, on `main` at `421aea1`: server 171 (20 files), client 95
+(15 files), Playwright 128.
+
+| Suite | Command | Result | Baseline to now |
+|---|---|---|---|
+| Server (unit, API, authorization, workflow, migration, seed, dashboards, performance smoke) | `cd server && npm test` | **31 files, 251 tests passed** | 171 to 251 (+80) |
+| Client (UI component and style) | `cd client && npm test` | **23 files, 137 tests passed** | 95 to 137 (+42) |
+| End to end, responsive, regression (Playwright, `npx playwright test`) | 28 Lab 2 + 100 Lab 3 + 84 Lab 4 | **212 tests passed** | 128 to 212 (+84) |
+| Typecheck | `npx tsc --noEmit` in `server/` and `client/` | clean | |
+
+Lab 4's 84 Playwright tests: `actions-taken-flow` 4 (E2E-01), `ticket-resolution` 4 (E2E-02), `dashboards` 9
+(E2E-03), `regression` 6 (REG-04 and the FR-21 screen sweep), `responsive` 61 (RESP-01 to RESP-05, 66 screenshots).
+
+Real output of `node server/scripts/check-traceability.mjs`:
+
+```
+Requirements with a passing test: AC 37/37, FR 22/22, BR 40/40
+Tests in the plan: 98 (Pass 95, Partial 3, other 0)
+Every FR, BR and AC has a passing test, and every listed test file exists and names its test.
+```
+
+A search of every test directory finds no `skip`, `only`, `fixme` or disabled test, and a diff of the Lab 1 to
+Lab 3 test files against `main` shows no test removed (two titles renamed, listed in section 6). The performance
+smoke (SDASH-06) with about 3000 Tickets and 2000 Actions measured 9 to 10 ms and 9 to 10 queries per dashboard
+request against the 1000 ms and 12 query limits. Mutation checks MUT-01 to MUT-08 (section 7) were each run and
+restored.
 
 ## 9. Known Limitations or Deferred Tests
 

@@ -69,12 +69,15 @@ toktickit/
 ├── e2e/                        Playwright: global-setup.ts (re-seeds), cleanup.ts,
 │   ├── lab-02/                  Requester flow + responsive/visual specs (session-authenticated)
 │   ├── lab-03/                  authentication, staff-ticket-flow, user-administration, responsive specs
-│   └── lab-04/                  actions-taken-flow, dashboards, regression (flows + screen sweep)
+│   └── lab-04/                  actions-taken-flow, ticket-resolution, dashboards, regression (flows + screen
+│                                sweep), responsive (screenshots at three widths, keyboard focus)
 ├── artifacts/lab-02/screenshots/  Committed visual evidence (desktop/tablet/mobile x every state)
 ├── artifacts/lab-03/screenshots/  Lab 3 visual evidence: authentication, requester, staff-queue,
 │                                  staff-ticket-detail, user-management, focus (86 images)
+├── artifacts/lab-04/screenshots/  Lab 4 visual evidence: staff-dashboard, requester-dashboard,
+│                                  actions-taken, ticket-workflow, focus (66 images)
 ├── docs/lab-01/ .. docs/lab-04/  specification.md, api-spec.md, ui-spec.md, tests.md,
-│                                 reviewer.md, ai-use.md (Lab 4's last two arrive with its evidence)
+│                                 reviewer.md, ai-use.md
 ├── playwright.config.ts
 └── .gitignore
 ```
@@ -208,8 +211,8 @@ and runs against the actual PostgreSQL-backed API. Nothing is mocked except one 
 aborted request, used to produce the Create Ticket API-failure state. Before each run
 `e2e/global-setup.ts` removes leftover `e2e.*` users and re-seeds the dev database, and the run uses one
 worker because the specs share that database. It writes screenshots to `artifacts/lab-02/screenshots/`
-(see `docs/lab-02/ui-spec.md` §11-12) and `artifacts/lab-03/screenshots/` (see `docs/lab-03/ui-spec.md`
-§13-14), and creates real Ticket and User rows in your dev database as it exercises the flows.
+(see `docs/lab-02/ui-spec.md` §11-12), `artifacts/lab-03/screenshots/` (see `docs/lab-03/ui-spec.md`
+§13-14) and `artifacts/lab-04/screenshots/` (66 images, indexed in `docs/lab-04/ui-spec.md` §13), and creates real Ticket and User rows in your dev database as it exercises the flows.
 `npx playwright test e2e/lab-03` runs only the Lab 3 specs, and `npx playwright test e2e/lab-04` only Lab 4's.
 The Lab 4 specs create Actions assigned to a throwaway `e2e.*` IT Staff user; the same clean-up removes them.
 
@@ -219,7 +222,11 @@ The Lab 4 specs create Actions assigned to a throwaway `e2e.*` IT Staff user; th
 |---|---|---|
 | Server (unit + API + authorization + migration + dashboards) | `cd server && npm test` | 31 files, 251 tests |
 | Client (UI component + style) | `cd client && npm test` | 23 files, 137 tests |
-| End to end + responsive (Playwright) | `npx playwright test` | 151 tests (28 Lab 2 + 100 Lab 3 + 23 Lab 4) |
+| End to end + responsive (Playwright) | `npx playwright test` | 212 tests (28 Lab 2 + 100 Lab 3 + 84 Lab 4) |
+
+Lab 4 also has a traceability check, `node server/scripts/check-traceability.mjs` (from the repo root): it fails
+unless every FR, BR and AC in `docs/lab-04/specification.md` maps to a passing test in `docs/lab-04/tests.md`, and
+every listed test file exists and names its test. Today it reports 37/37, 22/22 and 40/40.
 
 `server/vitest.config.ts` runs test files sequentially (`fileParallelism: false`): every server test
 file shares the one real test database with no per-file transaction isolation, so parallel files can
@@ -293,6 +300,8 @@ endpoint that deletes a user (BR-34): access is removed by deactivating the acco
 - [`docs/lab-04/api-spec.md`](docs/lab-04/api-spec.md) - the new and changed endpoints, error codes.
 - [`docs/lab-04/ui-spec.md`](docs/lab-04/ui-spec.md) - dashboards, the Actions Taken tab, navigation, deviations from the mockups.
 - [`docs/lab-04/tests.md`](docs/lab-04/tests.md) - planned tests, traceability, changes to earlier tests, mutation checks, results.
+- [`docs/lab-04/reviewer.md`](docs/lab-04/reviewer.md) - peer review record in both directions, with the real GitHub conversations.
+- [`docs/lab-04/ai-use.md`](docs/lab-04/ai-use.md) - the LLM used, key prompts, and my reflection.
 
 ## Git workflow
 
