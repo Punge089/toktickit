@@ -62,6 +62,33 @@ export const handlers = [
 
   // Issue 66 - Public Comments (api-spec.md section 7). Default: none yet.
   http.get(`${API_URL}/api/tickets/:id/comments`, () => HttpResponse.json([])),
+  // Lab 4: every role lands on /dashboard, so the default figures are all zero (a dashboard test supplies its own).
+  http.get(`${API_URL}/api/dashboard/requester`, () =>
+    HttpResponse.json({
+      generatedAt: "2026-10-30T03:00:00.000Z",
+      metrics: { openTickets: 0, waitingForYou: 0, resolved: 0, closed: 0 },
+      attention: [],
+      recent: [],
+    }),
+  ),
+  http.get(`${API_URL}/api/dashboard/staff`, () =>
+    HttpResponse.json({
+      generatedAt: "2026-10-30T03:00:00.000Z",
+      role: "IT_STAFF",
+      statusCounts: { NEW: 0, OPEN: 0, IN_PROGRESS: 0, WAITING_FOR_REQUESTER: 0 },
+      unassigned: 0,
+      activeByPriority: { URGENT: 0, HIGH: 0, MEDIUM: 0, LOW: 0 },
+      personal: { myAssigned: 0, myOpenActions: 0 },
+      urgentTickets: [],
+      recentTickets: [],
+      myActions: [],
+      accounts: null,
+    }),
+  ),
+  // Lab 4: every Ticket Detail screen now reads the Actions Taken of its Ticket; the default is none.
+  http.get(`${API_URL}/api/tickets/:id/actions`, () =>
+    HttpResponse.json({ items: [], counts: { open: 0, completed: 0, cancelled: 0 } }),
+  ),
 
   // Issue 27
   http.get(`${API_URL}/api/categories`, () =>

@@ -1,5 +1,5 @@
 import { test, expect, request, Browser, Page } from "@playwright/test";
-import { ACCOUNTS, API, apiSession, createTicketViaApi, loginAs, selectedLabel, stamp } from "./helpers";
+import { ACCOUNTS, API, addCompletedAction, apiSession, createTicketViaApi, loginAs, selectedLabel, stamp } from "./helpers";
 
 async function signedInPage(browser: Browser, email: string, role: "REQUESTER" | "IT_STAFF" | "ADMINISTRATOR") {
   const context = await browser.newContext();
@@ -88,6 +88,12 @@ test.describe("E2E-02 staff ticket flow", () => {
     await expect(requester.getByRole("button", { name: "Problem Appears Resolved" })).toHaveCount(0);
     expect(await requester.locator("body").innerText()).toContain("In Progress");
 
+    // Lab 4 BR-20: resolving needs a Completed Action, so one is recorded first (through the API;
+    // the Actions Taken screen has its own spec in e2e/lab-04).
+    const staffApi = await apiSession(ACCOUNTS.staff);
+    const staffId = (await (await staffApi.get("/api/auth/me")).json()).id as number;
+    await addCompletedAction(staffApi, ticketId, staffId);
+
     // --- IT Staff see the indicator, in the Queue and on the ticket (AC-21)
     await staff.getByRole("banner").getByRole("link", { name: "My Queue" }).click();
     await staff.getByLabel("Search").fill(summary);
@@ -132,8 +138,9 @@ test.describe("E2E-02 staff ticket flow", () => {
 
     const staff = await signedInPage(browser, ACCOUNTS.staff, "IT_STAFF");
     await staff.goto(`/staff/tickets/${id}`);
-    const options = await staff.getByLabel("Current Status").locator("option").allTextContents();
-    expect(options.map((o) => o.replace(" (current)", "").trim())).toEqual(["New", "Open", "In Progress", "Cancelled"]);
+    // Lab 4 Issue 84: wait for the options to be there (toHaveText retries) instead of reading them once,
+    // which could catch the select before the Ticket had loaded. The check itself is unchanged.
+    await expect(staff.getByLabel("Current Status").locator("option")).toHaveText(["New (current)", "Open", "In Progress", "Cancelled"]);
 
     // In Progress needs an owner first (AC-15, BR-20): the backend refuses and the screen says why.
     await staff.getByLabel("Current Status").selectOption({ label: "In Progress" });

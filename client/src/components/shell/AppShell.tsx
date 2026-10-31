@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.js";
 import { RoleBadge } from "../ui/Badge.js";
 
@@ -7,8 +7,21 @@ interface AppShellProps {
   children: ReactNode;
 }
 
-const NAV_LINK_CLASS = ({ isActive }: { isActive: boolean }) =>
-  ["zen-shell-nav-link", isActive ? "zen-shell-nav-link-active" : ""].filter(Boolean).join(" ");
+// Lab 4 ui-spec.md §2: one entry is marked as the current page, and never two.
+// NavLink would light "My Tickets" up on /tickets/new too (it matches by path
+// prefix), so the shell decides which entry is current and sets the same class
+// and aria-current="page" itself.
+function NavItem({ to, current, children }: { to: string; current: boolean; children: ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className={["zen-shell-nav-link", current ? "zen-shell-nav-link-active" : ""].filter(Boolean).join(" ")}
+      aria-current={current ? "page" : undefined}
+    >
+      {children}
+    </Link>
+  );
+}
 
 // Issue 23/64 — application shell (docs/lab-03/ui-spec.md §2): TokTickIT
 // identity, role-specific navigation (a role never sees a destination it
@@ -64,28 +77,28 @@ export function AppShell({ children }: AppShellProps) {
             className={["zen-shell-nav", mobileNavOpen ? "zen-shell-nav-open" : ""].filter(Boolean).join(" ")}
             aria-label="Primary"
           >
+            <NavItem to="/dashboard" current={pathname === "/dashboard"}>
+              Dashboard
+            </NavItem>
             {user.role === "REQUESTER" && (
               <>
-                <NavLink to="/tickets" className={NAV_LINK_CLASS}>
+                <NavItem to="/tickets" current={pathname === "/tickets" || (pathname.startsWith("/tickets/") && pathname !== "/tickets/new")}>
                   My Tickets
-                </NavLink>
-                <NavLink to="/tickets/new" className={NAV_LINK_CLASS}>
+                </NavItem>
+                <NavItem to="/tickets/new" current={pathname === "/tickets/new"}>
                   Create Ticket
-                </NavLink>
+                </NavItem>
               </>
             )}
             {user.role === "IT_STAFF" && (
-              <NavLink
-                to="/staff/queue"
-                className={({ isActive }) => NAV_LINK_CLASS({ isActive: isActive || pathname.startsWith("/staff/tickets/") })}
-              >
+              <NavItem to="/staff/queue" current={pathname === "/staff/queue" || pathname.startsWith("/staff/tickets/")}>
                 My Queue
-              </NavLink>
+              </NavItem>
             )}
             {user.role === "ADMINISTRATOR" && (
-              <NavLink to="/admin/users" className={NAV_LINK_CLASS}>
+              <NavItem to="/admin/users" current={pathname === "/admin/users"}>
                 Users
-              </NavLink>
+              </NavItem>
             )}
           </nav>
         )}

@@ -7,6 +7,7 @@ import { Alert } from "../components/ui/Alert.js";
 import { PriorityBadge, StatusBadge } from "../components/ui/Badge.js";
 import { AttachmentSection } from "../components/tickets/AttachmentSection.js";
 import { EntryThread } from "../components/tickets/EntryThread.js";
+import { RequesterActions } from "../components/actions/RequesterActions.js";
 import { Button } from "../components/ui/Button.js";
 import { Badge } from "../components/ui/Badge.js";
 import { Entry, fetchComments, markProblemResolved, postComment } from "../api/entries.js";
@@ -62,7 +63,16 @@ export function TicketDetailPage() {
   }
 
   if (state === "error" || !ticket) {
-    return <Alert tone="error">Unable to load this ticket. Please try again.</Alert>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--zen-space-3)" }}>
+        <Alert tone="error">Unable to load this ticket. Please try again.</Alert>
+        <div>
+          <Button variant="secondary" onClick={load}>
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // Closed and Cancelled Tickets accept no more comments or resolved signals (BR-22).
@@ -177,6 +187,10 @@ export function TicketDetailPage() {
       <h2 style={{ fontSize: "var(--zen-fs-h2)" }}>Attachments</h2>
 
       <AttachmentSection ticketId={ticket.id} attachments={ticket.attachments} onChange={load} />
+
+      <hr className="zen-detail-divider" />
+
+      <RequesterActions ticketId={ticket.id} />
 
       <hr className="zen-detail-divider" />
 

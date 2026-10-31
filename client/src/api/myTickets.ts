@@ -25,6 +25,8 @@ export interface TicketListMeta {
     relatedSystemId: number | null;
     requestedPriority: string | null;
     status: string | null;
+    /** Lab 4: true when the list was limited to active Tickets. */
+    active?: boolean | null;
   };
 }
 
@@ -38,6 +40,8 @@ export interface MyTicketsQuery {
   categoryId?: string;
   relatedSystemId?: string;
   requestedPriority?: string;
+  status?: string;
+  active?: boolean;
   sort?: string;
   page?: number;
   pageSize?: number;
@@ -51,6 +55,8 @@ export async function fetchMyTickets(query: MyTicketsQuery): Promise<MyTicketsRe
   if (query.categoryId) params.set("categoryId", query.categoryId);
   if (query.relatedSystemId) params.set("relatedSystemId", query.relatedSystemId);
   if (query.requestedPriority) params.set("requestedPriority", query.requestedPriority);
+  if (query.status) params.set("status", query.status);
+  if (query.active) params.set("active", "true");
   if (query.sort) params.set("sort", query.sort);
   if (query.page) params.set("page", String(query.page));
   if (query.pageSize) params.set("pageSize", String(query.pageSize));

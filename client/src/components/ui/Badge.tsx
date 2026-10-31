@@ -87,3 +87,39 @@ const ROLE_LABEL: Record<string, string> = {
 export function RoleBadge({ role }: { role: "REQUESTER" | "IT_STAFF" | "ADMINISTRATOR" }) {
   return <Badge tone={ROLE_TONE[role]}>{ROLE_LABEL[role]}</Badge>;
 }
+
+// Lab 4 ui-spec.md §1 - the four Action statuses. Each has its own class and
+// always its own text; Completed also carries a check and Cancelled is
+// struck through, so no state depends on colour alone (BR-40).
+export type ActionStatusKey = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+
+export const ACTION_STATUS_LABEL: Record<ActionStatusKey, string> = {
+  PLANNED: "Planned",
+  IN_PROGRESS: "In Progress",
+  COMPLETED: "Completed",
+  CANCELLED: "Cancelled",
+};
+
+const ACTION_STATUS_CLASS: Record<ActionStatusKey, string> = {
+  PLANNED: "zen-badge-action-planned",
+  IN_PROGRESS: "zen-badge-action-progress",
+  COMPLETED: "zen-badge-action-completed",
+  CANCELLED: "zen-badge-action-cancelled",
+};
+
+export function ActionStatusBadge({ status }: { status: ActionStatusKey }) {
+  return (
+    <span className={`zen-badge ${ACTION_STATUS_CLASS[status]}`}>
+      {status === "COMPLETED" && <span aria-hidden="true">✓</span>}
+      {ACTION_STATUS_LABEL[status]}
+    </span>
+  );
+}
+
+export function FollowUpMarker() {
+  return (
+    <span className="zen-followup-marker">
+      <span aria-hidden="true">⚑</span> Follow-up needed
+    </span>
+  );
+}
