@@ -34,6 +34,8 @@ interface ActionFormProps {
   /** Edit mode: open with this status already chosen (the quick Complete and Cancel buttons). */
   initialStatus?: ActionStatus;
   focusResultOnOpen?: boolean;
+  /** The tab already shows the shared-content notice right above the form, so the form need not repeat it. */
+  hideSharedLabel?: boolean;
   /** Fetches the latest version of this Action for "Reload latest". */
   loadLatest: () => Promise<ActionItem | null>;
   onSaved: (saved: ActionItem) => void;
@@ -113,6 +115,7 @@ export function ActionForm({
   defaultAssigneeId,
   initialStatus,
   focusResultOnOpen,
+  hideSharedLabel,
   loadLatest,
   onSaved,
   onCancel,
@@ -280,12 +283,14 @@ export function ActionForm({
 
   return (
     <form className="zen-action-form" onSubmit={handleSubmit} noValidate aria-label={mode === "create" ? "Add action" : "Edit action"}>
-      <p className="zen-action-shared-label">
-        <span role="img" aria-label="Visible to requester">
-          👁
-        </span>{" "}
-        Everything in an Action is visible to the Requester.
-      </p>
+      {!hideSharedLabel && (
+        <p className="zen-action-shared-label">
+          <span role="img" aria-label="Visible to requester">
+            👁
+          </span>{" "}
+          Everything in an Action is visible to the Requester.
+        </p>
+      )}
 
       {stale && (
         <Alert tone="warning">

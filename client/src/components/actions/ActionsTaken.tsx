@@ -176,6 +176,7 @@ export function ActionsTaken({ ticketId, ticketStatus, canWrite, user, state, it
             ticketId={ticketId}
             mode="create"
             staff={staff}
+            hideSharedLabel
             defaultAssigneeId={user.role === "IT_STAFF" && staff.some((u) => u.id === user.id) ? user.id : null}
             loadLatest={async () => null}
             onSaved={() => void afterSave("Action saved.", { kind: "closed" })}
@@ -304,6 +305,7 @@ export function ActionsTaken({ ticketId, ticketStatus, canWrite, user, state, it
             mode="edit"
             action={selected}
             staff={staff}
+            hideSharedLabel
             defaultAssigneeId={null}
             initialStatus={panel.status}
             focusResultOnOpen={panel.focusResult}

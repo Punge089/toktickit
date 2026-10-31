@@ -41,7 +41,7 @@ export function DashboardFrame({ firstName, subtitle, state, refreshing, refresh
       )}
 
       {state === "loading" && (
-        <div aria-busy="true">
+        <div aria-busy="true" className="zen-dash-loading-wrap">
           <p role="status" className="zen-dash-loading">
             Loading dashboard…
           </p>
