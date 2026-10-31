@@ -9,18 +9,18 @@ Pull Requests my partner authored that I reviewed.
 
 ## How the reviews were done
 
-- Every Lab 4 Pull Request went **feature branch -> `lab4-staging`**; none targeted `main`. The only Pull Request
-  into `main` is the release Pull Request from `lab4-staging`, which a file cannot list because the file is part of
-  what it releases (see the note under the first table).
+- Every Lab 4 feature Pull Request went **feature branch -> `lab4-staging`**; none targeted `main`. The only Pull
+  Requests into `main` are release Pull Requests from `lab4-staging` (#94, and the one that promotes this
+  record, see the note under the first table).
 - In every Pull Request the **reviewer clicked "Merge pull request"**, not the author (Workflow Guide, Part 9). The
   "Merged by" column below was read from GitHub, not assumed.
 - The reviewer left a review comment (a question about something real in the diff), the author replied, and the
   reviewer then submitted an **Approve** review. A review summary cannot be replied to under GitHub's review
   model, so each reply is a **top-level Pull Request comment that quotes the question** it answers.
 - The review messages were drafted with AI assistance and then posted by the two of us; `ai-use.md` says so. The
-  timestamps show how quick the reviews were instead of hiding it: from question to approval, five of my six Pull
-  Requests (#87, #88, #89, #90, #91) took 7 minutes or less (#91 under one), and all five of my partner's
-  (#57, #58, #59, #60, #61) took 7 minutes or less. The only slow one is #92, 51 minutes from question
+  timestamps show how quick the reviews were instead of hiding it: from question to approval, seven of my eight Pull
+  Requests (#87, #88, #89, #90, #91, #93, #94) took 7 minutes or less (#91 under one), and all six of my partner's
+  (#57, #58, #59, #60, #61, #62) took 7 minutes or less. The only slow one is #92, 51 minutes from question
   to approval.
 
 ## Pull Requests I authored (reviewed, approved and merged by @book6349)
@@ -33,11 +33,13 @@ Pull Requests my partner authored that I reviewed.
 | [#90](https://github.com/Punge089/toktickit/pull/90) | #82 Actions Taken UI | feature/82-actions-taken-ui | 10-30 15:35 | 15:37 | 15:39 | @book6349, 15:39 |
 | [#91](https://github.com/Punge089/toktickit/pull/91) | #83 Role dashboards (Requester and IT Staff) | feature/83-dashboards | 10-30 16:30 | 16:30 | 16:30 | @book6349, 16:31 |
 | [#92](https://github.com/Punge089/toktickit/pull/92) | #84 Final hardening and regression | feature/84-final-hardening | 10-31 11:24 | 12:13 | 12:15 | @book6349, 12:16 |
+| [#93](https://github.com/Punge089/toktickit/pull/93) | #85 Sprint 4 evidence, screenshots, traceability and review records | feature/85-e2e-evidence | 10-31 13:03 | 13:07 | 13:09 | @book6349, 13:09 |
+| [#94](https://github.com/Punge089/toktickit/pull/94) | #86 Release: promote `lab4-staging` to `main` (base `main`) | lab4-staging | 10-31 14:49 | 14:52 | 14:52 | @book6349, 14:52 |
 
-Two more Pull Requests are not in this table, because a file cannot list the Pull Request that introduces it: the
-**evidence Pull Request for Issue #85** that adds this file, and the **release Pull Request** from `lab4-staging`
-into `main`. Both are on the repository's Pull Requests page and are covered in the submission PDF; if a docs-only
-Pull Request is needed to record them here, it will be listed the same way.
+#93 and #94 were added after the release by a small docs-only Pull Request, because a file cannot list the Pull
+Request that introduces it (#93 added this file; #94 released it). That docs-only Pull Request, and the Pull Request
+that promotes it to `main`, are likewise not in this table; they are on the repository's Pull Requests page and are
+covered in the submission PDF.
 
 ### PR #87 - Issue 79: Sprint 4 engineering contract
 **@book6349:** "BR-06 lets an Administrator create and edit Actions, but Lab 3 made Administrators read-only on tickets. Doesn't that conflict?"
@@ -68,6 +70,17 @@ Pull Request is needed to record them here, it will be listed the same way.
 **@book6349:** "Why use a ref in useSingleFlight when the buttons are already disabled while a request is running?"
 **Me:** "The button only disables after React re-renders, so two submits in the same tick would both pass. UI-24 sends two in one tick and fails if the guard is removed."
 **@book6349:** "The guard is small, tested against a real double submit, and the sweep covers every role. Approved." - Approved, then merged by @book6349.
+
+### PR #93 - Issue 85: Sprint 4 evidence, screenshots, traceability and review records
+**@book6349:** "Why does the traceability script require a \"Pass\" result instead of just checking that every requirement has a test?"
+**Me:** "A planned test can exist with no result at all, so the script fails unless at least one mapped test is Pass and its file really names the test. It reports 98 of 98 now."
+**@book6349:** "The checklist matches the screenshots and the script gives a clear pass or fail. Approved." - Approved, then merged by @book6349.
+
+### PR #94 - Issue 86: Release, promote `lab4-staging` to `main`
+**@book6349:** "Why is the last checklist item, the run on main, still unticked in this PR?"
+**Me:** "It can only be true after the merge, so I will run the same three suites on main right after and record the numbers in tests.md. It stays unticked rather than claimed early."
+**@book6349:** "The counts match what was reviewed in the earlier PRs and nothing new is in here. Approved." - Approved, then merged by @book6349 (the Lab 4 release into `main`). The run on `main` that I promised is in `tests.md` section 8.
+
 ## Pull Requests I reviewed (authored by @book6349, in github.com/book6349/toktickit)
 
 Recorded as of 2026-10-31. In each, @book6349 opened the Pull Request into `lab4-staging`, I reviewed it against its
@@ -82,6 +95,7 @@ the same way.
 | [#59](https://github.com/book6349/toktickit/pull/59) | #53 Lab 4 Issue 3 - Actions Taken UI | feature/lab4-actions-ui | 10-30 15:33 | 15:34 | 15:37 | @Punge089, 15:37 |
 | [#60](https://github.com/book6349/toktickit/pull/60) | #54 Lab 4 Issue 4 - Ticket Workflow and Resolution Enforcement | feature/lab4-ticket-workflow | 10-30 16:22 | 16:22 | 16:23 | @Punge089, 16:23 |
 | [#61](https://github.com/book6349/toktickit/pull/61) | #55 Lab 4 Issue 5 - Requester and Staff Dashboards | feature/lab4-dashboards | 10-31 12:12 | 12:15 | 12:20 | @Punge089, 12:20 |
+| [#62](https://github.com/book6349/toktickit/pull/62) | Lab 4 - Final Regression, Hardening and Evidence | feature/lab4-final-hardening | 10-31 14:56 | 14:56 | 14:57 | @Punge089, 14:57 |
 
 ### PR #57 - Lab 4 Issue 1 - Engineering Contract, Test DD and Documentation Cleanup
 **Me:** "Please confirm every acceptance criterion maps to a named test and the AI-use entries are actual prompts."
@@ -107,6 +121,12 @@ the same way.
 **Me:** "Compare dashboard totals with their ticket lists, including the date-range boundaries."
 **@book6349:** "Server tests confirm the dashboard totals and drill-downs share the same filters, including inclusive UTC date bounds. The dashboard browser journey passed; 306 server tests, 58 client tests, and both builds passed. Lab 1–3 regression and the remaining Lab 4 browser journeys are still pending."
 **Me:** "Totals match the underlying tickets across the tested date windows. Approved to merge." - Approved, then merged by me.
+
+### PR #62 - Lab 4 - Final Regression, Hardening and Evidence
+**Me:** "Please check the full-regression results and confirm the responsive captures match the tested build."
+**@book6349:** "The 21-test run, 24 captures, editable report, and PDF are included on this PR at [report commit 4f4a847](https://github.com/book6349/toktickit/commit/4f4a8479ddf4040f5b788bc577555e1e3bca3148)."
+**Me:** "The results and captures match this revision. Approved to merge." - Approved, then merged by me.
+
 ## What this record does not claim
 
 - It lists only what GitHub shows, read on 2026-10-31. Anything opened after that is not here; it can be added the
