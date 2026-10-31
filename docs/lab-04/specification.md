@@ -479,40 +479,54 @@ Full contract: `docs/lab-04/api-spec.md`. New or changed endpoints:
 
 ## 10. Definition of Done
 
-**Product completion** (each box is ticked only when it has been checked on the final release branch)
-- [ ] Every FR, BR and AC above is implemented and maps to a passing automated test in
-      `docs/lab-04/tests.md`, confirmed by a traceability script run on the release branch.
-- [ ] `server/tests/lab-04/*`, `client/tests/lab-04/*`, `e2e/lab-04/*` and every Lab 1 to Lab 3 test pass from
-      `lab4-staging` and again from `main`, with counts recorded in `tests.md` §6; none is skipped, `.only`'d
-      or deleted.
-- [ ] Every endpoint in `api-spec.md` has a direct API test for success and for its `401`, `403`, `400`,
-      `404` and `409` cases; the authorization matrix is enforced on the backend and proved by tests that do
+**Product completion** (each box was ticked only after it was checked on the final release branch; the evidence
+is named next to it)
+- [x] Every FR, BR and AC above is implemented and maps to a passing automated test in
+      `docs/lab-04/tests.md`, confirmed by a traceability script run on the release branch
+      (`node server/scripts/check-traceability.mjs` on `main`: AC 37/37, FR 22/22, BR 40/40, 98 of 98 tests Pass).
+- [x] `server/tests/lab-04/*`, `client/tests/lab-04/*`, `e2e/lab-04/*` and every Lab 1 to Lab 3 test pass from
+      `lab4-staging` and again from `main`, with counts recorded in `tests.md` §8 (server 251, client 137,
+      Playwright 212 on both); none is skipped, `.only`'d or deleted.
+- [x] Every endpoint in `api-spec.md` has a direct API test for success and for each of its `401`, `403`, `400`,
+      `404` and `409` cases that applies to it (`SEC-05` calls every Lab 4 endpoint without a session; `SEC-01`
+      to `SEC-04` cover `403`; `API-14` and `FLT-01` to `FLT-02` cover `400` and `404`; `API-10`, `API-03`
+      and `WF-01` cover `409`); the authorization matrix is enforced on the backend and proved by tests that do
       not use the screen.
-- [ ] The two concurrency guards (version check, idempotency key) and the row lock each have a test that
-      fails when the guard is removed (mutation check), recorded in `tests.md`.
-- [ ] Dashboard figures match database queries, shown by an automated comparison and a recorded `psql`
-      session.
-- [ ] Actions Taken, Requester and IT Staff dashboards, and the changed Ticket Detail screens conform to
-      `ui-spec.md` at desktop, tablet and mobile widths, proved by screenshots in
-      `artifacts/lab-04/screenshots/` that were each compared with the spec, and the completed checklist in
-      `ui-spec.md` §13.
-- [ ] No console error, broken link, placeholder text, unfinished control or obsolete UI remains on any main
-      screen.
-- [ ] README setup, seed, migration (with the `pg_dump` advice), test and demonstration instructions are
-      current and were followed on a clean checkout.
-- [ ] The timing-sensitive Lab 3 test E2E-02 waits for its options before reading them.
+- [x] The two concurrency guards (version check, idempotency key) and the row lock each have a test that
+      fails when the guard is removed (mutation check), recorded in `tests.md` §7 (MUT-01 to MUT-08).
+- [x] Dashboard figures match database queries, shown by an automated comparison (`SDASH-01`, `RDASH-04`,
+      `SDASH-03`, `RDASH-05`) and a recorded `psql` session placed in the submission PDF (Part 5), where the
+      API figures and independent SQL counts for the same user are equal.
+- [x] Actions Taken, Requester and IT Staff dashboards, and the changed Ticket Detail screens conform to
+      `ui-spec.md` at desktop, tablet and mobile widths, proved by the 66 screenshots in
+      `artifacts/lab-04/screenshots/` that were each compared with the spec, the completed checklist in
+      `ui-spec.md` §11, and the screenshot index with the six defects found and fixed in §13.
+- [x] No console error, broken link, placeholder text, unfinished control or obsolete UI remains on any main
+      screen (the FR-21 sweep in `e2e/lab-04/regression.spec.ts` visits every main screen of every role and
+      fails on a console error, an uncaught exception, a `5xx` answer, placeholder text, an unnamed control or a
+      dead link).
+- [x] README setup, seed, migration (with the `pg_dump` advice), test and demonstration instructions are
+      current. Checked on a fresh clone of `main` (`npm ci` in `server/` and `client/`, `prisma generate`,
+      `tsc --noEmit` in both, `prisma migrate deploy` on the test database, then the server tests, the client
+      tests and the traceability script, all passing); the demonstration steps are covered by `E2E-01` to
+      `E2E-03`. Not repeated on a fresh clone: creating the PostgreSQL databases from nothing and the
+      Playwright run, which use the developer's existing local databases.
+- [x] The timing-sensitive Lab 3 test E2E-02 waits for its options before reading them (changed in Issue #84,
+      `tests.md` §6).
 
 **Course delivery**
-- [ ] Every feature branch is named `feature/<issue>-<slug>`, merged into `lab4-staging` through a
-      peer-reviewed PR that the reviewer merged, then released to `main` through one release PR.
-- [ ] This contract (Issue #79) is merged into `lab4-staging` before any implementation PR is opened, so the
-      specification demonstrably existed first.
-- [ ] Every Issue is linked to its PR in the Development panel and moved through Backlog, Specified, Started,
-      PR Review, (Fixing,) Done.
-- [ ] `docs/lab-04/reviewer.md` records both review directions with real comments, replies and approvals.
-- [ ] `docs/lab-04/ai-use.md` names the LLM, shows 6 to 10 prompts, and says plainly where AI drafted review
+- [x] Every feature branch is named `feature/<issue>-<slug>`, merged into `lab4-staging` through a
+      peer-reviewed PR that the reviewer merged, then released to `main` through a release PR (#94; the later
+      documentation-only follow-ups went through the same two steps: #95 with #96, and this Definition of Done update).
+- [x] This contract (Issue #79) is merged into `lab4-staging` before any implementation PR is opened, so the
+      specification demonstrably existed first (PR #87 merged 2026-10-30 14:20 UTC; PR #88 opened 14:36 UTC).
+- [x] Every Issue is linked to its PR in the Development panel and moved through Backlog, Specified, Started,
+      PR Review, (Fixing,) Done (Issues #79 to #86, all closed and in Done).
+- [x] `docs/lab-04/reviewer.md` records both review directions with real comments, replies and approvals.
+- [x] `docs/lab-04/ai-use.md` names the LLM, shows 6 to 10 prompts, and says plainly where AI drafted review
       messages.
-- [ ] The submission is one PDF with headings "Answer Part 1" to "Answer Part 9" and working links.
+- [ ] The submission is one PDF with headings "Answer Part 1" to "Answer Part 9" and working links. (The PDF is
+      not a repository file; it is built from this repository after this change and submitted separately.)
 
 ## 11. Assumptions and Decisions
 
