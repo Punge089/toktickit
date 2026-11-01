@@ -3,25 +3,26 @@
 **Author:** Bannasorn Thongkorn - 67070503420 - GitHub: @Punge089
 **Peer reviewer:** Papangkorn Jitvoottikrai - 67070503421 - GitHub: @book6349
 
-Every conversation below was pulled from GitHub with `gh pr view` and `gh api` on 2026-10-31 (all times UTC), not
-retyped from memory. Both directions are recorded: the Pull Requests I authored that my partner reviewed, and the
+Every conversation below was pulled from GitHub with `gh pr view` and `gh api` on 2026-10-31 and 2026-11-01 (all
+times UTC), not retyped from memory. Both directions are recorded: the Pull Requests I authored that my partner reviewed, and the
 Pull Requests my partner authored that I reviewed.
 
 ## How the reviews were done
 
 - Every Lab 4 feature Pull Request went **feature branch -> `lab4-staging`**; none targeted `main`. The only Pull
-  Requests into `main` are release Pull Requests from `lab4-staging` (#94, and the one that promotes this
-  record, see the note under the first table).
+  Requests into `main` are release Pull Requests from `lab4-staging` (#94, and the later ones that promote
+  documentation updates, see the note under the first table).
 - In every Pull Request the **reviewer clicked "Merge pull request"**, not the author (Workflow Guide, Part 9). The
   "Merged by" column below was read from GitHub, not assumed.
 - The reviewer left a review comment (a question about something real in the diff), the author replied, and the
   reviewer then submitted an **Approve** review. A review summary cannot be replied to under GitHub's review
   model, so each reply is a **top-level Pull Request comment that quotes the question** it answers.
-- The review messages were drafted with AI assistance and then posted by the two of us; `ai-use.md` says so. The
-  timestamps show how quick the reviews were instead of hiding it: from question to approval, seven of my eight Pull
-  Requests (#87, #88, #89, #90, #91, #93, #94) took 7 minutes or less (#91 under one), and all six of my partner's
-  (#57, #58, #59, #60, #61, #62) took 7 minutes or less. The only slow one is #92, 51 minutes from question
-  to approval.
+- The review messages of my own Pull Requests and of my partner's #57 to #62 were drafted with AI assistance and
+  then posted by the two of us; `ai-use.md` says so. The review messages I wrote on my partner's #63 to #66 I wrote
+  myself, without that assistance. The timestamps show how quick the reviews were instead of hiding it: from
+  question to approval, seven of my eight Pull Requests below (#87, #88, #89, #90, #91, #93, #94) took 7 minutes or
+  less (#91 under one), and so did nine of my partner's ten (#57 to #64 and #66). The slow ones are my #92, 51
+  minutes from question to approval, and my partner's #65, 14 minutes.
 
 ## Pull Requests I authored (reviewed, approved and merged by @book6349)
 
@@ -37,8 +38,9 @@ Pull Requests my partner authored that I reviewed.
 | [#94](https://github.com/Punge089/toktickit/pull/94) | #86 Release: promote `lab4-staging` to `main` (base `main`) | lab4-staging | 10-31 14:49 | 14:52 | 14:52 | @book6349, 14:52 |
 
 #93 and #94 were added after the release by a small docs-only Pull Request, because a file cannot list the Pull
-Request that introduces it (#93 added this file; #94 released it). That docs-only Pull Request, and the Pull Request
-that promotes it to `main`, are likewise not in this table; they are on the repository's Pull Requests page and are
+Request that introduces it (#93 added this file; #94 released it). The docs-only Pull Requests that follow, each with
+the release Pull Request that promotes it to `main` (#95 to #98, and the last two, which add my partner's #63 to
+#66 to this record), are likewise not in this table; they are on the repository's Pull Requests page and are
 covered in the submission PDF.
 
 ### PR #87 - Issue 79: Sprint 4 engineering contract
@@ -83,10 +85,10 @@ covered in the submission PDF.
 
 ## Pull Requests I reviewed (authored by @book6349, in github.com/book6349/toktickit)
 
-Recorded as of 2026-10-31. In each, @book6349 opened the Pull Request into `lab4-staging`, I reviewed it against its
-Issue, they answered, I approved, and **I** clicked "Merge pull request" (GitHub shows @Punge089 as the merger). My
-partner had not opened a release Pull Request into `main` when this was written; if one is opened it can be added
-the same way.
+Recorded as of 2026-11-01. In each, @book6349 opened the Pull Request, I reviewed it, they answered, I approved, and
+**I** clicked "Merge pull request" (GitHub shows @Punge089 as the merger). #57 to #62 went into `lab4-staging`; #63
+is my partner's release of their `lab4-staging` into `main`, and #64 to #66 are their report and evidence updates
+into `main`. My partner has no Pull Request open at the time of writing.
 
 | PR | Issue | Branch | My review comment | Their reply | My approval | Merged by / at |
 |----|-------|--------|-------------------|-------------|-------------|----------------|
@@ -96,6 +98,10 @@ the same way.
 | [#60](https://github.com/book6349/toktickit/pull/60) | #54 Lab 4 Issue 4 - Ticket Workflow and Resolution Enforcement | feature/lab4-ticket-workflow | 10-30 16:22 | 16:22 | 16:23 | @Punge089, 16:23 |
 | [#61](https://github.com/book6349/toktickit/pull/61) | #55 Lab 4 Issue 5 - Requester and Staff Dashboards | feature/lab4-dashboards | 10-31 12:12 | 12:15 | 12:20 | @Punge089, 12:20 |
 | [#62](https://github.com/book6349/toktickit/pull/62) | Lab 4 - Final Regression, Hardening and Evidence | feature/lab4-final-hardening | 10-31 14:56 | 14:56 | 14:57 | @Punge089, 14:57 |
+| [#63](https://github.com/book6349/toktickit/pull/63) | Lab 4 - Promote reviewed staging release to main (into `main`) | lab4-staging | 10-31 15:11 | 15:11 | 15:12 | @Punge089, 15:12 |
+| [#64](https://github.com/book6349/toktickit/pull/64) | Lab 4 - Main Verification and Report Update (into `main`) | docs/lab4-main-verification-20261031 | 10-31 16:00 | 16:00 | 16:01 | @Punge089, 16:01 |
+| [#65](https://github.com/book6349/toktickit/pull/65) | Lab 4 - Complete Accessibility and Release Evidence (into `main`) | test/lab4-accessibility-release | 11-01 06:13 | 06:22 | 06:27 | @Punge089, 06:27 |
+| [#66](https://github.com/book6349/toktickit/pull/66) | Lab 4 - Final Main Report and Verification Evidence (into `main`) | docs/lab4-final-main-report-20261101 | 11-01 07:02 | 07:02 | 07:04 | @Punge089, 07:04 |
 
 ### PR #57 - Lab 4 Issue 1 - Engineering Contract, Test DD and Documentation Cleanup
 **Me:** "Please confirm every acceptance criterion maps to a named test and the AI-use entries are actual prompts."
@@ -127,14 +133,34 @@ the same way.
 **@book6349:** "The 21-test run, 24 captures, editable report, and PDF are included on this PR at [report commit 4f4a847](https://github.com/book6349/toktickit/commit/4f4a8479ddf4040f5b788bc577555e1e3bca3148)."
 **Me:** "The results and captures match this revision. Approved to merge." - Approved, then merged by me.
 
+### PR #63 - Lab 4 - Promote reviewed staging release to main
+**Me:** "Please confirm the staged scope and note how the pending CI and main-branch checks will be verified."
+**@book6349:** "The PR lists the local results; CI and main verification are still pending. I will keep any review fixes on this PR."
+**Me:** "Reviewed the scope and verification notes. Approved." - Approved, then merged by me.
+
+### PR #64 - Lab 4 - Main Verification and Report Update
+**Me:** "Please confirm the report matches the tested main revision and clearly lists the remaining gaps."
+**@book6349:** "Updated in [commit 993af6a](https://github.com/book6349/toktickit/commit/993af6ab3655bd69305d5068034dec87b3c2b2a6). The report includes the main verification logs and remaining evidence gaps."
+**Me:** "The report matches the recorded results and states its limits clearly. Approved." - Approved, then merged by me.
+
+### PR #65 - Lab 4 - Complete Accessibility and Release Evidence
+**Me:** "Please check the keyboard and 320px evidence, recovery cases, and release checklist against the recorded revision."
+**@book6349:** "The evidence and verification limits are documented on this branch in the release notes."
+**Me:** "The accessibility evidence and release checks are clear. Approved." - Approved, then merged by me.
+
+### PR #66 - Lab 4 - Final Main Report and Verification Evidence
+**Me:** "Please check that the final-main revision, test logs, and report claims align."
+**@book6349:** "I updated the report from merged main and included the full test logs. GitHub reported no status checks for this revision."
+**Me:** "The revision, test record, and report are consistent. Approved to merge." - Approved, then merged by me.
+
 ## What this record does not claim
 
-- It lists only what GitHub shows, read on 2026-10-31. Anything opened after that is not here; it can be added the
-  same way from `gh pr view <number>` (and `-R book6349/toktickit` for my partner's).
+- It lists only what GitHub shows, read on 2026-10-31 and 2026-11-01. Anything opened after that is not here; it can
+  be added the same way from `gh pr view <number>` (and `-R book6349/toktickit` for my partner's).
 - The reviews are short, single-question reviews, as in Labs 2 and 3. They are real questions about real code in
   each diff, but they are not line-by-line inspections, and I have not presented them as such. Several of my
   partner's questions are broad checklists ("Please check actor attribution, access control, idempotency, lifecycle
   rules and migration") rather than a question about one line.
-- The same AI assistance produced both sets of messages, so the questions and answers are not independent of each
-  other. What is independent is that each Pull Request was opened by one of us, approved by the other, and merged by
+- For my own Pull Requests and my partner's #57 to #62 the same AI assistance produced both sets of messages, so
+  those questions and answers are not independent of each other. (The messages I wrote on #63 to #66 are my own.) What is independent is that each Pull Request was opened by one of us, approved by the other, and merged by
   the approver.
