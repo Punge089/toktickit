@@ -7,7 +7,8 @@ engineering contract (Issue #79 / PR #87), the implementation of Issues #80 to #
 evidence work for Issue #85. The model shown for it was **Claude Sonnet 5.5**.
 
 **Where the AI also helped, stated plainly:** it drafted the review messages in `reviewer.md` (the reviewer's
-question, my reply, the approval line), which the two of us then posted on GitHub; it wrote the code, the tests and
+question, my reply, the approval line), which the two of us then posted on GitHub (the review messages I wrote on my
+partner's #63 to #66 are my own, not drafted by it); it wrote the code, the tests and
 the documents; it moved the Project board cards with `gh` after I said it should; and it re-read the labsheet and the
 workflow guide at the start because I asked it to. I made the decisions, merged nothing myself (my partner merged
 every Pull Request of mine, and I merged theirs), and did the two things it cannot do: linking each Issue in the
@@ -54,10 +55,10 @@ instead of a feeling.
 
 **Where the AI was wrong or I had to catch it.** The body of PR #87 said the Issue was linked when it was not; my
 screenshot showed "None yet". The full end-to-end run stalled for a long time after the landing page changed, until I
-asked "what happen?". A hook was placed after an early return in the Login page, and a Lab 3 test caught it. These
+asked "what happen?". A hook was placed after an early return in the Login page; the AI found and fixed it while checking the other forms. These
 are small, but they are the kind of mistake that is easy to miss when the code is produced this fast.
 
 **What I would do differently.** I would take the screenshots and run the traceability script earlier, after the
 first UI Issue instead of at the end, because that is where the defects were. I would also give my partner a more
 specific thing to look at in each Pull Request. The reviews in this sprint were quick and drafted with AI help, and
-`reviewer.md` says so; a slower, line-by-line review of one risky file would have been worth more than six fast ones.
+`reviewer.md` says so; a slower, line-by-line review of one risky file would have been worth more than the quick ones.
